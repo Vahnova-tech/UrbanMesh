@@ -113,11 +113,16 @@ export async function confirmHazard(id: string): Promise<ReportResponse> {
   return res.json() as Promise<ReportResponse>;
 }
 
+const PHOTO_PATH =
+  /^\/uploads\/photos\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp)$/i;
+
 export async function uploadPhoto(dataUrl: string): Promise<string> {
+  const blob = await (await fetch(dataUrl)).blob();
+  const form = new FormData();
+  form.append("photo", blob, "hazard.jpg");
   const res = await fetch(`${API_BASE}/api/v1/uploads/photos`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ data: dataUrl }),
+    body: form,
   });
   if (!res.ok) throw new Error(await readError(res, `Photo upload failed (${res.status})`));
   const data = (await res.json()) as { url: string };
@@ -126,6 +131,14 @@ export async function uploadPhoto(dataUrl: string): Promise<string> {
 
 export function photoSrc(url: string | null): string | null {
   if (!url) return null;
-  if (url.startsWith("http") || url.startsWith("data:")) return url;
-  return `${API_BASE}${url}`;
+  let pathName = url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      pathName = new URL(url).pathname;
+    } catch {
+      return null;
+    }
+  }
+  if (!PHOTO_PATH.test(pathName.split("?")[0])) return null;
+  return `${API_BASE}${pathName.split("?")[0]}`;
 }
