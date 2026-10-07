@@ -1,3 +1,25 @@
+import { photoSrc } from "../../lib/api";
+
+export function EvidencePhoto({
+  url,
+  alt,
+  className = "h-14 w-14",
+}: {
+  url: string | null;
+  alt: string;
+  className?: string;
+}) {
+  const src = photoSrc(url);
+  if (!src) return null;
+  return (
+    <img
+      src={src}
+      alt={alt}
+      className={`shrink-0 rounded-[10px] object-cover ${className}`}
+    />
+  );
+}
+
 export function StatusBadge({ verified }: { verified: boolean }) {
   return verified ? (
     <span className="inline-flex items-center rounded-md bg-civic-verifiedBg px-2 py-0.5 text-[11px] font-semibold text-civic-verified">

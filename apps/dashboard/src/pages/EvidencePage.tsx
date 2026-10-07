@@ -1,24 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   fetchClusters,
+  fetchReports,
   generateLpdpBrief,
   LPDP_DOWNLOAD_HREF,
+  type IncidentPublic,
   type SpatialCluster,
 } from "../lib/api";
 import { loadEvidenceSelection, saveEvidenceSelection } from "../lib/evidenceStore";
 import { formatCoords, MONTH_LABEL } from "../lib/format";
-import { StatCard, StatusBadge } from "../components/ui/Primitives";
+import { EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
 
 export function EvidencePage() {
   const [clusters, setClusters] = useState<SpatialCluster[]>([]);
+  const [incidents, setIncidents] = useState<IncidentPublic[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [generating, setGenerating] = useState(false);
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchClusters().then((rows) => {
+    void Promise.all([fetchClusters(), fetchReports()]).then(([rows, reports]) => {
       setClusters(rows);
+      setIncidents(reports);
       const stored = loadEvidenceSelection();
       const valid = stored?.filter((id) => rows.some((row) => row.cluster_id === id));
       setSelected(valid && valid.length > 0 ? valid : rows.map((r) => r.cluster_id));
@@ -156,6 +160,19 @@ export function EvidencePage() {
                     <p className="text-xs text-civic-muted">
                       {cluster.verification_status}
                     </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {incidents
+                        .filter((row) => row.cluster_id === cluster.cluster_id && row.photo_url)
+                        .slice(0, 4)
+                        .map((row) => (
+                          <EvidencePhoto
+                            key={row.id}
+                            url={row.photo_url}
+                            alt={`${cluster.category_label} evidence`}
+                            className="h-12 w-12"
+                          />
+                        ))}
+                    </div>
                   </div>
                 </label>
               ))}

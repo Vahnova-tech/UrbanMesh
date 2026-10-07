@@ -22,11 +22,11 @@ export const env = {
   /** ST_DWithin radius in metres (roadmap default: 15). */
   clusterRadiusMeters: intEnv("CLUSTER_RADIUS_METERS", 15),
 
-  /** Phase 1 — photo upload storage root (local path or S3-compatible prefix). */
+  /** Local photo directory served at /uploads/photos. */
   photoStoragePath: process.env.PHOTO_STORAGE_PATH ?? "./storage/photos",
   photoPublicBaseUrl: process.env.PHOTO_PUBLIC_BASE_URL ?? "",
 
-  /** Phase 1 — basic spam protection. */
+  /** Applied to POST /uploads/photos and POST /reports. */
   rateLimitWindowMs: intEnv("RATE_LIMIT_WINDOW_MS", 60_000),
   rateLimitMaxReports: intEnv("RATE_LIMIT_MAX_REPORTS", 10),
 

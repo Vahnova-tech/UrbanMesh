@@ -147,3 +147,21 @@ export async function generateLpdpBrief(clusterIds?: string[]): Promise<{
 }
 
 export const LPDP_DOWNLOAD_HREF = `${API_BASE}/api/v1/lpdp/latest.pdf`;
+
+const PHOTO_PATH =
+  /^\/uploads\/photos\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp)$/i;
+
+export function photoSrc(url: string | null): string | null {
+  if (!url) return null;
+  let pathName = url;
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    try {
+      pathName = new URL(url).pathname;
+    } catch {
+      return null;
+    }
+  }
+  const clean = pathName.split("?")[0];
+  if (!PHOTO_PATH.test(clean)) return null;
+  return `${API_BASE}${clean}`;
+}

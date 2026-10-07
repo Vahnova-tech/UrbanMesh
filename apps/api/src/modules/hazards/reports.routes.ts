@@ -12,6 +12,8 @@ import {
   listNearbyIncidents,
 } from "./listing.service.js";
 import type { HazardReportInput } from "../../types/reports.js";
+import { PhotoError, resolveStoredPhotoUrl } from "../uploads/photo.js";
+import { rateLimit } from "../../lib/rateLimit.js";
 
 const reportsRouter = Router();
 
@@ -102,6 +104,7 @@ reportsRouter.get(
 
 reportsRouter.post(
   "/:id/confirm",
+  rateLimit(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const original = await getIncidentById(req.params.id);
@@ -138,6 +141,7 @@ reportsRouter.post(
 
 reportsRouter.post(
   "/",
+  rateLimit(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { category, description, lat, lng, h3_index, photo_url } =
@@ -183,16 +187,24 @@ reportsRouter.post(
         return;
       }
 
+      let storedPhoto: string | null = null;
+      try {
+        storedPhoto = await resolveStoredPhotoUrl(photo_url);
+      } catch (err) {
+        if (err instanceof PhotoError) {
+          res.status(400).json({ error: err.message });
+          return;
+        }
+        throw err;
+      }
+
       const payload: HazardReportInput = {
         category,
         description: description.trim(),
         lat: latitude,
         lng: longitude,
         h3_index: h3_index.trim(),
-        photo_url:
-          typeof photo_url === "string" && photo_url.length > 0
-            ? photo_url
-            : null,
+        photo_url: storedPhoto,
       };
 
       const result = await ingestHazardReport(payload);

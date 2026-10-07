@@ -8,7 +8,7 @@ import {
 } from "../lib/api";
 import { addEvidenceCluster } from "../lib/evidenceStore";
 import { formatCoords, formatWhen } from "../lib/format";
-import { StatusBadge } from "../components/ui/Primitives";
+import { EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
 import { DEFAULT_LAYERS, PlannerMap } from "../components/map/PlannerMap";
 
 export function ClustersPage() {
@@ -101,11 +101,17 @@ export function ClustersPage() {
               </h3>
               <ul className="mt-2 space-y-2">
                 {members.map((row) => (
-                  <li key={row.id} className="rounded-[10px] border border-civic-line px-3 py-2">
-                    <p className="text-sm font-medium">{row.description}</p>
-                    <p className="text-[11px] text-civic-muted">
-                      {formatWhen(row.created_at)} · {row.corridor}
-                    </p>
+                  <li key={row.id} className="flex gap-3 rounded-[10px] border border-civic-line px-3 py-2">
+                    <EvidencePhoto
+                      url={row.photo_url}
+                      alt="Cluster evidence photograph"
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{row.description}</p>
+                      <p className="text-[11px] text-civic-muted">
+                        {formatWhen(row.created_at)} · {row.corridor}
+                      </p>
+                    </div>
                   </li>
                 ))}
               </ul>

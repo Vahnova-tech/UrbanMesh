@@ -34,10 +34,16 @@ export function createApp() {
     next();
   });
 
-  app.use(express.json({ limit: "10mb" }));
+  app.use(express.json({ limit: "256kb" }));
   app.use(
     "/uploads/photos",
-    express.static(path.resolve(env.photoStoragePath)),
+    express.static(path.resolve(env.photoStoragePath), {
+      fallthrough: true,
+      setHeaders(res) {
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Cache-Control", "public, max-age=86400");
+      },
+    }),
   );
 
   app.get("/health", (_req, res) => {

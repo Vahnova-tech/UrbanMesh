@@ -12,7 +12,7 @@ export interface HazardReportInput {
   lng: number;
   /** Uber H3 cell computed on the client (or server) for the report location. */
   h3_index: string;
-  /** Reserved — photo upload will land here in a later deliverable. */
+  /** Path returned by POST /api/v1/uploads/photos (`/uploads/photos/{uuid}.jpg`). */
   photo_url?: string | null;
 }
 

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { formatWhen } from "../lib/format";
-import { StatusBadge } from "../components/ui/Primitives";
+import { EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
 
 export function ReportsPage() {
   const [params] = useSearchParams();
@@ -76,6 +76,7 @@ export function ReportsPage() {
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead className="border-b border-civic-line text-xs uppercase tracking-wide text-civic-muted">
             <tr>
+              <th className="px-4 py-3">Photo</th>
               <th className="px-4 py-3">Hazard</th>
               <th className="px-4 py-3">Corridor</th>
               <th className="px-4 py-3">Area</th>
@@ -87,13 +88,22 @@ export function ReportsPage() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-8 text-center text-civic-muted">
+                <td colSpan={7} className="px-4 py-8 text-center text-civic-muted">
                   No reports match these filters.
                 </td>
               </tr>
             ) : (
               filtered.map((row) => (
                 <tr key={row.id} className="border-b border-civic-mist">
+                  <td className="px-4 py-3">
+                    <EvidencePhoto
+                      url={row.photo_url}
+                      alt={`${row.category_label} evidence`}
+                    />
+                    {!row.photo_url ? (
+                      <span className="text-xs text-civic-muted">—</span>
+                    ) : null}
+                  </td>
                   <td className="px-4 py-3">
                     <p className="font-medium">{row.category_label}</p>
                     <p className="text-xs text-civic-muted">{row.description}</p>
