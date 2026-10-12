@@ -45,13 +45,27 @@ export interface EvidenceResponse {
   cluster_members: IncidentPublic[];
 }
 
-async function readError(res: Response, fallback: string): Promise<string> {
-  const err = (await res.json().catch(() => null)) as { error?: string } | null;
-  if (err?.error) return err.error;
-  if (res.status === 500 || res.status === 502 || res.status === 503) {
-    return "Can't reach the UrbanMesh API on port 3001. In apps/api run npm run dev.";
+const API_DOWN =
+  "Can't reach the UrbanMesh API on port 3001. In apps/api run npm run dev.";
+
+async function readJson<T>(res: Response, fallback: string): Promise<T> {
+  const text = await res.text();
+  if (/^\s*</.test(text)) {
+    throw new Error(API_DOWN);
   }
-  return fallback;
+  let body: unknown = null;
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      throw new Error(res.status >= 500 ? API_DOWN : fallback);
+    }
+  }
+  if (!res.ok) {
+    const err = body as { error?: string } | null;
+    throw new Error(err?.error || (res.status >= 500 ? API_DOWN : fallback));
+  }
+  return body as T;
 }
 
 export async function fetchReports(params: {
@@ -64,8 +78,10 @@ export async function fetchReports(params: {
   if (params.category) query.set("category", params.category);
   if (params.limit) query.set("limit", String(params.limit));
   const res = await fetch(`${API_BASE}/api/v1/reports?${query.toString()}`);
-  if (!res.ok) throw new Error(await readError(res, `Reports failed (${res.status})`));
-  const data = (await res.json()) as { incidents: IncidentPublic[] };
+  const data = await readJson<{ incidents: IncidentPublic[] }>(
+    res,
+    `Reports failed (${res.status})`,
+  );
   return data.incidents ?? [];
 }
 
@@ -80,15 +96,16 @@ export async function fetchNearbyReports(
     radius: String(radius),
   });
   const res = await fetch(`${API_BASE}/api/v1/reports/nearby?${query.toString()}`);
-  if (!res.ok) throw new Error(await readError(res, `Nearby reports failed (${res.status})`));
-  const data = (await res.json()) as { incidents: IncidentPublic[] };
+  const data = await readJson<{ incidents: IncidentPublic[] }>(
+    res,
+    `Nearby reports failed (${res.status})`,
+  );
   return data.incidents ?? [];
 }
 
 export async function fetchEvidence(id: string): Promise<EvidenceResponse> {
   const res = await fetch(`${API_BASE}/api/v1/reports/${id}`);
-  if (!res.ok) throw new Error(await readError(res, `Report not found (${res.status})`));
-  return res.json() as Promise<EvidenceResponse>;
+  return readJson<EvidenceResponse>(res, `Report not found (${res.status})`);
 }
 
 export async function submitHazardReport(
@@ -99,8 +116,7 @@ export async function submitHazardReport(
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error(await readError(res, `Report failed (${res.status})`));
-  return res.json() as Promise<ReportResponse>;
+  return readJson<ReportResponse>(res, `Report failed (${res.status})`);
 }
 
 export async function confirmHazard(id: string): Promise<ReportResponse> {
@@ -109,8 +125,7 @@ export async function confirmHazard(id: string): Promise<ReportResponse> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({}),
   });
-  if (!res.ok) throw new Error(await readError(res, `Confirm failed (${res.status})`));
-  return res.json() as Promise<ReportResponse>;
+  return readJson<ReportResponse>(res, `Confirm failed (${res.status})`);
 }
 
 const PHOTO_PATH =
@@ -124,8 +139,10 @@ export async function uploadPhoto(dataUrl: string): Promise<string> {
     method: "POST",
     body: form,
   });
-  if (!res.ok) throw new Error(await readError(res, `Photo upload failed (${res.status})`));
-  const data = (await res.json()) as { url: string };
+  const data = await readJson<{ url: string }>(
+    res,
+    `Photo upload failed (${res.status})`,
+  );
   return data.url;
 }
 

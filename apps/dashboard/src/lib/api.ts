@@ -94,15 +94,32 @@ export interface PlatformMeta {
   }>;
 }
 
-async function readError(res: Response, fallback: string): Promise<string> {
-  const err = (await res.json().catch(() => null)) as { error?: string } | null;
-  return err?.error ?? fallback;
+const API_DOWN =
+  "Can't reach the UrbanMesh API on port 3001. In apps/api run npm run dev.";
+
+async function readJson<T>(res: Response, fallback: string): Promise<T> {
+  const text = await res.text();
+  if (/^\s*</.test(text)) {
+    throw new Error(API_DOWN);
+  }
+  let body: unknown = null;
+  if (text) {
+    try {
+      body = JSON.parse(text) as unknown;
+    } catch {
+      throw new Error(res.status >= 500 ? API_DOWN : fallback);
+    }
+  }
+  if (!res.ok) {
+    const err = body as { error?: string } | null;
+    throw new Error(err?.error || (res.status >= 500 ? API_DOWN : fallback));
+  }
+  return body as T;
 }
 
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   const res = await fetch(`${API_BASE}/api/v1/dashboard/metrics`);
-  if (!res.ok) throw new Error(await readError(res, `Metrics failed (${res.status})`));
-  return res.json() as Promise<DashboardMetrics>;
+  return readJson<DashboardMetrics>(res, `Metrics failed (${res.status})`);
 }
 
 export async function fetchReports(params: {
@@ -114,22 +131,25 @@ export async function fetchReports(params: {
   if (params.category) query.set("category", params.category);
   query.set("limit", "500");
   const res = await fetch(`${API_BASE}/api/v1/reports?${query.toString()}`);
-  if (!res.ok) throw new Error(await readError(res, `Reports failed (${res.status})`));
-  const data = (await res.json()) as { incidents: IncidentPublic[] };
+  const data = await readJson<{ incidents: IncidentPublic[] }>(
+    res,
+    `Reports failed (${res.status})`,
+  );
   return data.incidents ?? [];
 }
 
 export async function fetchClusters(): Promise<SpatialCluster[]> {
   const res = await fetch(`${API_BASE}/api/v1/clusters`);
-  if (!res.ok) throw new Error(await readError(res, `Clusters failed (${res.status})`));
-  const data = (await res.json()) as { clusters: SpatialCluster[] };
+  const data = await readJson<{ clusters: SpatialCluster[] }>(
+    res,
+    `Clusters failed (${res.status})`,
+  );
   return data.clusters ?? [];
 }
 
 export async function fetchMeta(): Promise<PlatformMeta> {
   const res = await fetch(`${API_BASE}/api/v1/meta`);
-  if (!res.ok) throw new Error(await readError(res, `Meta failed (${res.status})`));
-  return res.json() as Promise<PlatformMeta>;
+  return readJson<PlatformMeta>(res, `Meta failed (${res.status})`);
 }
 
 export async function generateLpdpBrief(clusterIds?: string[]): Promise<{
@@ -142,8 +162,7 @@ export async function generateLpdpBrief(clusterIds?: string[]): Promise<{
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(clusterIds ? { cluster_ids: clusterIds } : {}),
   });
-  if (!res.ok) throw new Error(await readError(res, `LPDP generation failed (${res.status})`));
-  return res.json();
+  return readJson(res, `LPDP generation failed (${res.status})`);
 }
 
 export const LPDP_DOWNLOAD_HREF = `${API_BASE}/api/v1/lpdp/latest.pdf`;
