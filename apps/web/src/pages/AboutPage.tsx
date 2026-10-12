@@ -65,6 +65,16 @@ export function AboutPage() {
         </section>
       </div>
 
+      <section className="mt-8 rounded-card border border-civic-line bg-civic-surface p-4">
+        <h2 className="text-sm font-semibold">Install on this phone</h2>
+        <p className="mt-2 text-sm leading-relaxed text-civic-slate">
+          Chrome and Edge show an install icon in the UrbanMesh header when
+          the app can be added. On iPhone, open Share and choose Add to Home
+          Screen. The map and reports you already loaded stay available if
+          the network drops; new reports still need a connection.
+        </p>
+      </section>
+
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section className="rounded-card border border-civic-line bg-civic-surface p-4">
           <h2 className="text-sm font-semibold">Built for low bandwidth</h2>

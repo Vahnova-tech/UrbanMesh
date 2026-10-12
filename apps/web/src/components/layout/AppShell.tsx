@@ -2,6 +2,7 @@ import { Link, NavLink, useLocation } from "react-router-dom";
 import { UrbanMeshLogo } from "../ui/UrbanMeshLogo";
 import { useLocationState } from "../../lib/location";
 import { ThemeToggle } from "../../lib/theme";
+import { InstallButton } from "../../lib/install";
 import type { ReactNode } from "react";
 import { useOnline } from "../../lib/online";
 
@@ -71,6 +72,7 @@ function TopBar() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
+          <InstallButton />
           <NavLink
             to="/about"
             aria-label="About UrbanMesh"
