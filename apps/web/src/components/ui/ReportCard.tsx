@@ -71,7 +71,7 @@ export function ErrorBanner({ message }: { message: string }) {
   return (
     <p
       role="alert"
-      className="rounded-card bg-civic-criticalBg px-3 py-2 text-sm font-semibold text-civic-critical"
+      className="rounded-card bg-civic-criticalBg px-3 py-2.5 text-sm font-medium leading-snug text-civic-critical shadow-card"
     >
       {message}
     </p>

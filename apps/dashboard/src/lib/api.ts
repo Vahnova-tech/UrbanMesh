@@ -95,8 +95,8 @@ export interface PlatformMeta {
 }
 
 const API_DOWN = import.meta.env.DEV
-  ? "Can't reach the UrbanMesh API on port 3001. In apps/api run npm run dev."
-  : "Can't load Kilimani reports. The UrbanMesh API is not connected to this site.";
+  ? "Couldn't load live reports. Start the API on port 3001, then refresh."
+  : "Couldn't load Kilimani planning evidence. Check your connection and try again.";
 
 async function readJson<T>(res: Response, fallback: string): Promise<T> {
   const text = await res.text();

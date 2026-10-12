@@ -1,5 +1,5 @@
 const API_UNAVAILABLE =
-  "Can't load Kilimani reports. The UrbanMesh API is not connected to this site.";
+  "Couldn't load live Kilimani reports. Check your connection and try again.";
 
 export const config = { maxDuration: 30 };
 

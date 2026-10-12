@@ -3,7 +3,7 @@ import { defineConfig, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 
 const API_DOWN =
-  "Can't reach the UrbanMesh API on port 3001. In apps/api run npm run dev.";
+  "Couldn't load live reports. Start the API on port 3001, then refresh.";
 
 function apiProxy(): ProxyOptions {
   return {
