@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   MapContainer,
@@ -45,14 +45,14 @@ export function ReportFlowPage() {
   const [result, setResult] = useState<ReportResponse | null>(null);
 
   const selected = HAZARD_OPTIONS.find((o) => o.value === category);
-  const formRef = useRef<HTMLFormElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (coords) setCenter(coords);
   }, [coords]);
 
   useEffect(() => {
-    formRef.current?.scrollTo({ top: 0 });
+    scrollRef.current?.scrollTo({ top: 0 });
   }, [step, result]);
 
   async function onSubmit(e: FormEvent) {
@@ -105,26 +105,23 @@ export function ReportFlowPage() {
         <ResultState result={result} />
       ) : (
         <form
-          ref={formRef}
-          className={`min-h-0 flex-1 um-scroll ${
-            step === 1 ? "flex flex-col lg:overflow-hidden" : ""
-          }`}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={onSubmit}
         >
           {step === 1 ? (
             <section className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
-              <div className="px-4 pb-2 pt-4 lg:hidden">
+              <div className="shrink-0 px-4 pb-2 pt-3 lg:hidden">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                   1 · Location
                 </p>
-                <h1 className="mt-1 text-xl font-semibold tracking-tight">
+                <h1 className="mt-1 text-lg font-semibold tracking-tight">
                   Where is the problem?
                 </h1>
-                <p className="mt-1 text-sm text-civic-muted">
+                <p className="mt-0.5 text-sm text-civic-muted">
                   Pan the map so the crosshair sits on the hazard.
                 </p>
               </div>
-              <div className="relative h-[38svh] min-h-[200px] max-h-[280px] shrink-0 lg:h-auto lg:max-h-none lg:min-h-0 lg:flex-1">
+              <div className="relative min-h-[160px] flex-1 lg:min-h-0">
                 <div className="absolute inset-0">
                 <MapContainer
                   center={[center.lat, center.lng]}
@@ -146,7 +143,7 @@ export function ReportFlowPage() {
                   <div className="relative um-crosshair" />
                 </div>
               </div>
-              <div className="space-y-3 border-t border-civic-line bg-civic-surface px-4 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] lg:w-[380px] lg:shrink-0 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
+              <div className="shrink-0 space-y-3 border-t border-civic-line bg-civic-surface px-4 py-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] lg:w-[380px] lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
                 <div className="hidden lg:block">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                     1 · Location
@@ -192,99 +189,111 @@ export function ReportFlowPage() {
           ) : null}
 
           {step === 2 ? (
-            <section className="mx-auto w-full max-w-4xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                2 · Hazard
-              </p>
-              <h1 className="mt-1 text-xl font-semibold tracking-tight">
-                What is the problem?
-              </h1>
-              <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
-                {HAZARD_OPTIONS.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setCategory(opt.value)}
-                    className={`min-h-[6.5rem] rounded-card border p-3 text-left lg:min-h-[7.5rem] lg:p-4 ${
-                      category === opt.value
-                        ? "border-civic-ink bg-civic-mist"
-                        : "border-civic-line bg-civic-surface"
-                    }`}
-                  >
-                    <CategoryIcon
-                      category={opt.value}
-                      className="h-6 w-6 text-civic-accent"
-                    />
-                    <p className="mt-3 text-sm font-semibold">{opt.label}</p>
-                    <p className="mt-1 text-xs text-civic-muted">{opt.hint}</p>
-                  </button>
-                ))}
+            <>
+              <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
+                <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+                    2 · Hazard
+                  </p>
+                  <h1 className="mt-1 text-xl font-semibold tracking-tight">
+                    What is the problem?
+                  </h1>
+                  <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                    {HAZARD_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setCategory(opt.value)}
+                        className={`min-h-[6.5rem] rounded-card border p-3 text-left lg:min-h-[7.5rem] lg:p-4 ${
+                          category === opt.value
+                            ? "border-civic-ink bg-civic-mist"
+                            : "border-civic-line bg-civic-surface"
+                        }`}
+                      >
+                        <CategoryIcon
+                          category={opt.value}
+                          className="h-6 w-6 text-civic-accent"
+                        />
+                        <p className="mt-3 text-sm font-semibold">{opt.label}</p>
+                        <p className="mt-1 text-xs text-civic-muted">{opt.hint}</p>
+                      </button>
+                    ))}
+                  </div>
+                </section>
               </div>
-              <button
-                type="button"
-                disabled={!category}
-                onClick={() => setStep(3)}
-                className="mt-5 w-full rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-50"
-              >
-                Continue
-              </button>
-            </section>
+              <ReportStepFooter>
+                <button
+                  type="button"
+                  disabled={!category}
+                  onClick={() => setStep(3)}
+                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Continue
+                </button>
+              </ReportStepFooter>
+            </>
           ) : null}
 
           {step === 3 ? (
-            <section className="mx-auto w-full max-w-5xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                3 · Evidence
-              </p>
-              <h1 className="mt-1 text-xl font-semibold tracking-tight">Add evidence</h1>
-              <p className="mt-1 text-sm text-civic-muted">
-                Photograph the hazard now. Gallery uploads are not accepted.
-              </p>
-              <div className="mt-4 grid gap-6 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
-                <div>
-                  <label className="block text-sm font-semibold">Photo</label>
-                  <div className="mt-2">
-                    <CameraCapture
-                      photoData={photoData}
-                      onCapture={setPhotoData}
-                      onRetake={() => setPhotoData(null)}
-                    />
+            <>
+              <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
+                <section className="mx-auto w-full max-w-5xl px-4 py-4 lg:px-6 lg:py-8">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+                    3 · Evidence
+                  </p>
+                  <h1 className="mt-1 text-xl font-semibold tracking-tight">Add evidence</h1>
+                  <p className="mt-1 text-sm text-civic-muted">
+                    Photograph the hazard now. Gallery uploads are not accepted.
+                  </p>
+                  <div className="mt-4 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+                    <div className="order-2 lg:order-none">
+                      <label className="block text-sm font-semibold">Photo</label>
+                      <div className="mt-2">
+                        <CameraCapture
+                          photoData={photoData}
+                          onCapture={setPhotoData}
+                          onRetake={() => setPhotoData(null)}
+                        />
+                      </div>
+                    </div>
+                    <div className="order-1 lg:order-none">
+                      <label className="block text-sm font-semibold" htmlFor="desc">
+                        Short description
+                      </label>
+                      <textarea
+                        id="desc"
+                        rows={4}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        onFocus={(e) => {
+                          window.setTimeout(() => {
+                            e.target.scrollIntoView({ block: "center", behavior: "smooth" });
+                          }, 280);
+                        }}
+                        placeholder="e.g. Open manhole on Argwings Kodhek pedestrian verge, no barrier."
+                        className="mt-2 min-h-[6.5rem] w-full scroll-mb-28 rounded-card border border-civic-line bg-civic-surface px-3 py-3 text-base outline-none focus:border-civic-accent lg:min-h-[12rem] lg:text-sm"
+                      />
+                      <p className="mt-3 text-xs font-medium text-civic-muted">
+                        Detected location · {formatCoords(center.lat, center.lng)}
+                      </p>
+                      <p className="mt-2 text-xs text-civic-muted">
+                        Photo is recommended for stronger evidence but optional if the camera is unavailable.
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold" htmlFor="desc">
-                    Short description
-                  </label>
-                  <textarea
-                    id="desc"
-                    rows={4}
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    onFocus={(e) => {
-                      window.setTimeout(() => {
-                        e.target.scrollIntoView({ block: "center", behavior: "smooth" });
-                      }, 280);
-                    }}
-                    placeholder="e.g. Open manhole on Argwings Kodhek pedestrian verge, no barrier."
-                    className="mt-2 min-h-[6.5rem] w-full rounded-card border border-civic-line bg-civic-surface px-3 py-3 text-base outline-none focus:border-civic-accent lg:min-h-[12rem] lg:text-sm"
-                  />
-                  <p className="mt-3 text-xs font-medium text-civic-muted">
-                    Detected location · {formatCoords(center.lat, center.lng)}
-                  </p>
-                  <button
-                    type="button"
-                    disabled={!description.trim()}
-                    onClick={() => setStep(4)}
-                    className="mt-5 w-full rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-50"
-                  >
-                    Review
-                  </button>
-                  <p className="mt-2 text-xs text-civic-muted">
-                    Photo is recommended for stronger evidence but optional if the camera is unavailable.
-                  </p>
-                </div>
+                </section>
               </div>
-            </section>
+              <ReportStepFooter>
+                <button
+                  type="button"
+                  disabled={!description.trim()}
+                  onClick={() => setStep(4)}
+                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  Review
+                </button>
+              </ReportStepFooter>
+            </>
           ) : null}
 
           {step === 4 ? (
