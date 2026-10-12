@@ -103,7 +103,7 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="absolute inset-0 overflow-y-auto bg-civic-paper px-3 pb-36 pt-44 lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-36 pt-44 lg:hidden">
             {visible.length === 0 ? (
               <p className="text-sm font-medium text-civic-muted">
                 No reports match these filters.

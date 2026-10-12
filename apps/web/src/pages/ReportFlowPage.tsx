@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   MapContainer,
@@ -45,10 +45,15 @@ export function ReportFlowPage() {
   const [result, setResult] = useState<ReportResponse | null>(null);
 
   const selected = HAZARD_OPTIONS.find((o) => o.value === category);
+  const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
     if (coords) setCenter(coords);
   }, [coords]);
+
+  useEffect(() => {
+    formRef.current?.scrollTo({ top: 0 });
+  }, [step, result]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -76,8 +81,8 @@ export function ReportFlowPage() {
   }
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-civic-paper">
-      <header className="shrink-0 border-b border-civic-line bg-civic-surface">
+    <div className="flex h-full max-h-full w-full flex-col overflow-hidden bg-civic-paper">
+      <header className="shrink-0 border-b border-civic-line bg-civic-surface pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2.5 lg:px-6">
         <button
           type="button"
@@ -99,10 +104,16 @@ export function ReportFlowPage() {
       {result ? (
         <ResultState result={result} />
       ) : (
-        <form className="flex min-h-0 flex-1 flex-col" onSubmit={onSubmit}>
+        <form
+          ref={formRef}
+          className={`min-h-0 flex-1 um-scroll ${
+            step === 1 ? "flex flex-col lg:overflow-hidden" : ""
+          }`}
+          onSubmit={onSubmit}
+        >
           {step === 1 ? (
-            <section className="flex min-h-0 flex-1 flex-col lg:flex-row">
-              <div className="px-4 py-4 lg:hidden">
+            <section className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
+              <div className="px-4 pb-2 pt-4 lg:hidden">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                   1 · Location
                 </p>
@@ -113,7 +124,7 @@ export function ReportFlowPage() {
                   Pan the map so the crosshair sits on the hazard.
                 </p>
               </div>
-              <div className="relative min-h-[280px] flex-1">
+              <div className="relative h-[38svh] min-h-[200px] max-h-[280px] shrink-0 lg:h-auto lg:max-h-none lg:min-h-0 lg:flex-1">
                 <div className="absolute inset-0">
                 <MapContainer
                   center={[center.lat, center.lng]}
@@ -135,7 +146,7 @@ export function ReportFlowPage() {
                   <div className="relative um-crosshair" />
                 </div>
               </div>
-              <div className="space-y-3 border-t border-civic-line bg-civic-surface px-4 py-4 lg:w-[380px] lg:shrink-0 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
+              <div className="space-y-3 border-t border-civic-line bg-civic-surface px-4 py-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] lg:w-[380px] lg:shrink-0 lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
                 <div className="hidden lg:block">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                     1 · Location
@@ -181,7 +192,7 @@ export function ReportFlowPage() {
           ) : null}
 
           {step === 2 ? (
-            <section className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto px-4 py-4 lg:px-6 lg:py-8">
+            <section className="mx-auto w-full max-w-4xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                 2 · Hazard
               </p>
@@ -194,7 +205,7 @@ export function ReportFlowPage() {
                     key={opt.value}
                     type="button"
                     onClick={() => setCategory(opt.value)}
-                    className={`min-h-[7.5rem] rounded-card border p-4 text-left ${
+                    className={`min-h-[6.5rem] rounded-card border p-3 text-left lg:min-h-[7.5rem] lg:p-4 ${
                       category === opt.value
                         ? "border-civic-ink bg-civic-mist"
                         : "border-civic-line bg-civic-surface"
@@ -221,7 +232,7 @@ export function ReportFlowPage() {
           ) : null}
 
           {step === 3 ? (
-            <section className="mx-auto w-full max-w-5xl flex-1 overflow-y-auto px-4 py-4 lg:px-6 lg:py-8">
+            <section className="mx-auto w-full max-w-5xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                 3 · Evidence
               </p>
@@ -246,11 +257,16 @@ export function ReportFlowPage() {
                   </label>
                   <textarea
                     id="desc"
-                    rows={8}
+                    rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    onFocus={(e) => {
+                      window.setTimeout(() => {
+                        e.target.scrollIntoView({ block: "center", behavior: "smooth" });
+                      }, 280);
+                    }}
                     placeholder="e.g. Open manhole on Argwings Kodhek pedestrian verge, no barrier."
-                    className="mt-2 w-full rounded-card border border-civic-line bg-civic-surface px-3 py-3 text-sm outline-none focus:border-civic-accent"
+                    className="mt-2 min-h-[6.5rem] w-full rounded-card border border-civic-line bg-civic-surface px-3 py-3 text-base outline-none focus:border-civic-accent lg:min-h-[12rem] lg:text-sm"
                   />
                   <p className="mt-3 text-xs font-medium text-civic-muted">
                     Detected location · {formatCoords(center.lat, center.lng)}
@@ -272,7 +288,7 @@ export function ReportFlowPage() {
           ) : null}
 
           {step === 4 ? (
-            <section className="mx-auto w-full max-w-4xl flex-1 overflow-y-auto px-4 py-4 lg:px-6 lg:py-8">
+            <section className="mx-auto w-full max-w-4xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                 4 · Review
               </p>
@@ -354,7 +370,7 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
 function ResultState({ result }: { result: ReportResponse }) {
   const verified = result.is_verified;
   return (
-    <div className="um-enter mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-10 lg:max-w-xl lg:justify-center">
+    <div className="um-enter um-scroll mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:max-w-xl lg:justify-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
         5 · Submission
       </p>

@@ -90,7 +90,7 @@ export function ReportsPage() {
   }, [items, category, status, date, tab, coords, distance]);
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-8 lg:px-6 lg:py-6">
+    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-6">
       <div className="mb-4 flex items-end justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold tracking-tight lg:text-2xl">Reports</h1>

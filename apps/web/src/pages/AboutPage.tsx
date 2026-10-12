@@ -3,7 +3,7 @@ import { PipelineStrip } from "../components/ui/Pipeline";
 
 export function AboutPage() {
   return (
-    <article className="um-enter mx-auto w-full max-w-[960px] px-4 py-6 pb-10 lg:px-6 lg:py-10">
+    <article className="um-enter mx-auto w-full max-w-[960px] px-4 py-6 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-10">
       <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
         Kilimani · Nairobi City County
       </p>

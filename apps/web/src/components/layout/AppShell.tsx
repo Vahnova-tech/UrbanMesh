@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const online = useOnline();
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-civic-paper">
+    <div className="flex h-full max-h-full w-full flex-col overflow-hidden bg-civic-paper">
       {!online ? (
         <p
           role="status"
@@ -30,7 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TopBar />
       <main
         className={`relative min-h-0 flex-1 ${
-          fullBleed ? "overflow-hidden" : "overflow-y-auto"
+          fullBleed ? "overflow-hidden" : "um-scroll"
         }`}
       >
         {children}
@@ -54,7 +54,7 @@ function TopBar() {
   const { requestLocation, locating, coords, error } = useLocationState();
 
   return (
-    <header className="relative z-[2000] shrink-0 border-b border-civic-line bg-civic-surface">
+    <header className="relative z-[2000] shrink-0 border-b border-civic-line bg-civic-surface pt-[env(safe-area-inset-top)]">
       <div className="mx-auto flex w-full max-w-[1440px] items-center gap-4 px-4 py-2.5 lg:px-6">
         <Link to="/" aria-label="UrbanMesh home" className="shrink-0">
           <UrbanMeshLogo compact />

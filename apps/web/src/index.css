@@ -48,6 +48,8 @@ html,
 body,
 #root {
   height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow: hidden;
 }
 
@@ -55,6 +57,13 @@ body {
   margin: 0;
   background: var(--civic-paper);
   color: var(--civic-ink);
+}
+
+.um-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  scroll-padding-bottom: 8rem;
 }
 
 :focus-visible {

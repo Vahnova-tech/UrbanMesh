@@ -62,7 +62,7 @@ export function MyReportsPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-8 lg:px-6 lg:py-6">
+    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-6">
       <h1 className="text-xl font-semibold tracking-tight lg:text-2xl">My reports</h1>
       <p className="mt-1 text-sm leading-relaxed text-civic-muted">
         Stored on this device. No public profile — just the hazards you logged in Kilimani.

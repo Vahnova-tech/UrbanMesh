@@ -86,7 +86,7 @@ export function CameraCapture({
         <img
           src={photoData}
           alt="Captured hazard evidence"
-          className="max-h-56 w-full rounded-card object-cover lg:max-h-80"
+          className="max-h-44 w-full rounded-card object-cover lg:max-h-80"
         />
         <button
           type="button"
@@ -107,7 +107,7 @@ export function CameraCapture({
           playsInline
           muted
           autoPlay
-          className="h-56 w-full object-cover lg:h-80"
+          className="h-44 w-full object-cover lg:h-80"
         />
         {!ready && !error ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm font-medium text-civic-muted">
