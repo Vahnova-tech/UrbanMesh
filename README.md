@@ -51,7 +51,7 @@ I used **AI coding tools as a force multiplier**, not as the author of the produ
 | Self-verify rule (15 m / ≥3, same category) | Drafted Prisma `$queryRaw` / `ST_DWithin` ingest + clustering loops I then reviewed and hardened |
 | Citizen map & report UX | Accelerated React/Leaflet/Tailwind UI and multi-step report flow |
 | LPDP PDF pipeline | Generated HTML print templates + Puppeteer render script I edited for A4 / county tone |
-| Seed realism (Argwings, Dennis Pritt, Ngong, Kirichwa) | Helped expand corridor points and near-miss pairs for demos |
+| Honest empty start (no authored demo incidents) | Helped strip seed pins so the map only shows resident reports |
 | README / STATUS / roadmap | Kept documentation aligned with the actual codebase |
 
 ### Tools & workflow
@@ -155,14 +155,14 @@ On every `POST /api/v1/reports`:
    - `"Verified Cluster Created"`
    - `"Incident Logged - Pending Verification"`
 
-Seed data includes full clusters (A–D) and near-miss pairs (E–F) so demos can show verified heat **and** a live third report flipping verification.
+The database starts empty. Verification appears only after three same-category resident reports land within 15 metres.
 
 ---
 
 ## Prerequisites & local setup
 
 **Full requirements and step-by-step local run guide:** **[`LOCAL.md`](./LOCAL.md)**  
-(PostGIS / Docker, env files, `prisma db push` + seed, ports, smoke checks, common issues.)
+(PostGIS / Docker, env files, `prisma db push`, ports, smoke checks, common issues.)
 
 Quick checklist:
 
@@ -173,7 +173,7 @@ Quick checklist:
 ### Quick start (summary)
 
 1. Start PostGIS and copy `apps/api/.env.example` → `apps/api/.env`  
-2. `cd apps/api && npm install && npx prisma generate && npx prisma db push && npm run db:seed && npm run dev` → `:3001`  
+2. `cd apps/api && npm install && npx prisma generate && npx prisma db push && npm run dev` → `:3001`  
 3. `cd apps/web && npm install && npm run dev` → `:5173`  
 4. `cd apps/dashboard && npm install && npm run dev` → `:5174`  
 
@@ -221,9 +221,9 @@ Base URL: `http://localhost:3001`
 
 Punchy path (aim ≤ 2–3 minutes on camera):
 
-1. Seed API + open the **mobile PWA map**  
-2. Drop a geotagged hazard on **Argwings Kodhek** (near a near-miss pair)  
-3. Show **Verified Cluster Created** when the 15 m / ≥3 rule fires  
+1. Open the **citizen map** (empty until someone reports)  
+2. File three same-category geotagged hazards within 15 m on **Argwings Kodhek**  
+3. Show **Verified Cluster Created** when the rule fires  
 4. County dashboard → **Generate LPDP PDF** → download the structured brief  
 
 ---

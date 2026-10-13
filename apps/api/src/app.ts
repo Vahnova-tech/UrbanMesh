@@ -67,7 +67,7 @@ export function createApp() {
         message.includes("P1001");
       res.status(dbMissing ? 503 : 500).json({
         error: dbMissing
-          ? "UrbanMesh cannot reach PostgreSQL. Start Postgres with PostGIS, then in apps/api run npx prisma migrate dev and npm run db:seed."
+          ? "UrbanMesh cannot reach PostgreSQL. Start Postgres with PostGIS, then in apps/api run npx prisma db push."
           : "Something went wrong on the UrbanMesh API.",
       });
     },

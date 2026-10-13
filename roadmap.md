@@ -17,7 +17,7 @@ The 90-day plan below is **not** a build-from-zero backlog. The demo stack alrea
 | Citizen report form + GPS + live H3 cells | Installable PWA, map-pin fallback, offline cache |
 | PostGIS 15 m / ≥3 self-verify (env-configurable) | Threshold tuned on real corridor density |
 | County dashboard + LPDP PDF | Named LPDP desk access, official ward polygons |
-| 53-point Kilimani seed + demo script | Real resident reports on two corridors |
+| Empty incidents table (no authored demo reports) | Real resident reports on two corridors |
 | — | KCF hosting, reporter cohort, moderation, runbook |
 
 Phase 1 is **harden + partner**. Phase 2 is **live usage**. Phase 3 is **validate + handover**.
@@ -33,7 +33,7 @@ This plan turns the MVP into a supervised, real-world pilot across two of Kilima
 | **Argwings Kodhek Road** | Mobility & surface damage |
 | **Kirichwa Kubwa river corridor** | Sewer, sanitation & environmental hazards |
 
-These corridors already anchor the seed data and demo flow, giving Day 1 of the pilot a running start rather than a cold launch.
+These corridors already have named map geometry and copy, so Day 1 of the pilot is a cold launch on real reports rather than authored pins.
 
 | Phase | Days | Owning question |
 | --- | --- | --- |

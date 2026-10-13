@@ -99,7 +99,6 @@ cd apps/api
 npm install
 npx prisma generate
 npx prisma db push          # apply schema (no checked-in migrations folder yet)
-npm run db:seed             # Kilimani corridors + verified clusters A–D
 npm run dev                 # http://localhost:3001
 ```
 
@@ -146,8 +145,8 @@ npm run dev:dashboard
 
 ## Verify the core loop
 
-1. Open http://localhost:5173 — map should show verified + pending seed pins.  
-2. **Report a hazard** near a seed near-miss corridor (e.g. Argwings Kodhek).  
+1. Open http://localhost:5173 — the map is empty until a resident reports.  
+2. **Report a hazard** on Argwings Kodhek (or any Kilimani pin).  
 3. Confirm API clustering: third same-category report within 15 m → verified.  
 4. Open http://localhost:5174 — Overview / Live Map / Analytics should show metrics.  
 5. **Policy Briefs** or LPDP Evidence → **Generate LPDP Brief** → download PDF.
@@ -163,7 +162,7 @@ Demo video of the loop: [`demo/UrbanMesh-demo.mp4`](./demo/UrbanMesh-demo.mp4).
 | API fails on start / Prisma connection error | Postgres not running, wrong `DATABASE_URL`, or PostGIS extension missing |
 | `ST_DWithin` / raw SQL errors | Run `CREATE EXTENSION postgis;` on the database |
 | Frontends load but empty map / API errors | Start API on `:3001`; check CORS and proxy |
-| `prisma migrate dev` fails | Use `npx prisma db push` — this repo ships schema + seed, not a migrations history |
+| `prisma migrate dev` fails | Use `npx prisma db push` — this repo ships schema, not a migrations history |
 | GPS / “Could not read GPS” | Browser blocked location; report flow still works by panning the map crosshair |
 | LPDP generate fails | Puppeteer/Chromium deps missing; retry after install or run `npm run generate:lpdp` in `apps/api` |
 | Photo step blocked | Photo is optional — description alone is enough to reach Review |
@@ -174,7 +173,7 @@ Demo video of the loop: [`demo/UrbanMesh-demo.mp4`](./demo/UrbanMesh-demo.mp4).
 
 | Piece | Required? |
 | --- | --- |
-| PostGIS + API + seed | **Yes** — without these the UIs have no evidence |
+| PostGIS + API | **Yes** — without these the UIs have no live reports |
 | Citizen PWA (`apps/web`) | **Yes** for reporting / heatmap |
 | County dashboard | **Yes** for metrics / LPDP |
 | Real GPS outdoors | Optional — map pin works |

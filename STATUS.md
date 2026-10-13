@@ -12,9 +12,9 @@ UrbanMesh is a three-app prototype for Kilimani walkability & safety intelligenc
 
 | Question | Answer |
 | --- | --- |
-| Can we run the end-to-end demo? | **Yes** — seed + PWA report + heatmap + dashboard + LPDP PDF |
+| Can we run the end-to-end demo? | **Yes** — PWA report + heatmap + dashboard + LPDP PDF (map starts empty) |
 | Can residents use it unsupervised on the street? | **Not yet** — rate limiting stubbed; moderation and installable PWA hardening remain |
-| Can the county treat output as operational evidence? | **Not yet** — seed-backed demo data, approximate ward boxes, no named LPDP desk access |
+| Can the county treat output as operational evidence? | **Not yet** — empty until real reports, approximate ward boxes, no named LPDP desk access |
 | What is the next product job? | Harden the reporting path (Phase 1), then put real Kilimani reporters on Argwings Kodhek and Kirichwa Kubwa |
 
 ---
@@ -27,7 +27,7 @@ UrbanMesh is a three-app prototype for Kilimani walkability & safety intelligenc
 | County dashboard (`apps/dashboard`) | `:5174` | Overview, live map, clusters, analytics, LPDP evidence workspace |
 | API (`apps/api`) | `:3001` | Report ingest + PostGIS clustering, verified listings, metrics, LPDP generate + download |
 | Database | Postgres + PostGIS | `incidents` table, six hazard categories, `is_verified` / `cluster_id` |
-| Seed | `npm run db:seed` | 53 Kilimani points; clusters A–D auto-verify; near-miss pairs E–F |
+| Seed | `npm run db:seed` | Clears `incidents` — no authored demo reports |
 
 **Self-verifying rule (live):** same category, `ST_DWithin` on geography, default **≥ 3 reports within 15 m**. Env-configurable via `CLUSTER_RADIUS_METERS` / `CLUSTER_THRESHOLD`.
 
@@ -44,7 +44,7 @@ UrbanMesh is a three-app prototype for Kilimani walkability & safety intelligenc
 | Verified heatmap | **Shipped** | Leaflet.heat |
 | Ward / category metrics | **Shipped** | Approximate bbox “wards” |
 | LPDP A4 PDF | **Shipped** | Puppeteer HTML → PDF |
-| Kilimani seed + demo script | **Shipped** | Argwings, Dennis Pritt, Ngong, Kirichwa |
+| Authored demo incidents | **Removed** | Map and LPDP stay empty until residents report |
 | Photo upload | **Shipped** | `POST /api/v1/uploads/photos` |
 | CORS | **Shipped** | `CORS_ORIGINS` |
 | Low-bandwidth PWA posture | **Partial** | Lazy map; manifest present; no service worker yet |
@@ -59,11 +59,11 @@ UrbanMesh is a three-app prototype for Kilimani walkability & safety intelligenc
 
 Current end-to-end contract:
 
-1. Seed DB → verified clusters A–D on the heatmap  
-2. Report near an Argwings near-miss pair → `Verified Cluster Created`  
+1. File three same-category reports within 15 m  
+2. Heatmap shows the new verified cluster  
 3. Dashboard metrics + **Generate LPDP PDF**  
 
-The 90-day pilot still needs partners (KCF, county LPDP desk), a reporter cohort, and Phase 1 hardening. Do not treat seed clusters as live citizen evidence.
+The 90-day pilot still needs partners (KCF, county LPDP desk), a reporter cohort, and Phase 1 hardening.
 
 ---
 

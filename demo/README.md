@@ -9,4 +9,4 @@
 2. **5–25s** — Report flow (pin → hazard → evidence → review → submitted)  
 3. **25–55s** — Verified clusters, About, county overview, live map, analytics, LPDP evidence, policy briefs  
 
-Captured against a live API with Kilimani seed data (verified clusters + pending reports).
+Captured against a live API. The product no longer ships authored demo incidents.
