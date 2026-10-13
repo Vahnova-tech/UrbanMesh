@@ -48,6 +48,7 @@ Then open http://localhost:3001 and http://localhost:3001/planner.
 
 | Symptom | Fix |
 | --- | --- |
+| `DATABASE_URL is missing` | The web service was deployed without the Postgres link. Create **urbanmesh-db** (Postgres 16), then on the web service → **Environment** → **Add from database** → Internal Database URL as `DATABASE_URL`. Redeploy. Blueprint deploy (`New → Blueprint`) wires this automatically. |
 | `CREATE EXTENSION postgis` | Confirm the Render Postgres version is 13+ and the instance is not an old Starter PG12 |
 | Prisma cannot reach the database | `DATABASE_URL` must be the Render connection string (blueprint wires this) |
 | LPDP generate 503 | Chromium missing or out of memory — stay on starter or larger |

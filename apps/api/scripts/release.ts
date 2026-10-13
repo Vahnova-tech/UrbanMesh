@@ -9,7 +9,9 @@ import { prisma } from "../src/lib/prisma.js";
 
 async function main() {
   if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required to release UrbanMesh.");
+    throw new Error(
+      "DATABASE_URL is missing. In Render: urbanmesh → Environment → Add from database (urbanmesh-db Internal Database URL), or redeploy via Blueprint so render.yaml can wire it.",
+    );
   }
 
   mkdirSync(env.photoStoragePath, { recursive: true });

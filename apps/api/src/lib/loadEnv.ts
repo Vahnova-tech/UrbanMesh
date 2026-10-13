@@ -12,6 +12,18 @@ if (existsSync(envPath)) {
   loadEnvFile(envPath);
 }
 
+const DATABASE_ALIASES = [
+  "DATABASE_URL",
+  "DATABASE_PRIVATE_URL",
+  "POSTGRES_URL",
+  "POSTGRES_CONNECTION_STRING",
+] as const;
+
+const alias = DATABASE_ALIASES.find((key) => process.env[key]);
+if (alias && alias !== "DATABASE_URL") {
+  process.env.DATABASE_URL = process.env[alias];
+}
+
 /** Render Postgres requires TLS. Internal URLs often omit sslmode. */
 const databaseUrl = process.env.DATABASE_URL;
 if (
