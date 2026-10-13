@@ -4,7 +4,9 @@ const API_UNAVAILABLE =
 export const config = { maxDuration: 30 };
 
 export default async function handler(req, res) {
-  const origin = (process.env.API_ORIGIN ?? "").replace(/\/$/, "");
+  const origin = (
+    process.env.API_ORIGIN ?? "https://urbanmesh-vitx.onrender.com"
+  ).replace(/\/$/, "");
   if (!origin) {
     res.status(503).json({ error: API_UNAVAILABLE });
     return;

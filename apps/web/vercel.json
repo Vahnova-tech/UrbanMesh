@@ -1,9 +1,16 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "env": {
+    "API_ORIGIN": "https://urbanmesh-vitx.onrender.com"
+  },
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://urbanmesh-vitx.onrender.com/api/:path*"
+    },
+    {
       "source": "/uploads/:path*",
-      "destination": "/api/__file/uploads/:path*"
+      "destination": "https://urbanmesh-vitx.onrender.com/uploads/:path*"
     },
     {
       "source": "/((?!assets/|icons/|api/|uploads/|sw\\.js|manifest\\.webmanifest|favicon\\.svg).*)",
