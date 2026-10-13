@@ -110,7 +110,7 @@ export function ReportFlowPage() {
         >
           {step === 1 ? (
             <section className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
-              <div className="shrink-0 px-4 pb-2 pt-3 lg:hidden">
+              <div className="shrink-0 px-4 pb-2 pt-3 lg:hidden [@media(max-height:560px)]:hidden">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
                   1 · Location
                 </p>
@@ -136,6 +136,7 @@ export function ReportFlowPage() {
                     attribution={tiles.attribution}
                   />
                   <MoveTracker onMove={setCenter} />
+                  <InvalidateSize />
                   {coords ? <FlyTo lat={coords.lat} lng={coords.lng} /> : null}
                 </MapContainer>
                 </div>
@@ -164,26 +165,28 @@ export function ReportFlowPage() {
                 {locating ? (
                   <p className="text-sm text-civic-muted">Reading GPS…</p>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => {
-                    requestLocation();
-                    if (coords) setCenter(coords);
-                  }}
-                  className="w-full min-h-12 rounded-card border border-civic-line py-3 text-sm font-semibold"
-                >
-                  {locating ? "Locating…" : "Use my location"}
-                </button>
                 {locationError ? (
                   <p className="text-sm font-semibold text-civic-critical">{locationError}</p>
                 ) : null}
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white"
-                >
-                  Confirm location
-                </button>
+                <div className="grid grid-cols-2 gap-2 lg:grid-cols-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      requestLocation();
+                      if (coords) setCenter(coords);
+                    }}
+                    className="w-full min-h-12 rounded-card border border-civic-line py-3 text-sm font-semibold"
+                  >
+                    {locating ? "Locating…" : "Use my location"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white"
+                  >
+                    Confirm location
+                  </button>
+                </div>
               </div>
             </section>
           ) : null}
@@ -297,56 +300,62 @@ export function ReportFlowPage() {
           ) : null}
 
           {step === 4 ? (
-            <section className="mx-auto w-full max-w-4xl px-4 py-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                4 · Review
-              </p>
-              <h1 className="mt-1 text-xl font-semibold tracking-tight">Review and submit</h1>
-              <dl className="mt-4 grid gap-4 rounded-card border border-civic-line bg-civic-surface p-4 text-sm lg:grid-cols-2">
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                    Location
-                  </dt>
-                  <dd className="mt-1 font-medium">{formatCoords(center.lat, center.lng)}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                    Hazard
-                  </dt>
-                  <dd className="mt-1 font-medium">{selected?.label}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                    Evidence
-                  </dt>
-                  <dd className="mt-1 font-medium">{description}</dd>
-                </div>
-                <div className="lg:row-span-3">
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                    Photo
-                  </dt>
-                  <dd className="mt-1">
-                    {photoData ? (
-                      <img
-                        src={photoData}
-                        alt="Captured hazard evidence"
-                        className="max-h-40 w-full rounded-card object-cover lg:max-h-72"
-                      />
-                    ) : (
-                      <span className="font-medium">Not taken</span>
-                    )}
-                  </dd>
-                </div>
-              </dl>
-              {error ? <div className="mt-3"><ErrorBanner message={error} /></div> : null}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-5 w-full rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-60"
-              >
-                {submitting ? "Sending…" : "Submit report"}
-              </button>
-            </section>
+            <>
+              <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
+                <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+                    4 · Review
+                  </p>
+                  <h1 className="mt-1 text-xl font-semibold tracking-tight">Review and submit</h1>
+                  <dl className="mt-4 grid gap-4 rounded-card border border-civic-line bg-civic-surface p-4 text-sm lg:grid-cols-2">
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
+                        Location
+                      </dt>
+                      <dd className="mt-1 font-medium">{formatCoords(center.lat, center.lng)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
+                        Hazard
+                      </dt>
+                      <dd className="mt-1 font-medium">{selected?.label}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
+                        Evidence
+                      </dt>
+                      <dd className="mt-1 font-medium">{description}</dd>
+                    </div>
+                    <div className="lg:row-span-3">
+                      <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
+                        Photo
+                      </dt>
+                      <dd className="mt-1">
+                        {photoData ? (
+                          <img
+                            src={photoData}
+                            alt="Captured hazard evidence"
+                            className="max-h-40 w-full rounded-card object-cover lg:max-h-72"
+                          />
+                        ) : (
+                          <span className="font-medium">Not taken</span>
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                  {error ? <div className="mt-3"><ErrorBanner message={error} /></div> : null}
+                </section>
+              </div>
+              <ReportStepFooter>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {submitting ? "Sending…" : "Submit report"}
+                </button>
+              </ReportStepFooter>
+            </>
           ) : null}
         </form>
       )}
@@ -368,6 +377,20 @@ function MoveTracker({
   return null;
 }
 
+function InvalidateSize() {
+  const map = useMap();
+  useEffect(() => {
+    const refresh = () => map.invalidateSize();
+    const timer = window.setTimeout(refresh, 80);
+    window.addEventListener("resize", refresh);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("resize", refresh);
+    };
+  }, [map]);
+  return null;
+}
+
 function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
@@ -376,10 +399,18 @@ function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   return null;
 }
 
+function ReportStepFooter({ children }: { children: ReactNode }) {
+  return (
+    <div className="shrink-0 border-t border-civic-line bg-civic-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:px-6">
+      <div className="mx-auto w-full max-w-4xl">{children}</div>
+    </div>
+  );
+}
+
 function ResultState({ result }: { result: ReportResponse }) {
   const verified = result.is_verified;
   return (
-    <div className="um-enter um-scroll mx-auto flex w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:max-w-xl lg:justify-center">
+    <div className="um-enter um-scroll mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:max-w-xl lg:justify-center">
       <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
         5 · Submission
       </p>

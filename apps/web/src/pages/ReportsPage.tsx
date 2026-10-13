@@ -124,11 +124,11 @@ export function ReportsPage() {
         ))}
       </div>
 
-      <div className="mb-4 flex gap-2 overflow-x-auto lg:flex-wrap">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold"
+          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
         >
           <option value="all">Category</option>
           {HAZARD_OPTIONS.map((opt) => (
@@ -140,7 +140,7 @@ export function ReportsPage() {
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold"
+          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
         >
           <option value="all">Status</option>
           <option value="verified">Verified</option>
@@ -149,7 +149,7 @@ export function ReportsPage() {
         <select
           value={distance}
           onChange={(e) => setDistance(Number(e.target.value))}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold"
+          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
         >
           {DISTANCES.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -160,7 +160,7 @@ export function ReportsPage() {
         <select
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold"
+          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
         >
           {DATES.map((opt) => (
             <option key={opt.value} value={opt.value}>

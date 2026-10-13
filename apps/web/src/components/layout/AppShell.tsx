@@ -91,7 +91,10 @@ function TopBar() {
             aria-label={coords ? "Refresh location" : "Use current location"}
             className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-3 text-xs font-semibold text-civic-slate"
           >
-            {locating ? "Locating…" : coords ? "Kilimani · Located" : "Location"}
+            <span className="md:hidden">{locating ? "…" : coords ? "Located" : "Locate"}</span>
+            <span className="hidden md:inline">
+              {locating ? "Locating…" : coords ? "Kilimani · Located" : "Location"}
+            </span>
           </button>
           <ThemeToggle />
         </div>

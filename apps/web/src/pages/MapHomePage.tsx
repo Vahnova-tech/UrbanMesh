@@ -103,7 +103,7 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-36 pt-44 lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-44 lg:hidden">
             {visible.length === 0 ? (
               <p className="text-sm font-medium text-civic-muted">
                 No reports match these filters.
@@ -256,7 +256,7 @@ function MapFilters({
           onChange={(e) => onQuery(e.target.value)}
           placeholder="Search Kilimani streets"
           aria-label="Search Kilimani streets"
-          className="w-full rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 text-sm shadow-card outline-none focus:border-civic-accent lg:shadow-none"
+          className="w-full rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 text-base shadow-card outline-none focus:border-civic-accent lg:text-sm lg:shadow-none"
         />
         {suggestions.length > 0 ? (
           <ul className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-card border border-civic-line bg-civic-surface shadow-card">
