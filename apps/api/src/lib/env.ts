@@ -1,9 +1,7 @@
 import "./loadEnv.js";
 
 /**
- * Runtime config aligned with roadmap.md:
- * - Wk 1–2: photo storage + rate limiting (pilot hardening)
- * - Wk 6 / risks: clustering radius & report count must be configurable
+ * Runtime config. Render injects PORT, DATABASE_URL, and RENDER_EXTERNAL_URL.
  */
 
 function intEnv(name: string, fallback: number): number {
@@ -13,30 +11,48 @@ function intEnv(name: string, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+function csvEnv(...parts: Array<string | undefined>): string {
+  const seen = new Set<string>();
+  const values: string[] = [];
+  for (const part of parts) {
+    if (!part) continue;
+    for (const item of part.split(",")) {
+      const origin = item.trim().replace(/\/$/, "");
+      if (!origin || seen.has(origin)) continue;
+      seen.add(origin);
+      values.push(origin);
+    }
+  }
+  return values.join(",");
+}
+
 export const env = {
   port: intEnv("PORT", 3001),
+  /** Render and Docker must bind all interfaces. */
+  host: process.env.HOST ?? "0.0.0.0",
   databaseUrl: process.env.DATABASE_URL ?? "",
 
-  /** Same-category reports needed to auto-verify (roadmap default: 3). */
   clusterThreshold: intEnv("CLUSTER_THRESHOLD", 3),
-  /** ST_DWithin radius in metres (roadmap default: 15). */
   clusterRadiusMeters: intEnv("CLUSTER_RADIUS_METERS", 15),
 
-  /** Local photo directory served at /uploads/photos. */
   photoStoragePath: process.env.PHOTO_STORAGE_PATH ?? "./storage/photos",
   photoPublicBaseUrl: process.env.PHOTO_PUBLIC_BASE_URL ?? "",
 
-  /** Applied to POST /uploads/photos and POST /reports. */
   rateLimitWindowMs: intEnv("RATE_LIMIT_WINDOW_MS", 60_000),
   rateLimitMaxReports: intEnv("RATE_LIMIT_MAX_REPORTS", 10),
 
-  /** LPDP PDF output directory (relative to apps/api cwd unless absolute). */
   lpdpStorageDir: process.env.LPDP_STORAGE_DIR ?? "./storage/lpdp",
+  puppeteerExecutablePath: process.env.PUPPETEER_EXECUTABLE_PATH ?? "",
 
-  /** Comma-separated browser origins allowed to call the API (PWA + dashboard). */
-  corsOrigins:
-    process.env.CORS_ORIGINS ??
-    "http://localhost:5173,http://localhost:5174",
+  webDist: process.env.WEB_DIST ?? "",
+  dashboardDist: process.env.DASHBOARD_DIST ?? "",
+
+  corsOrigins: csvEnv(
+    process.env.CORS_ORIGINS,
+    process.env.RENDER_EXTERNAL_URL,
+    "http://localhost:5173",
+    "http://localhost:5174",
+  ),
 
   nodeEnv: process.env.NODE_ENV ?? "development",
 };

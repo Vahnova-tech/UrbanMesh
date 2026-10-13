@@ -12,9 +12,11 @@ import { lpdpRouter } from "./modules/reports/lpdp.routes.js";
 import { clustersRouter } from "./modules/clusters/clusters.routes.js";
 import { uploadsRouter } from "./modules/uploads/uploads.routes.js";
 import { metaRouter } from "./modules/meta/meta.routes.js";
+import { mountFrontends } from "./lib/serveFrontends.js";
 
 export function createApp() {
   const app = express();
+  app.set("trust proxy", 1);
 
   app.use((req: Request, res: Response, next: NextFunction) => {
     const allowed = env.corsOrigins
@@ -61,6 +63,8 @@ export function createApp() {
   app.use("/api", (_req: Request, res: Response) => {
     res.status(404).json({ error: "That UrbanMesh endpoint does not exist." });
   });
+
+  mountFrontends(app);
 
   app.use(
     (err: unknown, _req: Request, res: Response, _next: NextFunction) => {

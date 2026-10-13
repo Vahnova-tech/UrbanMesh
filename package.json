@@ -1,7 +1,7 @@
 {
   "name": "urbanmesh",
   "private": true,
-  "description": "UrbanMesh monorepo — set Vercel Root Directory to apps/web (or use root vercel.json).",
+  "description": "UrbanMesh monorepo — Render blueprint in render.yaml; Vercel static hosting still works for apps/web.",
   "scripts": {
     "dev:web": "npm run dev --prefix apps/web",
     "build:web": "npm run build --prefix apps/web",

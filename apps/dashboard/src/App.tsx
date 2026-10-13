@@ -10,10 +10,15 @@ import { EvidencePage } from "./pages/EvidencePage";
 import { BriefsPage } from "./pages/BriefsPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
+const basename =
+  import.meta.env.BASE_URL === "/"
+    ? undefined
+    : import.meta.env.BASE_URL.replace(/\/$/, "");
+
 export default function App() {
   return (
     <ThemeProvider>
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <Routes>
         <Route element={<PlannerShell />}>
           <Route path="/" element={<OverviewPage />} />

@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import puppeteer from "puppeteer";
+import { env } from "../../lib/env.js";
 import { HttpError } from "../../lib/httpError.js";
 import {
   listVerifiedClusters,
@@ -8,10 +9,9 @@ import {
 } from "../clusters/clusters.service.js";
 
 /**
- * Predictable on-disk path (run API scripts from apps/api).
- * Frontend downloads via {@link LPDP_DOWNLOAD_URL}.
+ * On Render this is the attached disk (`LPDP_STORAGE_DIR=/var/data/lpdp`).
  */
-export const LPDP_STORAGE_DIR = path.resolve(process.cwd(), "storage/lpdp");
+export const LPDP_STORAGE_DIR = path.resolve(env.lpdpStorageDir);
 export const LPDP_PDF_FILENAME = "UrbanMesh-LPDP-Policy-Brief.pdf";
 export const LPDP_PDF_PATH = path.join(LPDP_STORAGE_DIR, LPDP_PDF_FILENAME);
 /** Stable public download URL served by Express. */
@@ -196,7 +196,12 @@ export async function generateLpdpPdf(
   try {
     const browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: env.puppeteerExecutablePath || undefined,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+      ],
     });
 
     try {

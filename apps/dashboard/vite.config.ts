@@ -28,6 +28,7 @@ const proxy = {
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.VITE_BASE || "/",
   server: {
     port: 5174,
     proxy,

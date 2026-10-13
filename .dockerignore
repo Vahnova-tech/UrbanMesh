@@ -1,0 +1,16 @@
+.git
+.pgdata
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+demo/frames
+demo/frames2
+apps/api/storage/photos/*
+!apps/api/storage/photos/.gitkeep
+apps/api/storage/lpdp/*.pdf
+*.log
+.cursor
+canvases
