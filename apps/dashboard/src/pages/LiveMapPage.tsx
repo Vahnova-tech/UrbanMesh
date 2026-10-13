@@ -10,7 +10,7 @@ import {
 } from "../lib/api";
 import { addEvidenceCluster } from "../lib/evidenceStore";
 import { formatCoords, formatWhen } from "../lib/format";
-import { EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
+import { ErrorNotice, EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
 import {
   DEFAULT_LAYERS,
   PlannerMap,
@@ -36,16 +36,28 @@ export function LiveMapPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [category, setCategory] = useState("all");
   const [days, setDays] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    void Promise.all([fetchReports(), fetchClusters(), fetchMeta()]).then(
-      ([reports, cls, platform]) => {
+    let cancelled = false;
+    void Promise.all([fetchReports(), fetchClusters(), fetchMeta()])
+      .then(([reports, cls, platform]) => {
+        if (cancelled) return;
         setIncidents(reports);
         setClusters(cls);
         setMeta(platform);
-      },
-    );
-  }, []);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load the live map. Try again.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   const cutoff =
     days === "all" ? 0 : Date.now() - Number(days) * 24 * 60 * 60 * 1000;
@@ -78,6 +90,14 @@ export function LiveMapPage() {
 
   function toggle(key: keyof MapLayers) {
     setLayers((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+      </div>
+    );
   }
 
   return (

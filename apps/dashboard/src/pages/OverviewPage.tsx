@@ -22,7 +22,7 @@ import {
   type SpatialCluster,
 } from "../lib/api";
 import { MONTH_LABEL } from "../lib/format";
-import { Panel, PipelineStrip, Skeleton, StatCard, StatusBadge } from "../components/ui/Primitives";
+import { ErrorNotice, Panel, PipelineStrip, Skeleton, StatCard, StatusBadge } from "../components/ui/Primitives";
 import { DEFAULT_LAYERS, PlannerMap } from "../components/map/PlannerMap";
 import { useChartColors } from "../lib/theme";
 
@@ -33,8 +33,10 @@ export function OverviewPage() {
   const [clusters, setClusters] = useState<SpatialCluster[]>([]);
   const [meta, setMeta] = useState<PlatformMeta | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     Promise.all([
       fetchDashboardMetrics(),
       fetchReports({ status: "all" }),
@@ -42,18 +44,29 @@ export function OverviewPage() {
       fetchMeta(),
     ])
       .then(([m, reports, cls, platform]) => {
+        if (cancelled) return;
         setMetrics(m);
         setIncidents(reports);
         setClusters(cls);
         setMeta(platform);
+        setError(null);
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Could not load overview.");
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load the overview. Try again.");
+        }
       });
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   if (error) {
-    return <p className="p-6 text-sm font-semibold text-civic-critical">{error}</p>;
+    return (
+      <div className="p-6">
+        <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+      </div>
+    );
   }
   if (!metrics) {
     return (

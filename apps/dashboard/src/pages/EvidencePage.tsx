@@ -9,7 +9,7 @@ import {
 } from "../lib/api";
 import { loadEvidenceSelection, saveEvidenceSelection } from "../lib/evidenceStore";
 import { formatCoords, MONTH_LABEL } from "../lib/format";
-import { EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
+import { ErrorNotice, EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
 
 export function EvidencePage() {
   const [clusters, setClusters] = useState<SpatialCluster[]>([]);
@@ -18,16 +18,31 @@ export function EvidencePage() {
   const [generating, setGenerating] = useState(false);
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [generateError, setGenerateError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    void Promise.all([fetchClusters(), fetchReports()]).then(([rows, reports]) => {
-      setClusters(rows);
-      setIncidents(reports);
-      const stored = loadEvidenceSelection();
-      const valid = stored?.filter((id) => rows.some((row) => row.cluster_id === id));
-      setSelected(valid && valid.length > 0 ? valid : rows.map((r) => r.cluster_id));
-    });
-  }, []);
+    let cancelled = false;
+    void Promise.all([fetchClusters(), fetchReports()])
+      .then(([rows, reports]) => {
+        if (cancelled) return;
+        setClusters(rows);
+        setIncidents(reports);
+        const stored = loadEvidenceSelection();
+        const valid = stored?.filter((id) => rows.some((row) => row.cluster_id === id));
+        setSelected(valid && valid.length > 0 ? valid : rows.map((r) => r.cluster_id));
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load evidence. Try again.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, SpatialCluster[]>();
@@ -44,6 +59,7 @@ export function EvidencePage() {
   async function onGenerate() {
     setGenerating(true);
     setMessage(null);
+    setGenerateError(null);
     try {
       const result = await generateLpdpBrief(selected);
       setReady(true);
@@ -51,7 +67,9 @@ export function EvidencePage() {
         `Brief ready — ${result.cluster_count} verified cluster${result.cluster_count === 1 ? "" : "s"} compiled.`,
       );
     } catch (err) {
-      setMessage(err instanceof Error ? err.message : "Could not generate brief.");
+      setGenerateError(
+        err instanceof Error ? err.message : "Couldn't compile the LPDP brief. Try again.",
+      );
     } finally {
       setGenerating(false);
     }
@@ -86,6 +104,11 @@ export function EvidencePage() {
           {generating ? "Generating brief…" : "Generate LPDP Brief"}
         </button>
       </header>
+      {error ? (
+        <div className="mb-4">
+          <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+        </div>
+      ) : null}
 
       <div className="mb-6 grid grid-cols-3 gap-3">
         <StatCard label="Verified clusters" value={clusters.length} />
@@ -102,6 +125,11 @@ export function EvidencePage() {
         </div>
       ) : null}
 
+      {generateError ? (
+        <div className="mb-4">
+          <ErrorNotice message={generateError} onRetry={() => void onGenerate()} />
+        </div>
+      ) : null}
       {message ? (
         <p className="mb-4 text-sm font-medium text-civic-accentDark">{message}</p>
       ) : null}

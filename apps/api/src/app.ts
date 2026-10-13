@@ -64,7 +64,10 @@ export function createApp() {
 
   app.use(
     (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
-      if (res.headersSent) return;
+      if (res.headersSent) {
+        _next(err);
+        return;
+      }
       const syntax =
         err instanceof SyntaxError ||
         (err && typeof err === "object" && "type" in err && (err as { type?: string }).type === "entity.parse.failed");

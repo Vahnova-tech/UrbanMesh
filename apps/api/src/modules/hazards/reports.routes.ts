@@ -192,7 +192,7 @@ reportsRouter.post(
       }
 
       if (typeof h3_index !== "string" || h3_index.trim().length === 0) {
-        res.status(400).json({ error: "h3_index is required" });
+        res.status(400).json({ error: "Location could not be indexed. Move the map pin and try again." });
         return;
       }
 

@@ -1,6 +1,7 @@
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
 import puppeteer from "puppeteer";
+import { HttpError } from "../../lib/httpError.js";
 import {
   listVerifiedClusters,
   type SpatialCluster,
@@ -192,22 +193,30 @@ export async function generateLpdpPdf(
 
   await mkdir(LPDP_STORAGE_DIR, { recursive: true });
 
-  const browser = await puppeteer.launch({
-    headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-
   try {
-    const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "load" });
-    await page.pdf({
-      path: LPDP_PDF_PATH,
-      format: "A4",
-      printBackground: true,
-      margin: { top: "16mm", right: "14mm", bottom: "16mm", left: "14mm" },
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
-  } finally {
-    await browser.close();
+
+    try {
+      const page = await browser.newPage();
+      await page.setContent(html, { waitUntil: "load" });
+      await page.pdf({
+        path: LPDP_PDF_PATH,
+        format: "A4",
+        printBackground: true,
+        margin: { top: "16mm", right: "14mm", bottom: "16mm", left: "14mm" },
+      });
+    } finally {
+      await browser.close();
+    }
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    throw new HttpError(
+      503,
+      "Couldn't generate the LPDP brief. Check Chromium is available, then try again.",
+    );
   }
 
   return {

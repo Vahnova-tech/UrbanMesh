@@ -28,16 +28,22 @@ export function HazardDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [shareError, setShareError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
         const evidence = await fetchEvidence(id);
-        if (!cancelled) setData(evidence);
+        if (!cancelled) {
+          setData(evidence);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Report not found.");
+          setError(err instanceof Error ? err.message : "This report is not on UrbanMesh.");
         }
       }
     }
@@ -45,7 +51,7 @@ export function HazardDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, reload]);
 
   const timeline = useMemo(() => {
     if (!data) return [];
@@ -66,6 +72,8 @@ export function HazardDetailPage() {
   async function onConfirm() {
     setConfirming(true);
     setConfirmMessage(null);
+    setConfirmError(null);
+    setShareError(null);
     try {
       const result = await confirmHazard(id);
       rememberMyReport(result.incident_id);
@@ -76,8 +84,8 @@ export function HazardDetailPage() {
       );
       setData(await fetchEvidence(id));
     } catch (err) {
-      setConfirmMessage(
-        err instanceof Error ? err.message : "Could not add your confirmation.",
+      setConfirmError(
+        err instanceof Error ? err.message : "Couldn't add your confirmation. Try again.",
       );
     } finally {
       setConfirming(false);
@@ -86,22 +94,33 @@ export function HazardDetailPage() {
 
   async function onShare() {
     const url = window.location.href;
-    if (navigator.share) {
-      await navigator.share({
-        title: data?.incident.category_label ?? "UrbanMesh hazard",
-        text: data?.incident.description,
-        url,
-      });
-      return;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: data?.incident.category_label ?? "UrbanMesh hazard",
+          text: data?.incident.description,
+          url,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShareError(null);
+      setConfirmMessage("Link copied.");
+    } catch {
+      setShareError("Couldn't share this report. Copy the address bar link instead.");
     }
-    await navigator.clipboard.writeText(url);
-    setConfirmMessage("Link copied.");
   }
 
   if (error) {
     return (
       <div className="mx-auto max-w-[1100px] px-4 py-6 lg:px-6">
-        <ErrorBanner message={error} />
+        <ErrorBanner
+          message={error}
+          onRetry={() => {
+            setError(null);
+            setReload((n) => n + 1);
+          }}
+        />
         <Link to="/" className="mt-3 inline-block text-sm font-semibold text-civic-accent">
           Back to map
         </Link>
@@ -196,6 +215,16 @@ export function HazardDetailPage() {
             Share
           </button>
         </div>
+        {confirmError ? (
+          <div className="mt-3">
+            <ErrorBanner message={confirmError} onRetry={() => void onConfirm()} />
+          </div>
+        ) : null}
+        {shareError ? (
+          <div className="mt-3">
+            <ErrorBanner message={shareError} />
+          </div>
+        ) : null}
         {confirmMessage ? (
           <p className="mt-3 text-sm font-medium text-civic-accentDark">{confirmMessage}</p>
         ) : null}

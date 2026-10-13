@@ -20,6 +20,7 @@ export function MapHomePage() {
   const [locateNonce, setLocateNonce] = useState(0);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [reload, setReload] = useState(0);
   const [focus, setFocus] = useState<{ lat: number; lng: number; zoom?: number } | null>(
     null,
   );
@@ -36,7 +37,7 @@ export function MapHomePage() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Could not load the map.");
+          setError(err instanceof Error ? err.message : "Couldn't load Kilimani reports. Try again.");
           setLoading(false);
         }
       }
@@ -47,7 +48,7 @@ export function MapHomePage() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [reload]);
 
   const visible = useMemo(() => {
     return incidents.filter((item) => {
@@ -124,7 +125,9 @@ export function MapHomePage() {
 
         {error || locationError ? (
           <div className="absolute inset-x-3 top-[9.5rem] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-3 lg:w-[360px]">
-            {error ? <ErrorBanner message={error} /> : null}
+            {error ? (
+              <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
+            ) : null}
             {locationError ? <ErrorBanner message={locationError} /> : null}
           </div>
         ) : null}

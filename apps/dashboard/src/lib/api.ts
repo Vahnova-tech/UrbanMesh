@@ -94,33 +94,78 @@ export interface PlatformMeta {
   }>;
 }
 
-const API_DOWN = import.meta.env.DEV
-  ? "Couldn't load live reports. Start the API on port 3001, then refresh."
-  : "Couldn't load Kilimani planning evidence. Check your connection and try again.";
+type RequestKind = "load" | "lpdp";
 
-async function readJson<T>(res: Response, fallback: string): Promise<T> {
+const COPY: Record<RequestKind, { down: string; fallback: string; offline: string }> = {
+  load: {
+    down: import.meta.env.DEV
+      ? "Couldn't load planning evidence. Start the API on port 3001, then refresh."
+      : "Couldn't load Kilimani planning evidence. Check your connection and try again.",
+    fallback: "Couldn't load Kilimani planning evidence. Try again.",
+    offline: "You're offline. Reconnect to load county evidence.",
+  },
+  lpdp: {
+    down: import.meta.env.DEV
+      ? "Couldn't compile the LPDP brief. Start the API on port 3001, then try again."
+      : "Couldn't compile the LPDP brief. Check your connection and try again.",
+    fallback: "Couldn't compile the LPDP brief. Try again.",
+    offline: "You're offline. Reconnect, then generate the brief.",
+  },
+};
+
+function isPublicError(message: string): boolean {
+  if (!message || message.length > 200) return false;
+  return !/prisma|P\d{4}|ECONNREFUSED|EACCES|ENOENT|node_modules|at Object/i.test(
+    message,
+  );
+}
+
+async function requestJson<T>(
+  url: string,
+  kind: RequestKind,
+  init?: RequestInit,
+): Promise<T> {
+  const copy = COPY[kind];
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch {
+    throw new Error(
+      typeof navigator !== "undefined" && navigator.onLine === false
+        ? copy.offline
+        : copy.down,
+    );
+  }
+
   const text = await res.text();
   if (/^\s*</.test(text)) {
-    throw new Error(API_DOWN);
+    throw new Error(copy.down);
   }
   let body: unknown = null;
   if (text) {
     try {
       body = JSON.parse(text) as unknown;
     } catch {
-      throw new Error(res.status >= 500 ? API_DOWN : fallback);
+      throw new Error(res.status >= 500 ? copy.down : copy.fallback);
     }
   }
   if (!res.ok) {
-    const err = body as { error?: string } | null;
-    throw new Error(err?.error || (res.status >= 500 ? API_DOWN : fallback));
+    const server = (body as { error?: string } | null)?.error ?? "";
+    if (res.status >= 500) {
+      throw new Error(
+        import.meta.env.DEV && isPublicError(server) ? server : copy.down,
+      );
+    }
+    throw new Error(isPublicError(server) ? server : copy.fallback);
   }
   return body as T;
 }
 
 export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
-  const res = await fetch(`${API_BASE}/api/v1/dashboard/metrics`);
-  return readJson<DashboardMetrics>(res, `Metrics failed (${res.status})`);
+  return requestJson<DashboardMetrics>(
+    `${API_BASE}/api/v1/dashboard/metrics`,
+    "load",
+  );
 }
 
 export async function fetchReports(params: {
@@ -131,26 +176,23 @@ export async function fetchReports(params: {
   if (params.status) query.set("status", params.status);
   if (params.category) query.set("category", params.category);
   query.set("limit", "500");
-  const res = await fetch(`${API_BASE}/api/v1/reports?${query.toString()}`);
-  const data = await readJson<{ incidents: IncidentPublic[] }>(
-    res,
-    `Reports failed (${res.status})`,
+  const data = await requestJson<{ incidents: IncidentPublic[] }>(
+    `${API_BASE}/api/v1/reports?${query.toString()}`,
+    "load",
   );
   return data.incidents ?? [];
 }
 
 export async function fetchClusters(): Promise<SpatialCluster[]> {
-  const res = await fetch(`${API_BASE}/api/v1/clusters`);
-  const data = await readJson<{ clusters: SpatialCluster[] }>(
-    res,
-    `Clusters failed (${res.status})`,
+  const data = await requestJson<{ clusters: SpatialCluster[] }>(
+    `${API_BASE}/api/v1/clusters`,
+    "load",
   );
   return data.clusters ?? [];
 }
 
 export async function fetchMeta(): Promise<PlatformMeta> {
-  const res = await fetch(`${API_BASE}/api/v1/meta`);
-  return readJson<PlatformMeta>(res, `Meta failed (${res.status})`);
+  return requestJson<PlatformMeta>(`${API_BASE}/api/v1/meta`, "load");
 }
 
 export async function generateLpdpBrief(clusterIds?: string[]): Promise<{
@@ -158,12 +200,11 @@ export async function generateLpdpBrief(clusterIds?: string[]): Promise<{
   cluster_count: number;
   generated_at: string;
 }> {
-  const res = await fetch(`${API_BASE}/api/v1/lpdp/generate`, {
+  return requestJson(`${API_BASE}/api/v1/lpdp/generate`, "lpdp", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(clusterIds ? { cluster_ids: clusterIds } : {}),
   });
-  return readJson(res, `LPDP generation failed (${res.status})`);
 }
 
 export const LPDP_DOWNLOAD_HREF = `${API_BASE}/api/v1/lpdp/latest.pdf`;

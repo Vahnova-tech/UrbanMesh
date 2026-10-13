@@ -58,10 +58,10 @@ export function publicPhotoUrl(filename: string): string {
 export async function savePhotoBuffer(buf: Buffer): Promise<string> {
   const sniffed = sniffImage(buf);
   if (!sniffed) {
-    throw new PhotoError("Only JPEG, PNG, or WebP photos are accepted");
+    throw new PhotoError("Only JPEG, PNG, or WebP photos are accepted.");
   }
   if (buf.length > MAX_PHOTO_BYTES) {
-    throw new PhotoError("Photo must be 2 MB or smaller");
+    throw new PhotoError("Photo must be 2 MB or smaller.");
   }
   const dest = path.resolve(env.photoStoragePath);
   await mkdir(dest, { recursive: true });
@@ -75,11 +75,11 @@ export async function resolveStoredPhotoUrl(
 ): Promise<string | null> {
   if (raw == null || raw === "") return null;
   if (typeof raw !== "string") {
-    throw new PhotoError("photo_url must be an UrbanMesh upload path");
+    throw new PhotoError("That photo is not an UrbanMesh camera still.");
   }
   const relative = canonicalizePhotoPath(raw);
   if (!relative) {
-    throw new PhotoError("photo_url must be an UrbanMesh upload path");
+    throw new PhotoError("That photo is not an UrbanMesh camera still.");
   }
   const filename = path.basename(relative);
   try {

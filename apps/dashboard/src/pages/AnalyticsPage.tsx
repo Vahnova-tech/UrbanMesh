@@ -18,7 +18,7 @@ import {
   type IncidentPublic,
   type SpatialCluster,
 } from "../lib/api";
-import { Panel, Skeleton } from "../components/ui/Primitives";
+import { ErrorNotice, Panel, Skeleton } from "../components/ui/Primitives";
 import { useChartColors } from "../lib/theme";
 
 export function AnalyticsPage() {
@@ -29,18 +29,32 @@ export function AnalyticsPage() {
   const [days, setDays] = useState("all");
   const [category, setCategory] = useState("all");
   const [ward, setWard] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
+    let cancelled = false;
     void Promise.all([
       fetchDashboardMetrics(),
       fetchClusters(),
       fetchReports(),
-    ]).then(([m, c, reports]) => {
-      setMetrics(m);
-      setClusters(c);
-      setIncidents(reports);
-    });
-  }, []);
+    ])
+      .then(([m, c, reports]) => {
+        if (cancelled) return;
+        setMetrics(m);
+        setClusters(c);
+        setIncidents(reports);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load analytics. Try again.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   const cutoff =
     days === "all" ? 0 : Date.now() - Number(days) * 24 * 60 * 60 * 1000;
@@ -107,6 +121,14 @@ export function AnalyticsPage() {
       { label: "Pending", count: pending },
     ];
   }, [filteredIncidents]);
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+      </div>
+    );
+  }
 
   if (!metrics) {
     return (

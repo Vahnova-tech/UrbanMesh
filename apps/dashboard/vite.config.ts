@@ -3,7 +3,7 @@ import { defineConfig, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 
 const API_DOWN =
-  "Couldn't load live reports. Start the API on port 3001, then refresh.";
+  "Couldn't load planning evidence. Start the API on port 3001, then refresh.";
 
 function apiProxy(): ProxyOptions {
   return {

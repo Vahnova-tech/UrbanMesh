@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { formatWhen } from "../lib/format";
-import { EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
+import { ErrorNotice, EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
 
 export function ReportsPage() {
   const [params] = useSearchParams();
@@ -11,10 +11,26 @@ export function ReportsPage() {
   const [category, setCategory] = useState("all");
   const [status, setStatus] = useState("all");
   const [days, setDays] = useState("all");
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    void fetchReports().then(setItems);
-  }, []);
+    let cancelled = false;
+    void fetchReports()
+      .then((rows) => {
+        if (cancelled) return;
+        setItems(rows);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load reports. Try again.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   const categories = useMemo(
     () => [...new Set(items.map((i) => i.category_label))],
@@ -40,6 +56,11 @@ export function ReportsPage() {
         Every geotagged citizen report in the Kilimani catchments.
         {clusterFilter ? " Showing one verified cluster’s evidence." : ""}
       </p>
+      {error ? (
+        <div className="mt-4">
+          <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+        </div>
+      ) : null}
       <div className="mt-4 flex flex-wrap gap-2">
         <select
           value={category}

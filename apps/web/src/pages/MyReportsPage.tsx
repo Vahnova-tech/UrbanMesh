@@ -11,6 +11,7 @@ export function MyReportsPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [update, setUpdate] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
   const knownVerified = useRef<Set<string> | null>(null);
   const submittedAt = useRef(new Map(loadMyReportIds().map((row) => [row.id, row.at])));
 
@@ -41,7 +42,7 @@ export function MyReportsPage() {
         setError(null);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Could not load your reports.");
+          setError(err instanceof Error ? err.message : "Couldn't load your reports. Try again.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -53,7 +54,7 @@ export function MyReportsPage() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [reload]);
 
   const pending = items.filter((i) => !i.is_verified);
   const verified = items.filter((i) => i.is_verified);
@@ -83,7 +84,11 @@ export function MyReportsPage() {
         </p>
       ) : null}
 
-      {error ? <div className="mt-4"><ErrorBanner message={error} /></div> : null}
+      {error ? (
+        <div className="mt-4">
+          <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
+        </div>
+      ) : null}
       {loading ? (
         <div className="mt-4">
           <SkeletonList rows={3} />

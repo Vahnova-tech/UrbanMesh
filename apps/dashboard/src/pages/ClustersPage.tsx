@@ -8,7 +8,7 @@ import {
 } from "../lib/api";
 import { addEvidenceCluster } from "../lib/evidenceStore";
 import { formatCoords, formatWhen } from "../lib/format";
-import { EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
+import { ErrorNotice, EvidencePhoto, StatusBadge } from "../components/ui/Primitives";
 import { DEFAULT_LAYERS, PlannerMap } from "../components/map/PlannerMap";
 
 export function ClustersPage() {
@@ -17,14 +17,28 @@ export function ClustersPage() {
   const [incidents, setIncidents] = useState<IncidentPublic[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(params.get("id"));
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    void Promise.all([fetchClusters(), fetchReports()]).then(([cls, reports]) => {
-      setClusters(cls);
-      setIncidents(reports);
-      setSelectedId((current) => current ?? params.get("id") ?? cls[0]?.cluster_id ?? null);
-    });
-  }, [params]);
+    let cancelled = false;
+    void Promise.all([fetchClusters(), fetchReports()])
+      .then(([cls, reports]) => {
+        if (cancelled) return;
+        setClusters(cls);
+        setIncidents(reports);
+        setSelectedId((current) => current ?? params.get("id") ?? cls[0]?.cluster_id ?? null);
+        setError(null);
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Couldn't load clusters. Try again.");
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [params, reload]);
 
   const selected = clusters.find((c) => c.cluster_id === selectedId) ?? null;
   const members = useMemo(
@@ -41,6 +55,11 @@ export function ClustersPage() {
       <p className="mt-1 text-sm text-civic-muted">
         Same-category reports within 15 metres, confirmed by at least three residents.
       </p>
+      {error ? (
+        <div className="mt-4">
+          <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
+        </div>
+      ) : null}
 
       <div className="mt-5 grid gap-5 xl:grid-cols-5">
         <div className="h-[360px] overflow-hidden rounded-card border border-civic-line xl:col-span-3">

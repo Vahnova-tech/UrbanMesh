@@ -37,6 +37,7 @@ export function ReportsPage() {
   const [status, setStatus] = useState("all");
   const [distance, setDistance] = useState(900);
   const [date, setDate] = useState("all");
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +60,7 @@ export function ReportsPage() {
         if (!cancelled) setItems(data);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Could not load reports.");
+          setError(err instanceof Error ? err.message : "Couldn't load Kilimani reports. Try again.");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -69,7 +70,7 @@ export function ReportsPage() {
     return () => {
       cancelled = true;
     };
-  }, [tab, coords, distance]);
+  }, [tab, coords, distance, reload]);
 
   const filtered = useMemo(() => {
     const cutoff =
@@ -187,7 +188,9 @@ export function ReportsPage() {
         </button>
       ) : null}
 
-      {error ? <ErrorBanner message={error} /> : null}
+      {error ? (
+        <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
+      ) : null}
       {loading ? <SkeletonList rows={4} /> : null}
 
       {!loading && filtered.length === 0 && (tab !== "nearby" || coords) ? (

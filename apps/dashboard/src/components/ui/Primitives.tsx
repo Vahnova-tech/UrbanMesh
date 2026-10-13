@@ -76,6 +76,32 @@ export function Skeleton({ className = "" }: { className?: string }) {
   return <div className={`um-skeleton ${className}`} />;
 }
 
+export function ErrorNotice({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div
+      role="alert"
+      className="rounded-card bg-civic-criticalBg px-4 py-3 text-sm font-medium leading-snug text-civic-critical"
+    >
+      <p>{message}</p>
+      {onRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-2 text-sm font-semibold underline underline-offset-2"
+        >
+          Try again
+        </button>
+      ) : null}
+    </div>
+  );
+}
+
 export function Panel({
   title,
   hint,

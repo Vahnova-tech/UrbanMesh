@@ -67,13 +67,28 @@ export function EmptyState({
   );
 }
 
-export function ErrorBanner({ message }: { message: string }) {
+export function ErrorBanner({
+  message,
+  onRetry,
+}: {
+  message: string;
+  onRetry?: () => void;
+}) {
   return (
-    <p
+    <div
       role="alert"
       className="rounded-card bg-civic-criticalBg px-3 py-2.5 text-sm font-medium leading-snug text-civic-critical shadow-card"
     >
-      {message}
-    </p>
+      <p>{message}</p>
+      {onRetry ? (
+        <button
+          type="button"
+          onClick={onRetry}
+          className="mt-2 text-sm font-semibold underline underline-offset-2"
+        >
+          Try again
+        </button>
+      ) : null}
+    </div>
   );
 }

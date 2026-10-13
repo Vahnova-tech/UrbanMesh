@@ -62,7 +62,18 @@ export function ReportFlowPage() {
     setError(null);
     try {
       let photo_url: string | null = null;
-      if (photoData) photo_url = await uploadPhoto(photoData);
+      if (photoData) {
+        try {
+          photo_url = await uploadPhoto(photoData);
+        } catch (err) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Couldn't store the photo. Photograph the hazard again, or submit without it.",
+          );
+          return;
+        }
+      }
       const response = await submitHazardReport({
         category,
         description: description.trim(),
@@ -74,7 +85,7 @@ export function ReportFlowPage() {
       rememberMyReport(response.incident_id);
       setResult(response);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Submit failed.");
+      setError(err instanceof Error ? err.message : "Couldn't send the report. Try again.");
     } finally {
       setSubmitting(false);
     }

@@ -45,26 +45,88 @@ export interface EvidenceResponse {
   cluster_members: IncidentPublic[];
 }
 
-const API_DOWN = import.meta.env.DEV
-  ? "Couldn't load live reports. Start the API on port 3001, then refresh."
-  : "Couldn't load live Kilimani reports. Check your connection and try again.";
+type RequestKind = "load" | "submit" | "photo" | "confirm";
 
-async function readJson<T>(res: Response, fallback: string): Promise<T> {
+const COPY: Record<RequestKind, { down: string; fallback: string; offline: string }> = {
+  load: {
+    down: import.meta.env.DEV
+      ? "Couldn't load live reports. Start the API on port 3001, then refresh."
+      : "Couldn't load live Kilimani reports. Check your connection and try again.",
+    fallback: "Couldn't load Kilimani reports. Try again.",
+    offline: "You're offline. Reports already on this phone remain visible.",
+  },
+  submit: {
+    down: import.meta.env.DEV
+      ? "Couldn't send the report. Start the API on port 3001, then try again."
+      : "Couldn't send the report. Check your connection and try again.",
+    fallback: "Couldn't send the report. Try again.",
+    offline: "You're offline. Reconnect, then send the report.",
+  },
+  photo: {
+    down: import.meta.env.DEV
+      ? "Couldn't store the photo. Start the API on port 3001, then try again."
+      : "Couldn't store the photo. Check your connection and try again.",
+    fallback: "Couldn't store the photo. Photograph the hazard again.",
+    offline: "You're offline. Reconnect, then photograph the hazard again.",
+  },
+  confirm: {
+    down: import.meta.env.DEV
+      ? "Couldn't add your confirmation. Start the API on port 3001, then try again."
+      : "Couldn't add your confirmation. Check your connection and try again.",
+    fallback: "Couldn't add your confirmation. Try again.",
+    offline: "You're offline. Reconnect, then confirm this hazard.",
+  },
+};
+
+function isPublicError(message: string): boolean {
+  if (!message || message.length > 200) return false;
+  return !/prisma|P\d{4}|ECONNREFUSED|EACCES|ENOENT|node_modules|at Object/i.test(
+    message,
+  );
+}
+
+async function requestJson<T>(
+  url: string,
+  kind: RequestKind,
+  init?: RequestInit,
+): Promise<T> {
+  const copy = COPY[kind];
+  let res: Response;
+  try {
+    res = await fetch(url, init);
+  } catch {
+    throw new Error(
+      typeof navigator !== "undefined" && navigator.onLine === false
+        ? copy.offline
+        : copy.down,
+    );
+  }
+
   const text = await res.text();
   if (/^\s*</.test(text)) {
-    throw new Error(API_DOWN);
+    throw new Error(copy.down);
   }
   let body: unknown = null;
   if (text) {
     try {
       body = JSON.parse(text) as unknown;
     } catch {
-      throw new Error(res.status >= 500 ? API_DOWN : fallback);
+      throw new Error(res.status >= 500 ? copy.down : copy.fallback);
     }
   }
   if (!res.ok) {
-    const err = body as { error?: string } | null;
-    throw new Error(err?.error || (res.status >= 500 ? API_DOWN : fallback));
+    const server = (body as { error?: string } | null)?.error ?? "";
+    if (res.status === 404) {
+      throw new Error(
+        isPublicError(server) ? server : "This report is not on UrbanMesh.",
+      );
+    }
+    if (res.status >= 500) {
+      throw new Error(
+        import.meta.env.DEV && isPublicError(server) ? server : copy.down,
+      );
+    }
+    throw new Error(isPublicError(server) ? server : copy.fallback);
   }
   return body as T;
 }
@@ -78,10 +140,9 @@ export async function fetchReports(params: {
   if (params.status) query.set("status", params.status);
   if (params.category) query.set("category", params.category);
   if (params.limit) query.set("limit", String(params.limit));
-  const res = await fetch(`${API_BASE}/api/v1/reports?${query.toString()}`);
-  const data = await readJson<{ incidents: IncidentPublic[] }>(
-    res,
-    `Reports failed (${res.status})`,
+  const data = await requestJson<{ incidents: IncidentPublic[] }>(
+    `${API_BASE}/api/v1/reports?${query.toString()}`,
+    "load",
   );
   return data.incidents ?? [];
 }
@@ -96,37 +157,37 @@ export async function fetchNearbyReports(
     lng: String(lng),
     radius: String(radius),
   });
-  const res = await fetch(`${API_BASE}/api/v1/reports/nearby?${query.toString()}`);
-  const data = await readJson<{ incidents: IncidentPublic[] }>(
-    res,
-    `Nearby reports failed (${res.status})`,
+  const data = await requestJson<{ incidents: IncidentPublic[] }>(
+    `${API_BASE}/api/v1/reports/nearby?${query.toString()}`,
+    "load",
   );
   return data.incidents ?? [];
 }
 
 export async function fetchEvidence(id: string): Promise<EvidenceResponse> {
-  const res = await fetch(`${API_BASE}/api/v1/reports/${id}`);
-  return readJson<EvidenceResponse>(res, `Report not found (${res.status})`);
+  return requestJson<EvidenceResponse>(`${API_BASE}/api/v1/reports/${id}`, "load");
 }
 
 export async function submitHazardReport(
   payload: ReportPayload,
 ): Promise<ReportResponse> {
-  const res = await fetch(`${API_BASE}/api/v1/reports`, {
+  return requestJson<ReportResponse>(`${API_BASE}/api/v1/reports`, "submit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return readJson<ReportResponse>(res, `Report failed (${res.status})`);
 }
 
 export async function confirmHazard(id: string): Promise<ReportResponse> {
-  const res = await fetch(`${API_BASE}/api/v1/reports/${id}/confirm`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  return readJson<ReportResponse>(res, `Confirm failed (${res.status})`);
+  return requestJson<ReportResponse>(
+    `${API_BASE}/api/v1/reports/${id}/confirm`,
+    "confirm",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    },
+  );
 }
 
 const PHOTO_PATH =
@@ -136,13 +197,10 @@ export async function uploadPhoto(dataUrl: string): Promise<string> {
   const blob = await (await fetch(dataUrl)).blob();
   const form = new FormData();
   form.append("photo", blob, "hazard.jpg");
-  const res = await fetch(`${API_BASE}/api/v1/uploads/photos`, {
-    method: "POST",
-    body: form,
-  });
-  const data = await readJson<{ url: string }>(
-    res,
-    `Photo upload failed (${res.status})`,
+  const data = await requestJson<{ url: string }>(
+    `${API_BASE}/api/v1/uploads/photos`,
+    "photo",
+    { method: "POST", body: form },
   );
   return data.url;
 }

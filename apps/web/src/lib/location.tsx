@@ -30,7 +30,7 @@ export function LocationProvider({ children }: { children: ReactNode }) {
 
   const requestLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      setError("Location is not available on this device.");
+      setError("This device cannot share a location. Pan the map to the hazard.");
       return;
     }
     setLocating(true);
@@ -44,8 +44,10 @@ export function LocationProvider({ children }: { children: ReactNode }) {
         setLocating(false);
         setError(
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied."
-            : "Could not read GPS. Try outdoors.",
+            ? "Location is blocked. Allow it in the browser, or pan the map to the hazard."
+            : err.code === err.TIMEOUT
+              ? "GPS timed out. Move outdoors or pan the map to the hazard."
+              : "Could not read GPS. Pan the map to the hazard.",
         );
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },

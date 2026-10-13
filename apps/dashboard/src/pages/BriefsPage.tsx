@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { generateLpdpBrief, LPDP_DOWNLOAD_HREF } from "../lib/api";
 import { MONTH_LABEL } from "../lib/format";
+import { ErrorNotice } from "../components/ui/Primitives";
 
 export function BriefsPage() {
   const [generating, setGenerating] = useState(false);
@@ -16,7 +17,7 @@ export function BriefsPage() {
       setCount(result.cluster_count);
       setReady(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Generation failed.");
+      setError(err instanceof Error ? err.message : "Couldn't compile the LPDP brief. Try again.");
     } finally {
       setGenerating(false);
     }
@@ -55,7 +56,9 @@ export function BriefsPage() {
         </p>
       ) : null}
       {error ? (
-        <p className="mt-3 text-sm font-semibold text-civic-critical">{error}</p>
+        <div className="mt-3">
+          <ErrorNotice message={error} onRetry={() => void onGenerate()} />
+        </div>
       ) : null}
 
       {ready ? (
