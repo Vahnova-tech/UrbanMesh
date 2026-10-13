@@ -19,9 +19,13 @@ const DATABASE_ALIASES = [
   "POSTGRES_CONNECTION_STRING",
 ] as const;
 
-const alias = DATABASE_ALIASES.find((key) => process.env[key]);
-if (alias && alias !== "DATABASE_URL") {
-  process.env.DATABASE_URL = process.env[alias];
+function readEnv(key: string): string {
+  return process.env[key]?.trim() ?? "";
+}
+
+const alias = DATABASE_ALIASES.find((key) => readEnv(key));
+if (alias) {
+  process.env.DATABASE_URL = readEnv(alias);
 }
 
 /** Render Postgres requires TLS. Internal URLs often omit sslmode. */

@@ -8,9 +8,13 @@ import { env } from "../src/lib/env.js";
 import { prisma } from "../src/lib/prisma.js";
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
+  if (!process.env.DATABASE_URL?.trim()) {
+    const seen = Object.keys(process.env)
+      .filter((key) => /DATABASE|POSTGRES|RENDER/i.test(key))
+      .sort()
+      .join(", ");
     throw new Error(
-      "DATABASE_URL is missing. In Render: urbanmesh → Environment → Add from database (urbanmesh-db Internal Database URL), or redeploy via Blueprint so render.yaml can wire it.",
+      `DATABASE_URL is missing (saw: ${seen || "no DATABASE/POSTGRES/RENDER keys"}). In Render: urbanmesh → Environment → Add Environment Variable → DATABASE_URL = Internal Database URL from the Postgres instance. Then Manual Deploy. A rebuild alone will not fix this.`,
     );
   }
 
