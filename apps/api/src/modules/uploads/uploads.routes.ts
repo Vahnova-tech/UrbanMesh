@@ -24,11 +24,12 @@ uploadsRouter.post(
         return;
       }
       if (err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE") {
-        res.status(400).json({ error: "Photo must be 2 MB or smaller" });
+        res.status(400).json({ error: "Photo must be 2 MB or smaller." });
         return;
       }
-      const message = err instanceof Error ? err.message : "Photo upload failed";
-      res.status(400).json({ error: message });
+      res.status(400).json({
+        error: "The photo could not be read. Photograph the hazard again.",
+      });
     });
   },
   async (req: Request, res: Response, next: NextFunction) => {

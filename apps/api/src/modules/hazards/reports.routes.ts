@@ -14,6 +14,7 @@ import {
 import type { HazardReportInput } from "../../types/reports.js";
 import { PhotoError, resolveStoredPhotoUrl } from "../uploads/photo.js";
 import { rateLimit } from "../../lib/rateLimit.js";
+import { isUuid } from "../../lib/httpError.js";
 
 const reportsRouter = Router();
 
@@ -38,7 +39,7 @@ reportsRouter.get(
       const radius = Number(req.query.radius ?? 800);
 
       if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-        res.status(400).json({ error: "lat and lng are required" });
+        res.status(400).json({ error: "A location is required to search nearby reports." });
         return;
       }
 
@@ -90,9 +91,13 @@ reportsRouter.get(
   "/:id",
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!isUuid(req.params.id)) {
+        res.status(404).json({ error: "This report is not on UrbanMesh." });
+        return;
+      }
       const evidence = await getIncidentEvidence(req.params.id);
       if (!evidence) {
-        res.status(404).json({ error: "Report not found" });
+        res.status(404).json({ error: "This report is not on UrbanMesh." });
         return;
       }
       res.json(evidence);
@@ -107,9 +112,13 @@ reportsRouter.post(
   rateLimit(),
   async (req: Request, res: Response, next: NextFunction) => {
     try {
+      if (!isUuid(req.params.id)) {
+        res.status(404).json({ error: "This report is not on UrbanMesh." });
+        return;
+      }
       const original = await getIncidentById(req.params.id);
       if (!original) {
-        res.status(404).json({ error: "Report not found" });
+        res.status(404).json({ error: "This report is not on UrbanMesh." });
         return;
       }
 
@@ -149,7 +158,7 @@ reportsRouter.post(
 
       if (!isHazardCategory(category)) {
         res.status(400).json({
-          error: "Invalid or missing category",
+          error: "Choose a hazard type.",
           allowed: [
             "MOBILITY_SURFACE_DAMAGE",
             "NMT_PEDESTRIAN_HAZARD",
@@ -163,7 +172,7 @@ reportsRouter.post(
       }
 
       if (typeof description !== "string" || description.trim().length === 0) {
-        res.status(400).json({ error: "description is required" });
+        res.status(400).json({ error: "A short description of the hazard is required." });
         return;
       }
 
@@ -178,7 +187,7 @@ reportsRouter.post(
         longitude < -180 ||
         longitude > 180
       ) {
-        res.status(400).json({ error: "lat and lng must be valid coordinates" });
+        res.status(400).json({ error: "That location is outside the valid map range." });
         return;
       }
 

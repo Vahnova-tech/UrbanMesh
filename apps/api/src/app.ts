@@ -5,6 +5,7 @@ import express, {
   type Response,
 } from "express";
 import { env } from "./lib/env.js";
+import { toPublicError } from "./lib/httpError.js";
 import { reportsRouter } from "./modules/hazards/reports.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
 import { lpdpRouter } from "./modules/reports/lpdp.routes.js";
@@ -57,19 +58,27 @@ export function createApp() {
   app.use("/api/v1/lpdp", lpdpRouter);
   app.use("/api/v1/uploads", uploadsRouter);
 
+  app.use("/api", (_req: Request, res: Response) => {
+    res.status(404).json({ error: "That UrbanMesh endpoint does not exist." });
+  });
+
   app.use(
     (err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+      if (res.headersSent) return;
+      const syntax =
+        err instanceof SyntaxError ||
+        (err && typeof err === "object" && "type" in err && (err as { type?: string }).type === "entity.parse.failed");
+      if (syntax) {
+        res.status(400).json({ error: "The report could not be read. Send it again." });
+        return;
+      }
+      if (err && typeof err === "object" && "type" in err && (err as { type?: string }).type === "entity.too.large") {
+        res.status(413).json({ error: "That request is too large. Shorten the description and try again." });
+        return;
+      }
       console.error(err);
-      const message = err instanceof Error ? err.message : "";
-      const dbMissing =
-        message.includes("DATABASE_URL") ||
-        message.includes("Can't reach database") ||
-        message.includes("P1001");
-      res.status(dbMissing ? 503 : 500).json({
-        error: dbMissing
-          ? "UrbanMesh cannot reach PostgreSQL. Start Postgres with PostGIS, then in apps/api run npx prisma db push."
-          : "Something went wrong on the UrbanMesh API.",
-      });
+      const { status, error } = toPublicError(err);
+      res.status(status).json({ error });
     },
   );
 

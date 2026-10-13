@@ -18,7 +18,7 @@ export function rateLimit(
     }
     if (current.count >= max) {
       res.status(429).json({
-        error: "Too many requests. Wait a minute before sending another photo or report.",
+        error: "Too many reports from this connection. Wait a minute, then try again.",
       });
       return;
     }
