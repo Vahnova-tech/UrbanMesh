@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
 import { ErrorBanner, ReportCard } from "../components/ui/ReportCard";
-import { LiveMap } from "../components/map/LiveMap";
-import { searchKilimaniPlaces, type KilimaniPlace } from "../lib/places";
+import { LiveMap, type MapFocus } from "../components/map/LiveMap";
+import {
+  geocodeKilimani,
+  mergeSearchHits,
+  searchIncidents,
+  searchKilimaniPlaces,
+  type SearchHit,
+} from "../lib/places";
 
 type StatusFilter = "all" | "verified" | "pending";
 type MapView = "map" | "list";
@@ -21,9 +27,9 @@ export function MapHomePage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(0);
-  const [focus, setFocus] = useState<{ lat: number; lng: number; zoom?: number } | null>(
-    null,
-  );
+  const [focus, setFocus] = useState<MapFocus | null>(null);
+  const [remoteHits, setRemoteHits] = useState<SearchHit[]>([]);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,7 +67,43 @@ export function MapHomePage() {
 
   const verified = visible.filter((i) => i.is_verified).length;
   const pending = visible.length - verified;
-  const suggestions = searchKilimaniPlaces(query);
+  const localHits = useMemo(
+    () =>
+      mergeSearchHits(searchKilimaniPlaces(query), searchIncidents(query, incidents)),
+    [query, incidents],
+  );
+
+  useEffect(() => {
+    const needle = query.trim();
+    if (needle.length < 2) {
+      setRemoteHits([]);
+      setSearching(false);
+      return;
+    }
+    const ctrl = new AbortController();
+    setSearching(true);
+    const timer = window.setTimeout(() => {
+      void geocodeKilimani(needle, ctrl.signal)
+        .then((hits) => {
+          if (!ctrl.signal.aborted) setRemoteHits(hits);
+        })
+        .catch(() => {
+          if (!ctrl.signal.aborted) setRemoteHits([]);
+        })
+        .finally(() => {
+          if (!ctrl.signal.aborted) setSearching(false);
+        });
+    }, 350);
+    return () => {
+      ctrl.abort();
+      window.clearTimeout(timer);
+    };
+  }, [query]);
+
+  const suggestions = useMemo(
+    () => mergeSearchHits(localHits, remoteHits),
+    [localHits, remoteHits],
+  );
 
   function onLocate() {
     setFocus(null);
@@ -69,25 +111,24 @@ export function MapHomePage() {
     setLocateNonce((n) => n + 1);
   }
 
-  function onPickPlace(place: KilimaniPlace) {
+  function onPickPlace(place: SearchHit) {
     setQuery(place.name);
-    setFocus({ lat: place.lat, lng: place.lng, zoom: 17 });
+    setFocus({ lat: place.lat, lng: place.lng, zoom: 17, label: place.name });
     setLocateNonce((n) => n + 1);
     setView("map");
   }
 
-  const filters = (
-    <MapFilters
-      query={query}
-      onQuery={setQuery}
-      suggestions={suggestions}
-      onPickPlace={onPickPlace}
-      category={category}
-      onCategory={setCategory}
-      status={status}
-      onStatus={setStatus}
-    />
-  );
+  const filterProps = {
+    query,
+    onQuery: setQuery,
+    suggestions,
+    searching,
+    onPickPlace,
+    category,
+    onCategory: setCategory,
+    status,
+    onStatus: setStatus,
+  };
 
   return (
     <div className="absolute inset-0 flex">
@@ -120,7 +161,9 @@ export function MapHomePage() {
         ) : null}
 
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] px-3 lg:hidden">
-          <div className="pointer-events-auto">{filters}</div>
+          <div className="pointer-events-auto">
+            <MapFilters {...filterProps} />
+          </div>
         </div>
 
         {error || locationError ? (
@@ -166,7 +209,9 @@ export function MapHomePage() {
       </div>
 
       <aside className="hidden w-[380px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
-        <div className="border-b border-civic-line p-4">{filters}</div>
+        <div className="border-b border-civic-line p-4">
+          <MapFilters {...filterProps} />
+        </div>
         <div className="border-b border-civic-line px-4 py-3">
           <SummaryCard
             loading={loading && incidents.length === 0}
@@ -235,6 +280,7 @@ function MapFilters({
   query,
   onQuery,
   suggestions,
+  searching,
   onPickPlace,
   category,
   onCategory,
@@ -243,38 +289,112 @@ function MapFilters({
 }: {
   query: string;
   onQuery: (value: string) => void;
-  suggestions: KilimaniPlace[];
-  onPickPlace: (place: KilimaniPlace) => void;
+  suggestions: SearchHit[];
+  searching: boolean;
+  onPickPlace: (place: SearchHit) => void;
   category: string;
   onCategory: (value: string) => void;
   status: StatusFilter;
   onStatus: (value: StatusFilter) => void;
 }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(0);
+  const listId = useId();
+  const typed = query.trim().length >= 1;
+  const showList = open && typed;
+
+  useEffect(() => {
+    setActive(0);
+  }, [query]);
+
+  useEffect(() => {
+    function onDoc(ev: MouseEvent) {
+      if (!boxRef.current?.contains(ev.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  function pick(hit: SearchHit) {
+    onPickPlace(hit);
+    setOpen(false);
+  }
+
+  function onKeyDown(ev: KeyboardEvent<HTMLInputElement>) {
+    if (ev.key === "Escape") {
+      setOpen(false);
+      return;
+    }
+    if (ev.key === "ArrowDown") {
+      ev.preventDefault();
+      setOpen(true);
+      setActive((i) => Math.min(i + 1, Math.max(suggestions.length - 1, 0)));
+      return;
+    }
+    if (ev.key === "ArrowUp") {
+      ev.preventDefault();
+      setActive((i) => Math.max(i - 1, 0));
+      return;
+    }
+    if (ev.key === "Enter") {
+      ev.preventDefault();
+      if (suggestions[active]) pick(suggestions[active]);
+    }
+  }
+
   return (
     <div className="space-y-2">
-      <div className="relative">
+      <div className="relative" ref={boxRef}>
         <input
           type="search"
           value={query}
-          onChange={(e) => onQuery(e.target.value)}
+          onChange={(e) => {
+            onQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={onKeyDown}
           placeholder="Search Kilimani streets"
           aria-label="Search Kilimani streets"
+          aria-autocomplete="list"
+          aria-expanded={showList}
+          aria-controls={listId}
+          autoComplete="off"
+          enterKeyHint="search"
           className="w-full rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 text-base shadow-card outline-none focus:border-civic-accent lg:text-sm lg:shadow-none"
         />
-        {suggestions.length > 0 ? (
-          <ul className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-card border border-civic-line bg-civic-surface shadow-card">
-            {suggestions.map((place) => (
-              <li key={place.name}>
+        {showList ? (
+          <ul
+            id={listId}
+            role="listbox"
+            className="absolute inset-x-0 top-full z-[1200] mt-1 max-h-64 overflow-y-auto rounded-card border border-civic-line bg-civic-surface shadow-card"
+          >
+            {suggestions.map((place, index) => (
+              <li key={place.id} role="option" aria-selected={index === active}>
                 <button
                   type="button"
-                  onClick={() => onPickPlace(place)}
-                  className="flex w-full flex-col px-3 py-2 text-left text-sm"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => pick(place)}
+                  className={`flex w-full flex-col px-3 py-2 text-left text-sm ${
+                    index === active ? "bg-civic-mist" : ""
+                  }`}
                 >
                   <span className="font-semibold">{place.name}</span>
-                  <span className="text-xs text-civic-muted">{place.hint}</span>
+                  <span className="text-xs text-civic-muted">
+                    {place.kind === "report" ? "Report · " : ""}
+                    {place.hint}
+                  </span>
                 </button>
               </li>
             ))}
+            {suggestions.length === 0 ? (
+              <li className="px-3 py-2.5 text-sm text-civic-muted">
+                {searching
+                  ? "Looking up Kilimani streets…"
+                  : "No match. Try Argwings Kodhek, Yaya, Ngong Road, or a report category."}
+              </li>
+            ) : null}
           </ul>
         ) : null}
       </div>

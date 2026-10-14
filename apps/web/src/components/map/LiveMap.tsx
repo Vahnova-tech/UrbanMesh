@@ -78,8 +78,34 @@ function FlyToTarget({
   useEffect(() => {
     if (!target || nonce === 0) return;
     map.flyTo([target.lat, target.lng], target.zoom ?? 17, { duration: 0.7 });
-  }, [map, target, nonce]);
+  }, [map, target?.lat, target?.lng, target?.zoom, nonce]);
   return null;
+}
+
+function SearchPin({
+  target,
+}: {
+  target: { lat: number; lng: number; label?: string };
+}) {
+  return (
+    <CircleMarker
+      center={[target.lat, target.lng]}
+      radius={9}
+      pathOptions={{
+        color: "#FFFFFF",
+        weight: 2,
+        fillColor: MARKER.you,
+        fillOpacity: 1,
+      }}
+    >
+      {target.label ? (
+        <Popup>
+          <p className="text-sm font-semibold">{target.label}</p>
+          <p className="text-[11px] text-civic-muted">Search result</p>
+        </Popup>
+      ) : null}
+    </CircleMarker>
+  );
 }
 
 function markerFill(incident: IncidentPublic): string {
@@ -87,6 +113,13 @@ function markerFill(incident: IncidentPublic): string {
   if (incident.severity === "critical") return MARKER.critical;
   return MARKER.verified;
 }
+
+export type MapFocus = {
+  lat: number;
+  lng: number;
+  zoom?: number;
+  label?: string;
+};
 
 export function LiveMap({
   incidents,
@@ -100,7 +133,7 @@ export function LiveMap({
   incidents: IncidentPublic[];
   user: { lat: number; lng: number } | null;
   locateNonce?: number;
-  focus?: { lat: number; lng: number; zoom?: number } | null;
+  focus?: MapFocus | null;
   className?: string;
   showVerified?: boolean;
   showPending?: boolean;
@@ -145,6 +178,7 @@ export function LiveMap({
         {showVerified ? <HeatLayer points={incidents} dark={dark} /> : null}
         <FitOnce points={incidents} />
         <FlyToTarget target={flyTarget} nonce={flyNonce} />
+        {focus?.label ? <SearchPin target={focus} /> : null}
 
         {showVerified
           ? features.clusters.map((cluster) => (
