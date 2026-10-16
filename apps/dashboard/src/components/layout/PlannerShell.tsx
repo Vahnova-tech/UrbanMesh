@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { ThemeToggle } from "../../lib/theme";
+import { PlannerUpdates } from "./NotificationsPane";
 
 const NAV = [
   { to: "/", label: "Overview" },
@@ -17,10 +18,15 @@ export function PlannerShell() {
     <div className="flex min-h-dvh bg-civic-paper">
       <aside className="hidden w-60 shrink-0 border-r border-civic-line bg-civic-surface lg:flex lg:flex-col">
         <div className="border-b border-civic-line px-5 py-5">
-          <p className="text-base font-semibold tracking-tight">UrbanMesh</p>
-          <p className="mt-1 text-xs font-medium text-civic-muted">
-            Kilimani County Console
-          </p>
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <p className="text-base font-semibold tracking-tight">UrbanMesh</p>
+              <p className="mt-1 text-xs font-medium text-civic-muted">
+                Kilimani County Console
+              </p>
+            </div>
+            <PlannerUpdates />
+          </div>
           <label className="mt-3 block">
             <span className="sr-only">Planning area</span>
             <select
@@ -55,7 +61,7 @@ export function PlannerShell() {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center justify-between px-5 py-4">
+        <div className="flex items-center justify-between gap-2 px-5 py-4">
           <p className="text-[11px] text-civic-muted">
             Nairobi City County · LPDP desk
           </p>
@@ -65,6 +71,7 @@ export function PlannerShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         <div className="flex items-center gap-2 overflow-x-auto border-b border-civic-line bg-civic-surface px-3 py-2 lg:hidden">
+          <PlannerUpdates />
           <ThemeToggle />
           {NAV.map((item) => (
             <NavLink

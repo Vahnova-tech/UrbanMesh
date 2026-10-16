@@ -1,10 +1,12 @@
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { UrbanMeshLogo } from "../ui/UrbanMeshLogo";
 import { useLocationState } from "../../lib/location";
 import { ThemeToggle } from "../../lib/theme";
 import { InstallButton } from "../../lib/install";
-import type { ReactNode } from "react";
 import { useOnline } from "../../lib/online";
+import { useNotices } from "../../lib/useNotices";
+import { NoticeBell, NotificationsPane } from "./NotificationsPane";
 
 const NAV = [
   { to: "/", label: "Map", end: true },
@@ -16,6 +18,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const fullBleed = pathname === "/" || pathname.startsWith("/hazards/");
   const online = useOnline();
+  const notices = useNotices();
+  const [updatesOpen, setUpdatesOpen] = useState(false);
+
+  useEffect(() => {
+    setUpdatesOpen(false);
+  }, [pathname]);
 
   return (
     <div className="flex h-full max-h-full w-full flex-col overflow-hidden bg-civic-paper">
@@ -27,7 +35,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           You are offline. Reports already on this phone remain visible.
         </p>
       ) : null}
-      <TopBar />
+      <TopBar
+        unreadCount={notices.unreadCount}
+        updatesOpen={updatesOpen}
+        onToggleUpdates={() => setUpdatesOpen((open) => !open)}
+      />
       <main
         className={`relative min-h-0 flex-1 ${
           fullBleed ? "overflow-hidden" : "um-scroll"
@@ -36,6 +48,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <BottomNav />
+      <NotificationsPane
+        open={updatesOpen}
+        onClose={() => setUpdatesOpen(false)}
+        notices={notices.notices}
+        readIds={notices.readIds}
+        unreadCount={notices.unreadCount}
+        loading={notices.loading}
+        error={notices.error}
+        onRetry={notices.retry}
+        onRead={notices.markRead}
+        onReadAll={notices.markAllRead}
+      />
     </div>
   );
 }
@@ -50,7 +74,15 @@ function navClass(isActive: boolean, compact = false) {
       }`;
 }
 
-function TopBar() {
+function TopBar({
+  unreadCount,
+  updatesOpen,
+  onToggleUpdates,
+}: {
+  unreadCount: number;
+  updatesOpen: boolean;
+  onToggleUpdates: () => void;
+}) {
   const { requestLocation, locating, coords, error } = useLocationState();
 
   return (
@@ -73,6 +105,11 @@ function TopBar() {
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
           <InstallButton />
+          <NoticeBell
+            unreadCount={unreadCount}
+            open={updatesOpen}
+            onToggle={onToggleUpdates}
+          />
           <NavLink
             to="/about"
             aria-label="About UrbanMesh"
