@@ -115,12 +115,13 @@ function TopBar({
             aria-label="About UrbanMesh"
             title="About"
             className={({ isActive }) =>
-              `inline-flex h-11 w-11 items-center justify-center rounded-xl border border-civic-line ${
+              `inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold ${
                 isActive ? "bg-civic-mist text-civic-ink" : "text-civic-slate"
               }`
             }
           >
             <AboutIcon />
+            <span>About</span>
           </NavLink>
           <button
             type="button"

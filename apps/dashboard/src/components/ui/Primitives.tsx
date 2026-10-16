@@ -27,7 +27,7 @@ export function StatusBadge({ verified }: { verified: boolean }) {
     </span>
   ) : (
     <span className="inline-flex items-center rounded-md bg-civic-pendingBg px-2 py-0.5 text-[11px] font-semibold text-civic-pending">
-      Pending
+      Pending confirmation
     </span>
   );
 }

@@ -90,7 +90,7 @@ export function StatusBadge({
       className={`inline-flex items-center gap-1 rounded-md bg-civic-pendingBg font-semibold text-civic-pending ${pad}`}
     >
       <ClockIcon />
-      Pending
+      Pending confirmation
     </span>
   );
 }

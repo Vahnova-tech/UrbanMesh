@@ -296,10 +296,14 @@ export function LiveMap({
           </>
         ) : null}
       </MapContainer>
+      <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[220px] lg:block">
+        <MapKey />
+      </div>
       <div className="absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-card border border-civic-line bg-civic-surface shadow-card lg:bottom-28 lg:right-6 lg:top-auto">
         <button
           type="button"
           aria-label="Zoom in"
+          title="Zoom in"
           className="h-9 w-9 text-lg font-semibold text-civic-ink"
           onClick={() => mapRef.current?.zoomIn()}
         >
@@ -309,6 +313,7 @@ export function LiveMap({
         <button
           type="button"
           aria-label="Zoom out"
+          title="Zoom out"
           className="h-9 w-9 text-lg font-semibold text-civic-ink"
           onClick={() => mapRef.current?.zoomOut()}
         >
@@ -316,6 +321,58 @@ export function LiveMap({
         </button>
       </div>
     </div>
+  );
+}
+
+export function MapKey({ bare = false }: { bare?: boolean }) {
+  const body = (
+    <>
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-civic-muted">
+        Map key
+      </p>
+      <ul className="mt-1.5 space-y-1">
+        <LegendItem color={MARKER.verified} label="Verified cluster" hint="Solid pin · 15 m" />
+        <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
+        <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
+      </ul>
+    </>
+  );
+  if (bare) return <div>{body}</div>;
+  return (
+    <div className="rounded-card border border-civic-line bg-civic-surface px-2.5 py-2 shadow-card">
+      {body}
+    </div>
+  );
+}
+
+function LegendItem({
+  color,
+  label,
+  hint,
+  dashed = false,
+}: {
+  color: string;
+  label: string;
+  hint: string;
+  dashed?: boolean;
+}) {
+  return (
+    <li className="flex items-center gap-2">
+      <span
+        className="h-2.5 w-2.5 shrink-0 rounded-full border border-white"
+        style={{
+          background: color,
+          outline: dashed ? `1px dashed ${color}` : undefined,
+          outlineOffset: dashed ? "1px" : undefined,
+        }}
+      />
+      <span className="min-w-0">
+        <span className="block text-[11px] font-semibold leading-tight text-civic-ink">
+          {label}
+        </span>
+        <span className="block text-[10px] leading-tight text-civic-muted">{hint}</span>
+      </span>
+    </li>
   );
 }
 

@@ -28,7 +28,9 @@ export function PlannerShell() {
             <PlannerUpdates />
           </div>
           <label className="mt-3 block">
-            <span className="sr-only">Planning area</span>
+            <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+              Planning area
+            </span>
             <select
               defaultValue="kilimani"
               className="w-full rounded-[10px] border border-civic-line bg-civic-paper px-2 py-1.5 text-xs font-semibold text-civic-ink"

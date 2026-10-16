@@ -66,10 +66,9 @@ export function NotificationsPane({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-civic-line text-civic-slate"
-            aria-label="Close"
+            className="inline-flex min-h-11 items-center rounded-xl border border-civic-line px-3 text-xs font-semibold text-civic-slate"
           >
-            ×
+            Close
           </button>
         </div>
 
@@ -166,11 +165,12 @@ export function NoticeBell({
       aria-label={label}
       aria-expanded={open}
       title="Updates"
-      className="relative inline-flex h-11 w-11 items-center justify-center rounded-xl border border-civic-line text-civic-slate"
+      className="relative inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate"
     >
       <BellIcon />
+      <span>Updates</span>
       {unreadCount > 0 ? (
-        <span className="absolute right-1.5 top-1.5 min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white">
+        <span className="min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       ) : null}

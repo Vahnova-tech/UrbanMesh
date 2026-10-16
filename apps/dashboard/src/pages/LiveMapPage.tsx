@@ -113,7 +113,7 @@ export function LiveMapPage() {
         />
         <div className="absolute left-3 top-3 w-56 rounded-card border border-civic-line bg-civic-surface/95 p-3 shadow-card">
           <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-            Layers
+            Map layers
           </p>
           {(
             [
@@ -136,7 +136,7 @@ export function LiveMapPage() {
             </label>
           ))}
           <label className="mt-3 block text-xs font-semibold text-civic-muted">
-            Category
+            Hazard type
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}

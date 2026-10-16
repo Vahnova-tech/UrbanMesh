@@ -83,7 +83,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       title={dark ? "Light mode" : "Dark mode"}
-      className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-civic-line text-civic-ink"
+      className="inline-flex min-h-10 items-center gap-1.5 rounded-[10px] border border-civic-line px-2.5 text-xs font-semibold text-civic-ink"
     >
       {dark ? (
         <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -105,6 +105,7 @@ export function ThemeToggle() {
           />
         </svg>
       )}
+      <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
     </button>
   );
 }

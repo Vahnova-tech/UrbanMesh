@@ -146,9 +146,14 @@ export function HazardDetailPage() {
 
   return (
     <div className="um-scroll h-full pb-[max(2rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)] lg:overflow-hidden lg:pb-0">
-      <div className="h-48 lg:h-full lg:min-h-0">
+      <div className="relative h-48 lg:h-full lg:min-h-0">
         {photo ? (
-          <img src={photo} alt="Hazard evidence photograph" className="h-full w-full object-cover" />
+          <>
+            <img src={photo} alt="Hazard evidence photograph" className="h-full w-full object-cover" />
+            <p className="absolute bottom-2 left-2 rounded-md bg-civic-surface/90 px-2 py-1 text-[11px] font-semibold text-civic-ink">
+              Camera evidence
+            </p>
+          </>
         ) : (
           <MapContainer
             center={[incident.lat, incident.lng]}

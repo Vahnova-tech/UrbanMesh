@@ -111,64 +111,90 @@ export function ReportsPage() {
       </div>
 
       <div className="mb-3 flex rounded-card border border-civic-line bg-civic-mist p-1">
-        {(["nearby", "recent", "verified"] as Tab[]).map((id) => (
+        {(
+          [
+            ["nearby", "Near me"],
+            ["recent", "Recent"],
+            ["verified", "Verified"],
+          ] as Array<[Tab, string]>
+        ).map(([id, label]) => (
           <button
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex-1 rounded-[10px] py-2 text-xs font-semibold capitalize ${
+            className={`flex-1 rounded-[10px] py-2 text-xs font-semibold ${
               tab === id ? "bg-civic-surface text-civic-ink shadow-card" : "text-civic-muted"
             }`}
           >
-            {id}
+            {label}
           </button>
         ))}
       </div>
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
-        >
-          <option value="all">Category</option>
-          {HAZARD_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
-        >
-          <option value="all">Status</option>
-          <option value="verified">Verified</option>
-          <option value="pending">Pending</option>
-        </select>
-        <select
-          value={distance}
-          onChange={(e) => setDistance(Number(e.target.value))}
-          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
-        >
-          {DISTANCES.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
-        <select
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="shrink-0 rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
-        >
-          {DATES.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+        <label className="flex shrink-0 flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Hazard type
+          </span>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+          >
+            <option value="all">All hazards</option>
+            {HAZARD_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex shrink-0 flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Status
+          </span>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+          >
+            <option value="all">All statuses</option>
+            <option value="verified">Verified clusters</option>
+            <option value="pending">Pending confirmation</option>
+          </select>
+        </label>
+        <label className="flex shrink-0 flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Distance
+          </span>
+          <select
+            value={distance}
+            onChange={(e) => setDistance(Number(e.target.value))}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+          >
+            {DISTANCES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="flex shrink-0 flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Date
+          </span>
+          <select
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+          >
+            {DATES.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       {tab === "nearby" && !coords ? (

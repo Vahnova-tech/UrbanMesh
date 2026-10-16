@@ -145,10 +145,9 @@ export function NotificationsPane({
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-[10px] border border-civic-line text-civic-slate"
-            aria-label="Close"
+            className="inline-flex min-h-11 items-center rounded-[10px] border border-civic-line px-3 text-xs font-semibold text-civic-slate"
           >
-            ×
+            Close
           </button>
         </div>
         <div className="flex items-center justify-between px-4 py-2">
@@ -234,7 +233,7 @@ export function NoticeBell({
       aria-label={unreadCount > 0 ? `Updates, ${unreadCount} unread` : "Updates"}
       aria-expanded={open}
       title="Updates"
-      className="relative inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-civic-line text-civic-slate"
+      className="relative inline-flex min-h-10 items-center gap-1.5 rounded-[10px] border border-civic-line px-2.5 text-xs font-semibold text-civic-slate"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path
@@ -250,8 +249,9 @@ export function NoticeBell({
           strokeLinecap="round"
         />
       </svg>
+      <span>Updates</span>
       {unreadCount > 0 ? (
-        <span className="absolute right-1 top-1 min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white">
+        <span className="min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white">
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       ) : null}

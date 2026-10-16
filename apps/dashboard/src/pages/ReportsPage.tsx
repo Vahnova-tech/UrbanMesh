@@ -61,36 +61,51 @@ export function ReportsPage() {
           <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
         </div>
       ) : null}
-      <div className="mt-4 flex flex-wrap gap-2">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
-        >
-          <option value="all">All categories</option>
-          {categories.map((c) => (
-            <option key={c}>{c}</option>
-          ))}
-        </select>
-        <select
-          value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
-        >
-          <option value="all">All statuses</option>
-          <option value="verified">Verified</option>
-          <option value="pending">Pending</option>
-        </select>
-        <select
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
-        >
-          <option value="all">Any date</option>
-          <option value="7">Last 7 days</option>
-          <option value="30">Last 30 days</option>
-          <option value="90">Last 90 days</option>
-        </select>
+      <div className="mt-4 flex flex-wrap gap-3">
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Hazard type
+          </span>
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          >
+            <option value="all">All hazards</option>
+            {categories.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Status
+          </span>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          >
+            <option value="all">All statuses</option>
+            <option value="verified">Verified clusters</option>
+            <option value="pending">Pending confirmation</option>
+          </select>
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Date
+          </span>
+          <select
+            value={days}
+            onChange={(e) => setDays(e.target.value)}
+            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          >
+            <option value="all">Any date</option>
+            <option value="7">Last 7 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </label>
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-card border border-civic-line bg-civic-surface">

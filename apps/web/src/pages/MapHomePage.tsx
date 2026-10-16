@@ -4,7 +4,7 @@ import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
 import { ErrorBanner, ReportCard } from "../components/ui/ReportCard";
-import { LiveMap, type MapFocus } from "../components/map/LiveMap";
+import { LiveMap, MapKey, type MapFocus } from "../components/map/LiveMap";
 import {
   geocodeKilimani,
   mergeSearchHits,
@@ -267,9 +267,9 @@ function SummaryCard({
           <p className="text-xs font-medium text-civic-muted">
             {pending} pending reports
           </p>
-          <p className="mt-1 text-[11px] leading-relaxed text-civic-muted">
-            Solid pins are verified 15 m clusters. Dashed pins are individual reports still waiting for nearby confirmation.
-          </p>
+          <div className="mt-2 lg:hidden">
+            <MapKey bare />
+          </div>
         </>
       )}
     </div>
@@ -346,7 +346,11 @@ function MapFilters({
   return (
     <div className="space-y-2">
       <div className="relative" ref={boxRef}>
+        <label htmlFor={listId + "-q"} className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+          Search streets
+        </label>
         <input
+          id={listId + "-q"}
           type="search"
           value={query}
           onChange={(e) => {
@@ -355,7 +359,7 @@ function MapFilters({
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Search Kilimani streets"
+          placeholder="Yaya, Argwings Kodhek, Ngong Road…"
           aria-label="Search Kilimani streets"
           aria-autocomplete="list"
           aria-expanded={showList}
@@ -382,7 +386,7 @@ function MapFilters({
                 >
                   <span className="font-semibold">{place.name}</span>
                   <span className="text-xs text-civic-muted">
-                    {place.kind === "report" ? "Report · " : ""}
+                    {place.kind === "report" ? "Hazard report · " : "Street or landmark · "}
                     {place.hint}
                   </span>
                 </button>
@@ -398,9 +402,12 @@ function MapFilters({
           </ul>
         ) : null}
       </div>
+      <p className="pt-1 text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+        Hazard type
+      </p>
       <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
         <FilterChip active={category === "all"} onClick={() => onCategory("all")}>
-          All
+          All hazards
         </FilterChip>
         {HAZARD_OPTIONS.map((opt) => (
           <FilterChip
@@ -412,6 +419,9 @@ function MapFilters({
           </FilterChip>
         ))}
       </div>
+      <p className="pt-1 text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+        Status
+      </p>
       <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
         <FilterChip active={status === "all"} onClick={() => onStatus("all")}>
           All statuses
