@@ -335,6 +335,7 @@ export function ReportsPage() {
               incident={incident}
               memberIds={incident.member_ids}
               memberCount={incident.member_count}
+              onCorroborated={() => setReload((n) => n + 1)}
             />
           ))}
         </div>

@@ -255,6 +255,7 @@ export function MapHomePage() {
                     memberIds={incident.member_ids}
                     memberCount={incident.member_count}
                     onSelect={selectReport}
+                    onCorroborated={() => setReload((n) => n + 1)}
                   />
                 ))}
               </div>
@@ -453,6 +454,7 @@ export function MapHomePage() {
                   memberIds={incident.member_ids}
                   memberCount={incident.member_count}
                   onSelect={selectReport}
+                  onCorroborated={() => setReload((n) => n + 1)}
                 />
               ))}
             </div>

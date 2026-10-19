@@ -264,7 +264,12 @@ a[aria-disabled="true"] {
   width: 40px;
   height: 52px;
   position: relative;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+}
+
+html.dark .um-selected-pin__mark {
+  filter: drop-shadow(0 0 0 2px rgba(255, 255, 255, 0.2))
+    drop-shadow(0 4px 12px rgba(0, 0, 0, 0.65));
 }
 
 .um-selected-pin__svg {

@@ -1,7 +1,7 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import type { IncidentPublic } from "../../lib/api";
-import { photoSrc } from "../../lib/api";
+import type { IncidentPublic, ReportResponse } from "../../lib/api";
+import { confirmHazard, photoSrc } from "../../lib/api";
 import { formatRelative, shortTitle } from "../../lib/format";
 import {
   CORROBORATION_THRESHOLD,
@@ -14,6 +14,7 @@ import {
   isGroupResolved,
   setGroupResolved,
 } from "../../lib/resolvedReports";
+import { rememberMyReport } from "../../lib/myReports";
 import { CategoryIcon } from "./StatusBadge";
 import { ReportStatusBadge } from "../reports/ReportStatus";
 import { ButtonLink } from "./Button";
@@ -25,6 +26,8 @@ export function ReportCard({
   memberCount,
   memberIds,
   showResolved = true,
+  showCorroborate = true,
+  onCorroborated,
 }: {
   incident: IncidentPublic;
   footnote?: string;
@@ -32,6 +35,8 @@ export function ReportCard({
   memberCount?: number;
   memberIds?: string[];
   showResolved?: boolean;
+  showCorroborate?: boolean;
+  onCorroborated?: (result: ReportResponse) => void;
 }) {
   const collapsed = incident as CollapsedReport;
   const ids = memberIds?.length
@@ -40,11 +45,22 @@ export function ReportCard({
       ? collapsed.member_ids
       : [incident.id];
   const sightings = memberCount ?? collapsed.member_count ?? 1;
+  const corroborations =
+    collapsed.corroboration_count ?? Math.max(0, sightings - 1);
+  const members = collapsed.members?.length
+    ? collapsed.members
+    : [incident];
+  const latestAt = collapsed.latest_at ?? incident.created_at;
   const idKey = ids.join("|");
   const [photoFailed, setPhotoFailed] = useState(false);
   const [resolved, setResolved] = useState(() => isGroupResolved(ids));
+  const [expanded, setExpanded] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmError, setConfirmError] = useState<string | null>(null);
+  const [confirmOk, setConfirmOk] = useState<string | null>(null);
   const photo = photoFailed ? null : photoSrc(incident.photo_url);
   const matching = corroborationCount(incident.nearby_count);
+  const needsEvidence = matching < CORROBORATION_THRESHOLD || !incident.is_verified;
 
   useEffect(() => {
     setPhotoFailed(false);
@@ -62,6 +78,30 @@ export function ReportCard({
       window.removeEventListener("storage", sync);
     };
   }, [idKey]);
+
+  async function onAddEvidence(ev: MouseEvent) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    setConfirming(true);
+    setConfirmError(null);
+    setConfirmOk(null);
+    try {
+      const result = await confirmHazard(incident.id);
+      rememberMyReport(result.incident_id);
+      setConfirmOk(
+        result.is_verified
+          ? "Confirmation logged — cluster is now community-supported."
+          : "Confirmation logged. More nearby reports still help.",
+      );
+      onCorroborated?.(result);
+    } catch (err) {
+      setConfirmError(
+        err instanceof Error ? err.message : "Couldn't add evidence. Try again.",
+      );
+    } finally {
+      setConfirming(false);
+    }
+  }
 
   const thumb = photo ? (
     <img
@@ -90,7 +130,7 @@ export function ReportCard({
           <p className="um-eyebrow">{incident.category_label}</p>
           {sightings > 1 ? (
             <span className="shrink-0 rounded-full bg-civic-mist px-2 py-0.5 text-[10px] font-semibold text-civic-slate">
-              {sightings} sightings
+              {sightings} merged
             </span>
           ) : null}
         </div>
@@ -105,8 +145,9 @@ export function ReportCard({
           {incident.corridor}
         </p>
         <p className="um-meta mt-1.5">
-          Reported {formatRelative(incident.created_at)} · {matching} matching report
-          {matching === 1 ? "" : "s"}
+          {corroborations > 0
+            ? `${corroborations} new corroboration${corroborations === 1 ? "" : "s"} · ${formatRelative(latestAt)}`
+            : `Reported ${formatRelative(incident.created_at)} · ${matching} matching report${matching === 1 ? "" : "s"}`}
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-2">
           <ReportStatusBadge verified={incident.is_verified} size="sm" />
@@ -123,7 +164,7 @@ export function ReportCard({
           <p className="mt-0.5 text-xs font-semibold text-civic-ink">
             {Math.min(matching, CORROBORATION_THRESHOLD)} of {CORROBORATION_THRESHOLD}{" "}
             reports
-            {sightings > 1 ? ` · ${sightings} device sightings merged` : ""}
+            {sightings > 1 ? ` · ${sightings} sightings in this card` : ""}
           </p>
         </div>
         {footnote ? (
@@ -158,6 +199,78 @@ export function ReportCard({
   return (
     <div className={shellClass}>
       {main}
+
+      {corroborations > 0 ? (
+        <div className="border-t border-civic-line/80 px-3 py-2">
+          <button
+            type="button"
+            aria-expanded={expanded}
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded((open) => !open);
+            }}
+            className="flex w-full items-center justify-between gap-2 text-left text-xs font-semibold text-civic-slate hover:text-civic-ink"
+          >
+            <span>
+              {corroborations} new corroboration{corroborations === 1 ? "" : "s"} (
+              {formatRelative(latestAt)})
+            </span>
+            <span aria-hidden className="text-civic-muted">
+              {expanded ? "▴" : "▾"}
+            </span>
+          </button>
+          {expanded ? (
+            <ul className="mt-2 space-y-2 border-t border-civic-line/60 pt-2">
+              {members.map((row, index) => (
+                <li key={row.id} className="text-xs leading-snug text-civic-slate">
+                  <span className="font-semibold text-civic-ink">
+                    {index === members.length - 1
+                      ? "Initial report"
+                      : "Corroboration"}
+                  </span>
+                  {" · "}
+                  {shortTitle(row.description, row.category_label)}
+                  <span className="mt-0.5 block text-[11px] text-civic-muted">
+                    {formatRelative(row.created_at)} · {row.corridor}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      {showCorroborate && needsEvidence && !resolved ? (
+        <div className="flex flex-wrap items-center gap-2 border-t border-civic-line/80 px-3 py-2.5">
+          <button
+            type="button"
+            onClick={(e) => void onAddEvidence(e)}
+            disabled={confirming}
+            className="inline-flex min-h-10 flex-1 items-center justify-center rounded-[10px] bg-civic-accent px-3 text-xs font-semibold text-white transition-colors hover:bg-civic-accentDark disabled:opacity-60 sm:flex-none"
+          >
+            {confirming ? "Submitting…" : "Add evidence"}
+          </button>
+          <Link
+            to={reportPath(incident.id)}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex min-h-10 items-center justify-center rounded-[10px] border border-civic-line px-3 text-xs font-semibold text-civic-ink hover:bg-civic-mist"
+          >
+            Details
+          </Link>
+        </div>
+      ) : null}
+
+      {confirmError ? (
+        <p className="border-t border-civic-critical/20 bg-civic-criticalBg px-3 py-2 text-xs font-medium text-civic-critical">
+          {confirmError}
+        </p>
+      ) : null}
+      {confirmOk ? (
+        <p className="border-t border-civic-verified/20 bg-civic-verifiedBg px-3 py-2 text-xs font-medium text-civic-verified">
+          {confirmOk}
+        </p>
+      ) : null}
+
       {showResolved ? (
         <label className="flex cursor-pointer items-center gap-2 border-t border-civic-line/80 px-3 py-2.5 text-xs font-semibold text-civic-slate">
           <input

@@ -224,6 +224,7 @@ export function MyReportsPage() {
                 incident={incident}
                 memberIds={incident.member_ids}
                 memberCount={incident.member_count}
+                onCorroborated={() => setReload((n) => n + 1)}
                 footnote={
                   loggedAt
                     ? `Logged on this device · ${formatWhen(loggedAt)}`

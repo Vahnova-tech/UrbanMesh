@@ -77,18 +77,37 @@ export function buildNotices(
 
   const pendingNearby = nearby
     .filter((row) => !row.is_verified && !myIds.has(row.id))
-    .sort((a, b) => b.nearby_count - a.nearby_count || b.created_at.localeCompare(a.created_at))
-    .slice(0, 8);
+    .sort((a, b) => b.nearby_count - a.nearby_count || b.created_at.localeCompare(a.created_at));
 
+  const usedConfirm = new Set<string>();
   for (const row of pendingNearby) {
+    if (usedConfirm.has(row.id)) continue;
+    const peers = pendingNearby.filter(
+      (other) =>
+        !usedConfirm.has(other.id) &&
+        other.category === row.category &&
+        haversineMeters(row.lat, row.lng, other.lat, other.lng) <= 15,
+    );
+    for (const peer of peers) usedConfirm.add(peer.id);
+    const count = peers.length;
+    const newest = peers.reduce((a, b) =>
+      a.created_at > b.created_at ? a : b,
+    );
     notices.push({
-      id: `confirm:${row.id}`,
+      id: `confirm:${row.cluster_id ?? row.id}`,
       kind: "confirm",
-      title: "Nearby report needs confirmation",
-      body: `${row.category_label} on ${row.corridor}. Confirm if you see the same hazard.`,
-      at: row.created_at,
-      href: `/reports/${row.id}`,
+      title:
+        count > 1
+          ? `${count} nearby reports need confirmation`
+          : "Nearby report needs confirmation",
+      body:
+        count > 1
+          ? `${row.category_label} on ${row.corridor}. ${count} sightings within 15 m — confirm if you see the same hazard.`
+          : `${row.category_label} on ${row.corridor}. Confirm if you see the same hazard.`,
+      at: newest.created_at,
+      href: `/reports/${newest.id}`,
     });
+    if (notices.filter((n) => n.kind === "confirm").length >= 6) break;
   }
 
   return notices.sort((a, b) => b.at.localeCompare(a.at)).slice(0, 24);

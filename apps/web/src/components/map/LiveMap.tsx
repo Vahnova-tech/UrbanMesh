@@ -43,11 +43,12 @@ function markerFill(incident: IncidentPublic): string {
   return MARKER.verified;
 }
 
-function selectedPinHtml(fill: string, ring: string): string {
-  return `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true">
+function selectedPinHtml(fill: string, ring: string, dark: boolean): string {
+  const glow = dark ? "0 0 0 3px rgba(255,255,255,.22), 0 0 14px rgba(0,0,0,.55)" : "0 2px 8px rgba(0,0,0,.32)";
+  return `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring};filter:drop-shadow(${glow})" aria-hidden="true">
     <svg class="um-selected-pin__svg" viewBox="0 0 40 52" width="40" height="52" focusable="false">
-      <path d="M20 50c6-8 16-18 16-30A16 16 0 0 0 4 20c0 12 10 22 16 30z" fill="rgba(0,0,0,.18)"/>
-      <path d="M20 2c-9.4 0-17 7.6-17 17 0 12.4 14.2 28.2 16.2 30.4a1.1 1.1 0 0 0 1.6 0C22.8 47.2 37 31.4 37 19 37 9.6 29.4 2 20 2z" fill="${fill}" stroke="${ring}" stroke-width="2.5"/>
+      <path d="M20 50c6-8 16-18 16-30A16 16 0 0 0 4 20c0 12 10 22 16 30z" fill="rgba(0,0,0,.28)"/>
+      <path d="M20 2c-9.4 0-17 7.6-17 17 0 12.4 14.2 28.2 16.2 30.4a1.1 1.1 0 0 0 1.6 0C22.8 47.2 37 31.4 37 19 37 9.6 29.4 2 20 2z" fill="${fill}" stroke="${ring}" stroke-width="3"/>
       <circle cx="20" cy="19" r="6.5" fill="${ring}"/>
       <circle cx="20" cy="19" r="3.25" fill="${fill}"/>
     </svg>
@@ -126,12 +127,37 @@ function ensureIncidentLayers(map: MapLibreMap, dark: boolean) {
       id: "um-marker-halo",
       type: "circle",
       source: "um-markers",
-      filter: ["==", ["get", "kind"], "cluster"],
+      filter: [
+        "in",
+        ["get", "kind"],
+        ["literal", ["cluster", "verified"]],
+      ],
       paint: {
-        "circle-radius": 16,
+        "circle-radius": [
+          "case",
+          [">", ["get", "selected"], 0],
+          dark ? 22 : 18,
+          dark ? 18 : 15,
+        ],
         "circle-color": ["get", "color"],
-        "circle-opacity": dark ? 0.18 : 0.14,
-        "circle-pitch-alignment": "map",
+        "circle-opacity": dark ? 0.34 : 0.16,
+        "circle-blur": dark ? 0.55 : 0.35,
+        "circle-pitch-alignment": "viewport",
+      },
+    });
+
+    map.addLayer({
+      id: "um-marker-selected-ring",
+      type: "circle",
+      source: "um-markers",
+      filter: [">", ["get", "selected"], 0],
+      paint: {
+        "circle-radius": ["+", ["get", "radius"], dark ? 7 : 5],
+        "circle-color": "transparent",
+        "circle-stroke-width": dark ? 2.5 : 2,
+        "circle-stroke-color": dark ? "#F5F0E8" : "#FFFFFF",
+        "circle-stroke-opacity": dark ? 0.92 : 0.85,
+        "circle-pitch-alignment": "viewport",
       },
     });
 
@@ -146,21 +172,68 @@ function ensureIncidentLayers(map: MapLibreMap, dark: boolean) {
         "circle-stroke-width": [
           "case",
           [">", ["get", "selected"], 0],
-          3,
+          dark ? 3.5 : 3,
           ["==", ["get", "kind"], "pending"],
-          1.5,
-          2,
+          1.75,
+          dark ? 2.75 : 2,
         ],
-        "circle-stroke-color": dark ? "#EEE9E1" : "#FFFFFF",
-        "circle-opacity": ["case", ["==", ["get", "kind"], "pending"], 0.85, 0.96],
+        "circle-stroke-color": dark ? "#F7F2EA" : "#FFFFFF",
+        "circle-opacity": ["case", ["==", ["get", "kind"], "pending"], 0.9, 1],
         "circle-pitch-alignment": "viewport",
       },
     });
   } else {
     try {
+      if (!map.getLayer("um-marker-selected-ring") && map.getLayer("um-marker-circle")) {
+        map.addLayer(
+          {
+            id: "um-marker-selected-ring",
+            type: "circle",
+            source: "um-markers",
+            filter: [">", ["get", "selected"], 0],
+            paint: {
+              "circle-radius": ["+", ["get", "radius"], dark ? 7 : 5],
+              "circle-color": "transparent",
+              "circle-stroke-width": dark ? 2.5 : 2,
+              "circle-stroke-color": dark ? "#F5F0E8" : "#FFFFFF",
+              "circle-stroke-opacity": dark ? 0.92 : 0.85,
+              "circle-pitch-alignment": "viewport",
+            },
+          },
+          "um-marker-circle",
+        );
+      }
       map.setPaintProperty("um-heat-layer", "heatmap-opacity", dark ? 0.55 : 0.42);
-      map.setPaintProperty("um-marker-circle", "circle-stroke-color", dark ? "#EEE9E1" : "#FFFFFF");
-      map.setPaintProperty("um-marker-halo", "circle-opacity", dark ? 0.18 : 0.14);
+      map.setPaintProperty("um-marker-circle", "circle-stroke-color", dark ? "#F7F2EA" : "#FFFFFF");
+      map.setPaintProperty("um-marker-circle", "circle-stroke-width", [
+        "case",
+        [">", ["get", "selected"], 0],
+        dark ? 3.5 : 3,
+        ["==", ["get", "kind"], "pending"],
+        1.75,
+        dark ? 2.75 : 2,
+      ]);
+      map.setPaintProperty("um-marker-halo", "circle-opacity", dark ? 0.34 : 0.16);
+      map.setPaintProperty("um-marker-halo", "circle-radius", [
+        "case",
+        [">", ["get", "selected"], 0],
+        dark ? 22 : 18,
+        dark ? 18 : 15,
+      ]);
+      if (map.getLayer("um-marker-halo")) {
+        map.setFilter("um-marker-halo", [
+          "in",
+          ["get", "kind"],
+          ["literal", ["cluster", "verified"]],
+        ]);
+      }
+      if (map.getLayer("um-marker-selected-ring")) {
+        map.setPaintProperty(
+          "um-marker-selected-ring",
+          "circle-stroke-color",
+          dark ? "#F5F0E8" : "#FFFFFF",
+        );
+      }
     } catch {
       /* layers may be mid-swap */
     }
@@ -467,10 +540,10 @@ export function LiveMap({
     if (!selected || focus) return;
 
     const fill = markerFill(selected);
-    const ring = dark ? "#EEE9E1" : "#FFFFFF";
+    const ring = dark ? "#F7F2EA" : "#FFFFFF";
     const el = document.createElement("div");
     el.className = "um-selected-pin";
-    el.innerHTML = selectedPinHtml(fill, ring);
+    el.innerHTML = selectedPinHtml(fill, ring, dark);
 
     selectedMarkerRef.current = new maplibregl.Marker({
       element: el,

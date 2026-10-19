@@ -49,10 +49,10 @@ export const HEAT_DARK = {
 };
 
 export const MARKER = {
-  pending: "#C4923A",
-  verified: "#3F8A74",
-  critical: "#C56A58",
-  you: "#3DDCFF",
+  pending: "#D4A24A",
+  verified: "#4FA890",
+  critical: "#D47868",
+  you: "#5AE0FF",
 };
 
 export function styleUrlFor(dark: boolean): string {
