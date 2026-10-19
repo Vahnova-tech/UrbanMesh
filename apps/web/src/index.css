@@ -294,7 +294,8 @@ a[aria-disabled="true"] {
 @media (prefers-reduced-motion: reduce) {
   .um-enter,
   .um-sheet,
-  .um-skeleton {
+  .um-skeleton,
+  .um-selected-pin__mark::before {
     animation: none;
   }
 

@@ -100,6 +100,11 @@ export function MapHomePage() {
 
   const verified = visible.filter((i) => i.is_verified).length;
   const pending = visible.length - verified;
+  const mapIncidents = useMemo(() => {
+    if (!selected) return visible;
+    if (visible.some((row) => row.id === selected.id)) return visible;
+    return [...visible, selected];
+  }, [visible, selected]);
   const localHits = useMemo(
     () =>
       mergeSearchHits(searchKilimaniPlaces(query), searchIncidents(query, incidents)),
@@ -168,12 +173,12 @@ export function MapHomePage() {
       <div className="relative min-h-0 min-w-0 flex-1">
         <div className={view === "list" ? "absolute inset-0 hidden lg:block" : "absolute inset-0"}>
           <LiveMap
-            incidents={visible}
+            incidents={mapIncidents}
             user={coords}
             locateNonce={locateNonce}
             focus={focus}
-            showVerified={status !== "pending"}
-            showPending={status !== "verified"}
+            showVerified={status !== "pending" || selected?.is_verified === true}
+            showPending={status !== "verified" || selected?.is_verified === false}
             selectedId={selected?.id ?? null}
             onSelect={selectReport}
           />

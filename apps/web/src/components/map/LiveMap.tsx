@@ -141,23 +141,13 @@ function SelectedReportMarker({
     <>
       <Circle
         center={[incident.lat, incident.lng]}
-        radius={28}
+        radius={36}
         pathOptions={{
           color: fill,
           weight: 2,
           dashArray: "5 4",
           fillColor: fill,
-          fillOpacity: dark ? 0.14 : 0.12,
-        }}
-      />
-      <CircleMarker
-        center={[incident.lat, incident.lng]}
-        radius={13}
-        pathOptions={{
-          color: ring,
-          weight: 3,
-          fillColor: fill,
-          fillOpacity: 1,
+          fillOpacity: dark ? 0.16 : 0.12,
         }}
       />
       <Marker
