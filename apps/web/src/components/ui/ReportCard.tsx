@@ -7,15 +7,14 @@ import { CategoryIcon, StatusBadge } from "./StatusBadge";
 export function ReportCard({
   incident,
   footnote,
+  onSelect,
 }: {
   incident: IncidentPublic;
   footnote?: string;
+  onSelect?: (incident: IncidentPublic) => void;
 }) {
-  return (
-    <Link
-      to={`/hazards/${incident.id}`}
-      className="flex gap-3 rounded-card border border-civic-line bg-civic-surface p-3.5 shadow-card transition-colors hover:border-civic-slate hover:bg-civic-paper"
-    >
+  const body = (
+    <>
       <div
         className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
           incident.is_verified
@@ -49,6 +48,27 @@ export function ReportCard({
           <p className="mt-1 text-[11px] text-civic-muted">{footnote}</p>
         ) : null}
       </div>
+    </>
+  );
+
+  const className =
+    "flex gap-3 rounded-card border border-civic-line bg-civic-surface p-3.5 shadow-card transition-colors hover:border-civic-slate hover:bg-civic-paper";
+
+  if (onSelect) {
+    return (
+      <button
+        type="button"
+        onClick={() => onSelect(incident)}
+        className={`${className} w-full text-left`}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <Link to={`/hazards/${incident.id}`} className={className}>
+      {body}
     </Link>
   );
 }

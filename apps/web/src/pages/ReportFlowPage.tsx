@@ -425,11 +425,11 @@ function ResultState({ result }: { result: ReportResponse }) {
       <p className="um-meta mt-6">
         Nairobi City County has not inspected this site. Field-verified and Resolved are not live states yet.
       </p>
-      <ButtonLink to={`/hazards/${result.incident_id}`} className="mt-8 w-full">
-        View evidence
+      <ButtonLink to={`/?select=${result.incident_id}`} className="mt-8 w-full">
+        View on map
       </ButtonLink>
-      <ButtonLink to="/" variant="secondary" className="mt-3 w-full">
-        Back to map
+      <ButtonLink to={`/hazards/${result.incident_id}`} variant="secondary" className="mt-3 w-full">
+        View evidence
       </ButtonLink>
     </div>
   );

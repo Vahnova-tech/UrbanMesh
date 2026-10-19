@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
@@ -22,6 +22,8 @@ type MapView = "map" | "list";
 
 export function MapHomePage() {
   const { coords, requestLocation, locating, error: locationError } = useLocationState();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectParam = searchParams.get("select");
   const [incidents, setIncidents] = useState<IncidentPublic[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [category, setCategory] = useState<string>("all");
@@ -61,6 +63,31 @@ export function MapHomePage() {
       window.clearInterval(timer);
     };
   }, [reload]);
+
+  useEffect(() => {
+    if (!selectParam || incidents.length === 0) return;
+    const match = incidents.find((row) => row.id === selectParam);
+    if (!match) return;
+    setCategory("all");
+    setStatus("all");
+    setFocus(null);
+    setSelected(match);
+    setView("map");
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("select");
+        return next;
+      },
+      { replace: true },
+    );
+  }, [selectParam, incidents, setSearchParams]);
+
+  function selectReport(incident: IncidentPublic) {
+    setFocus(null);
+    setSelected(incident);
+    setView("map");
+  }
 
   const visible = useMemo(() => {
     return incidents.filter((item) => {
@@ -148,7 +175,7 @@ export function MapHomePage() {
             showVerified={status !== "pending"}
             showPending={status !== "verified"}
             selectedId={selected?.id ?? null}
-            onSelect={setSelected}
+            onSelect={selectReport}
           />
         </div>
 
@@ -162,7 +189,7 @@ export function MapHomePage() {
             ) : (
               <div className="space-y-3">
                 {visible.map((incident) => (
-                  <ReportCard key={incident.id} incident={incident} />
+                  <ReportCard key={incident.id} incident={incident} onSelect={selectReport} />
                 ))}
               </div>
             )}
@@ -327,7 +354,7 @@ export function MapHomePage() {
           ) : (
             <div className="space-y-3">
               {visible.slice(0, 40).map((incident) => (
-                <ReportCard key={incident.id} incident={incident} />
+                <ReportCard key={incident.id} incident={incident} onSelect={selectReport} />
               ))}
             </div>
           )}

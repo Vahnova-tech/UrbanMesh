@@ -3,6 +3,7 @@ import {
   Circle,
   CircleMarker,
   MapContainer,
+  Marker,
   Popup,
   TileLayer,
   useMap,
@@ -116,6 +117,75 @@ function markerFill(incident: IncidentPublic): string {
   return MARKER.verified;
 }
 
+function selectedPinIcon(fill: string, ring: string): L.DivIcon {
+  return L.divIcon({
+    className: "um-selected-pin",
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    html: `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true"></span>`,
+  });
+}
+
+function SelectedReportMarker({
+  incident,
+  dark,
+}: {
+  incident: IncidentPublic;
+  dark: boolean;
+}) {
+  const fill = markerFill(incident);
+  const ring = dark ? "#EEE9E1" : "#FFFFFF";
+  const icon = useMemo(() => selectedPinIcon(fill, ring), [fill, ring]);
+
+  return (
+    <>
+      <Circle
+        center={[incident.lat, incident.lng]}
+        radius={28}
+        pathOptions={{
+          color: fill,
+          weight: 2,
+          dashArray: "5 4",
+          fillColor: fill,
+          fillOpacity: dark ? 0.14 : 0.12,
+        }}
+      />
+      <CircleMarker
+        center={[incident.lat, incident.lng]}
+        radius={13}
+        pathOptions={{
+          color: ring,
+          weight: 3,
+          fillColor: fill,
+          fillOpacity: 1,
+        }}
+      />
+      <Marker
+        position={[incident.lat, incident.lng]}
+        icon={icon}
+        zIndexOffset={800}
+        interactive={false}
+      />
+    </>
+  );
+}
+
+function FlyToSelected({ incident }: { incident: IncidentPublic | null }) {
+  const map = useMap();
+  const lastId = useRef<string | null>(null);
+  useEffect(() => {
+    if (!incident) {
+      lastId.current = null;
+      return;
+    }
+    if (lastId.current === incident.id) return;
+    lastId.current = incident.id;
+    const duration = prefersReducedMotion() ? 0 : 0.55;
+    map.flyTo([incident.lat, incident.lng], 17, { duration });
+  }, [map, incident]);
+  return null;
+}
+
 export type MapFocus = {
   lat: number;
   lng: number;
@@ -155,6 +225,7 @@ export function LiveMap({
     () => new Map(incidents.map((row) => [row.id, row])),
     [incidents],
   );
+  const selected = selectedId ? byId.get(selectedId) ?? null : null;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -188,6 +259,7 @@ export function LiveMap({
         {showVerified ? <HeatLayer points={incidents} dark={dark} /> : null}
         <FitOnce points={incidents} />
         <FlyToTarget target={flyTarget} nonce={flyNonce} />
+        <FlyToSelected incident={focus ? null : selected} />
         {focus?.label ? <SearchPin target={focus} /> : null}
 
         {showVerified
@@ -317,6 +389,8 @@ export function LiveMap({
             />
           </>
         ) : null}
+
+        {selected ? <SelectedReportMarker incident={selected} dark={dark} /> : null}
       </MapContainer>
       <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[220px] lg:block">
         <MapKey />
@@ -354,6 +428,7 @@ export function MapKey({ bare = false }: { bare?: boolean }) {
         <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
         <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
         <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
+        <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Target ring" />
       </ul>
     </>
   );
@@ -370,22 +445,32 @@ function LegendItem({
   label,
   hint,
   dashed = false,
+  crosshair = false,
 }: {
   color: string;
   label: string;
   hint: string;
   dashed?: boolean;
+  crosshair?: boolean;
 }) {
   return (
     <li className="flex items-center gap-2">
-      <span
-        className="h-2.5 w-2.5 shrink-0 rounded-full border border-white"
-        style={{
-          background: color,
-          outline: dashed ? `1px dashed ${color}` : undefined,
-          outlineOffset: dashed ? "1px" : undefined,
-        }}
-      />
+      <span className="relative h-2.5 w-2.5 shrink-0">
+        <span
+          className="absolute inset-0 rounded-full border border-white"
+          style={{
+            background: color,
+            outline: dashed ? `1px dashed ${color}` : undefined,
+            outlineOffset: dashed ? "1px" : undefined,
+          }}
+        />
+        {crosshair ? (
+          <span
+            className="absolute inset-[-3px] rounded-full border border-dashed"
+            style={{ borderColor: color }}
+          />
+        ) : null}
+      </span>
       <span className="min-w-0">
         <span className="block text-[11px] font-semibold leading-tight text-civic-ink">
           {label}
