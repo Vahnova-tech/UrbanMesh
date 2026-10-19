@@ -14,16 +14,23 @@ export function DetailMap({
   lng,
   verified,
   className = "",
+  prominent = false,
 }: {
   lat: number;
   lng: number;
   verified: boolean;
   className?: string;
+  /** Larger teardrop pin for report-detail previews. */
+  prominent?: boolean;
 }) {
   const { dark } = useTheme();
   const wrapRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
+  const verifiedRef = useRef(verified);
+  const prominentRef = useRef(prominent);
+  verifiedRef.current = verified;
+  prominentRef.current = prominent;
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -33,7 +40,7 @@ export function DetailMap({
       container: el,
       style: styleUrlFor(dark),
       center: [lng, lat],
-      zoom: 16.4,
+      zoom: prominent ? 16.8 : 16.4,
       pitch: 42,
       bearing: MAP_CAMERA.bearing,
       maxPitch: MAP_CAMERA.maxPitch,
@@ -47,9 +54,26 @@ export function DetailMap({
       applyUrbanMeshBasemap(map, dark);
       markerRef.current?.remove();
       const pin = document.createElement("div");
-      pin.className = "h-3.5 w-3.5 rounded-full border-2 border-white shadow";
-      pin.style.background = verified ? MARKER.verified : MARKER.pending;
-      markerRef.current = new maplibregl.Marker({ element: pin, pitchAlignment: "viewport" })
+      const color = verifiedRef.current ? MARKER.verified : MARKER.pending;
+      if (prominentRef.current) {
+        pin.innerHTML = `
+          <svg width="36" height="44" viewBox="0 0 36 44" fill="none" aria-hidden="true">
+            <path d="M18 42s14-12.4 14-22.4A14 14 0 1 0 4 19.6C4 29.6 18 42 18 42z" fill="${color}" stroke="#fff" stroke-width="2.5"/>
+            <circle cx="18" cy="18" r="5.5" fill="#fff"/>
+          </svg>
+        `;
+        pin.style.width = "36px";
+        pin.style.height = "44px";
+        pin.style.transform = "translateY(4px)";
+      } else {
+        pin.className = "h-3.5 w-3.5 rounded-full border-2 border-white shadow";
+        pin.style.background = color;
+      }
+      markerRef.current = new maplibregl.Marker({
+        element: pin,
+        pitchAlignment: "viewport",
+        anchor: prominentRef.current ? "bottom" : "center",
+      })
         .setLngLat([lng, lat])
         .addTo(map);
     };
