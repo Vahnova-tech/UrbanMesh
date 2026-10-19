@@ -8,7 +8,7 @@ import { HAZARD_OPTIONS } from "../lib/categories";
 import { haversineMeters } from "../lib/geo";
 import { useLocationState } from "../lib/location";
 import { EmptyState, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
-import { Link } from "react-router-dom";
+import { ButtonLink } from "../components/ui/Button";
 import { PipelineStrip, SkeletonList } from "../components/ui/Pipeline";
 
 type Tab = "nearby" | "recent" | "verified";
@@ -91,23 +91,20 @@ export function ReportsPage() {
   }, [items, category, status, date, tab, coords, distance]);
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-6">
-      <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
+      <div className="mb-6 flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight lg:text-2xl">Reports</h1>
-          <p className="mt-1 text-sm text-civic-muted">
+          <h1 className="um-display text-2xl lg:text-3xl">Reports</h1>
+          <p className="um-body mt-2">
             Nearby evidence across Kilimani.
           </p>
-          <div className="mt-2">
+          <div className="mt-3">
             <PipelineStrip compact />
           </div>
         </div>
-        <Link
-          to="/report"
-          className="rounded-card bg-civic-accent px-3 py-2 text-xs font-semibold text-white lg:min-h-11 lg:px-4 lg:text-sm"
-        >
+        <ButtonLink to="/report" className="shrink-0 px-3 text-xs lg:px-4 lg:text-sm">
           + Report
-        </Link>
+        </ButtonLink>
       </div>
 
       <div className="mb-3 flex rounded-card border border-civic-line bg-civic-mist p-1">

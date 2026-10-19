@@ -3,7 +3,7 @@ import { fetchReports, type IncidentPublic } from "../lib/api";
 import { loadMyReportIds } from "../lib/myReports";
 import { formatWhen } from "../lib/format";
 import { EmptyState, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
-import { Link } from "react-router-dom";
+import { ButtonLink } from "../components/ui/Button";
 import { PipelineStrip, SkeletonList } from "../components/ui/Pipeline";
 
 export function MyReportsPage() {
@@ -63,16 +63,16 @@ export function MyReportsPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-[1100px] px-4 py-4 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-6">
-      <h1 className="text-xl font-semibold tracking-tight lg:text-2xl">My reports</h1>
-      <p className="mt-1 text-sm leading-relaxed text-civic-muted">
+    <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(2rem,env(safe-area-inset-bottom))] lg:px-6 lg:py-8">
+      <h1 className="um-display text-2xl lg:text-3xl">My reports</h1>
+      <p className="um-body mt-2">
         Stored on this device. No public profile — just the hazards you logged in Kilimani.
       </p>
-      <div className="mt-3">
+      <div className="mt-4">
         <PipelineStrip compact />
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2">
+      <div className="mt-6 grid grid-cols-3 gap-3">
         <Stat label="Submitted" value={items.length} />
         <Stat label="Pending" value={pending.length} />
         <Stat label="Community-supported" value={verified.length} />
@@ -96,17 +96,12 @@ export function MyReportsPage() {
       ) : null}
 
       {!loading && items.length === 0 ? (
-        <div className="mt-4">
+        <div className="mt-6">
           <EmptyState
             title="No reports from this phone yet"
             body="When you submit a hazard, it will appear here until nearby residents corroborate a 15 m cluster."
+            action={<ButtonLink to="/report">Report an issue</ButtonLink>}
           />
-          <Link
-            to="/report"
-            className="mt-3 inline-flex min-h-12 items-center justify-center rounded-card bg-civic-accent px-5 text-sm font-semibold text-white lg:min-w-[12rem]"
-          >
-            Report a hazard
-          </Link>
         </div>
       ) : null}
 
@@ -158,11 +153,9 @@ export function MyReportsPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-3">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-        {label}
-      </p>
-      <p className="mt-1 text-xl font-semibold">{value}</p>
+    <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-4">
+      <p className="um-eyebrow">{label}</p>
+      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-civic-ink">{value}</p>
     </div>
   );
 }

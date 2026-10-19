@@ -84,35 +84,33 @@ export function OverviewPage() {
   }
 
   return (
-    <div className="p-5 lg:p-7">
-      <header className="mb-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-          Nairobi City County · {MONTH_LABEL}
-        </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+    <div className="p-5 lg:p-8">
+      <header className="mb-8">
+        <p className="um-eyebrow">Nairobi City County · {MONTH_LABEL}</p>
+        <h1 className="um-display mt-2">
           Kilimani walkability intelligence
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-civic-slate">
+        <p className="um-body mt-3 max-w-2xl text-base">
           Residents report what they see. UrbanMesh groups nearby same-category
           reports into community-supported clusters. Planners receive that spatial
           corroboration as Kilimani planning input — not as a field inspection or a
           statutory LPDP.
         </p>
-        <p className="mt-2 text-xs font-medium text-civic-muted">
+        <p className="um-meta mt-2">
           {formatDataAsOf(metrics.generated_at)}
         </p>
-        <div className="mt-4">
+        <div className="mt-5">
           <PipelineStrip />
         </div>
       </header>
 
-      <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
         <StatCard label="Total reports" value={metrics.totals.all} />
         <StatCard label="Community-supported clusters" value={metrics.totals.clusters} />
         <StatCard label="Pending reports" value={metrics.totals.unverified} />
         <StatCard label="Affected areas" value={metrics.totals.affected_areas} />
       </div>
-      <p className="mb-5 text-xs leading-relaxed text-civic-muted">
+      <p className="um-meta mb-8">
         Affected areas use approximate Kilimani planning boxes, not official Nairobi ward polygons.
         Community-supported means spatial corroboration (≥3 same-category reports within 15 m), not a field inspection.
       </p>

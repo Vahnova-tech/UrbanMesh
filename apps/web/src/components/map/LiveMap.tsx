@@ -349,9 +349,7 @@ export function LiveMap({
 export function MapKey({ bare = false }: { bare?: boolean }) {
   const body = (
     <>
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-civic-muted">
-        Map key
-      </p>
+      <p className="um-eyebrow text-[10px]">Map key</p>
       <ul className="mt-1.5 space-y-1">
         <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
         <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />

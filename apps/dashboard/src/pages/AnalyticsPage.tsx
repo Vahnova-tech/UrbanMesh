@@ -195,21 +195,21 @@ export function AnalyticsPage() {
   }
 
   return (
-    <div className="p-5 lg:p-7">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="p-5 lg:p-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-          <p className="mt-1 text-sm text-civic-muted">
+          <h1 className="um-display">Analytics</h1>
+          <p className="um-body mt-2 max-w-xl">
             How Kilimani reports concentrate, become community-supported, and emerge along pilot corridors.
           </p>
-          <p className="mt-1 text-xs font-medium text-civic-muted">
+          <p className="um-meta mt-2">
             {formatDataAsOf(metrics.generated_at)}
           </p>
         </div>
         <button
           type="button"
           onClick={exportCsv}
-          className="rounded-card border border-civic-line px-3 py-2 text-sm font-semibold"
+          className="min-h-10 rounded-card border border-civic-line px-4 py-2 text-sm font-semibold transition-colors hover:bg-civic-mist"
         >
           Export data
         </button>

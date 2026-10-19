@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
-import { ErrorBanner, ReportCard } from "../components/ui/ReportCard";
+import { EmptyState, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
+import { ButtonLink } from "../components/ui/Button";
 import { StatusBadge } from "../components/ui/StatusBadge";
 import { LiveMap, MapKey, type MapFocus } from "../components/map/LiveMap";
 import { formatRelative, formatWhen } from "../lib/format";
@@ -152,11 +153,12 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-36 lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-40 lg:hidden">
             {visible.length === 0 ? (
-              <p className="text-sm font-medium text-civic-muted">
-                No Kilimani reports match these filters.
-              </p>
+              <EmptyState
+                title="No Kilimani reports match these filters"
+                body="Widen the hazard type or status filters, or report what you see on the street."
+              />
             ) : (
               <div className="space-y-3">
                 {visible.map((incident) => (
@@ -169,24 +171,19 @@ export function MapHomePage() {
 
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
-            <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 shadow-card">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                Kilimani pilot · Nairobi
-              </p>
-              <h1 className="mt-0.5 text-sm font-semibold tracking-tight text-civic-ink">
-                Report street hazards. UrbanMesh groups nearby reports into planning evidence.
+            <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3 shadow-card">
+              <p className="um-eyebrow">Kilimani pilot · Nairobi</p>
+              <h1 className="mt-1 text-[0.95rem] font-semibold leading-snug tracking-tight text-civic-ink">
+                Report street hazards. Neighbours corroborate them into planning evidence.
               </h1>
-              <div className="mt-2 flex gap-2">
-                <Link
-                  to="/about"
-                  className="text-xs font-semibold text-civic-accent"
-                >
+              <div className="mt-2.5 flex items-center gap-3">
+                <Link to="/about" className="text-xs font-semibold text-civic-accent">
                   How reporting works
                 </Link>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen((open) => !open)}
-                  className="ml-auto text-xs font-semibold text-civic-slate"
+                  className="ml-auto rounded-sm border border-civic-line px-2.5 py-1 text-xs font-semibold text-civic-slate"
                   aria-expanded={filtersOpen}
                 >
                   {filtersOpen ? "Hide filters" : "Filters"}
@@ -194,7 +191,7 @@ export function MapHomePage() {
               </div>
             </div>
             {filtersOpen ? (
-              <div className="rounded-card border border-civic-line bg-civic-surface p-3 shadow-card">
+              <div className="rounded-card border border-civic-line bg-civic-surface p-3.5 shadow-card">
                 <MapFilters {...filterProps} />
               </div>
             ) : null}
@@ -218,28 +215,25 @@ export function MapHomePage() {
           />
         </div>
 
-        <div className="absolute bottom-5 right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
+        <div className="absolute bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
           <button
             type="button"
             onClick={() => setView((v) => (v === "map" ? "list" : "map"))}
             aria-pressed={view === "list"}
-            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold text-civic-ink shadow-card lg:hidden"
+            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card lg:hidden"
           >
             {view === "map" ? "List" : "Map"}
           </button>
           <button
             type="button"
             onClick={onLocate}
-            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3 py-2 text-xs font-semibold text-civic-ink shadow-card"
+            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card"
           >
             {locating ? "Locating…" : "Recenter on me"}
           </button>
-          <Link
-            to="/report"
-            className="inline-flex min-h-14 items-center rounded-card bg-civic-accent px-5 text-sm font-semibold text-white shadow-card lg:hidden"
-          >
+          <ButtonLink to="/report" className="min-h-14 px-5 shadow-card lg:hidden">
             Report an issue
-          </Link>
+          </ButtonLink>
         </div>
 
         <BottomSheet
@@ -248,59 +242,55 @@ export function MapHomePage() {
           onClose={() => setSelected(null)}
         >
           {selected ? (
-            <div className="space-y-2 pb-2">
+            <>
               <StatusBadge verified={selected.is_verified} size="sm" />
-              <p className="text-sm leading-relaxed text-civic-slate">{selected.description}</p>
-              <p className="text-xs font-medium text-civic-muted">
+              <p className="um-body">{selected.description}</p>
+              <p className="um-meta">
                 {selected.corridor} · {formatRelative(selected.created_at)} · {formatWhen(selected.created_at)}
               </p>
-              <p className="text-xs leading-relaxed text-civic-muted">
+              <p className="um-meta">
                 {selected.is_verified
                   ? "Community-supported: three or more same-category reports within 15 m. Not a field inspection."
                   : "Pending: waiting for nearby same-category reports to corroborate this sighting."}
               </p>
-              <Link
-                to={`/hazards/${selected.id}`}
-                className="inline-flex min-h-11 items-center text-sm font-semibold text-civic-accent"
-              >
+              <ButtonLink to={`/hazards/${selected.id}`} variant="ghost" className="min-h-11 px-0">
                 Open full evidence
-              </Link>
-            </div>
+              </ButtonLink>
+            </>
           ) : null}
         </BottomSheet>
       </div>
 
-      <aside className="hidden w-[380px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
-        <div className="border-b border-civic-line p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Kilimani pilot · Nairobi City County
-          </p>
-          <h1 className="mt-1 text-base font-semibold tracking-tight">
+      <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
+        <div className="border-b border-civic-line px-5 py-5">
+          <p className="um-eyebrow">Kilimani pilot · Nairobi City County</p>
+          <h1 className="um-title mt-2 text-lg lg:text-xl">
             Street hazards become planning evidence when neighbours corroborate them.
           </h1>
-          <p className="mt-1 text-xs leading-relaxed text-civic-muted">
+          <p className="um-body mt-2">
             Scope is Kilimani only. Community-supported clusters are spatial corroboration, not county inspection.
           </p>
-          <Link to="/about" className="mt-2 inline-block text-xs font-semibold text-civic-accent">
+          <Link to="/about" className="mt-3 inline-block text-sm font-semibold text-civic-accent">
             How reporting works
           </Link>
         </div>
-        <div className="border-b border-civic-line p-4">
+        <div className="border-b border-civic-line px-5 py-4">
           <MapFilters {...filterProps} />
         </div>
-        <div className="border-b border-civic-line px-4 py-3">
+        <div className="border-b border-civic-line px-5 py-4">
           <SummaryCard
             loading={loading && incidents.length === 0}
             verified={verified}
             pending={pending}
           />
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-civic-muted">
-            Visible evidence
-          </p>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
+          <p className="um-eyebrow mb-3">Visible evidence</p>
           {visible.length === 0 ? (
-            <p className="text-sm text-civic-muted">No Kilimani reports match these filters.</p>
+            <EmptyState
+              title="No Kilimani reports match these filters"
+              body="Widen the filters or report a hazard you see on the street."
+            />
           ) : (
             <div className="space-y-3">
               {visible.slice(0, 40).map((incident) => (
@@ -309,13 +299,10 @@ export function MapHomePage() {
             </div>
           )}
         </div>
-        <div className="border-t border-civic-line p-4">
-          <Link
-            to="/report"
-            className="flex min-h-12 items-center justify-center rounded-card bg-civic-accent text-sm font-semibold text-white"
-          >
+        <div className="border-t border-civic-line p-5">
+          <ButtonLink to="/report" className="w-full min-h-12">
             Report an issue
-          </Link>
+          </ButtonLink>
         </div>
       </aside>
     </div>
@@ -332,15 +319,15 @@ function SummaryCard({
   pending: number;
 }) {
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 shadow-card lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+    <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3 shadow-card lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
       {loading ? (
-        <p className="text-sm font-medium text-civic-muted">Loading Kilimani evidence…</p>
+        <p className="um-meta">Loading Kilimani evidence…</p>
       ) : (
         <>
-          <p className="text-sm font-semibold text-civic-ink">
+          <p className="text-base font-semibold tracking-tight text-civic-ink">
             {verified} community-supported
           </p>
-          <p className="text-xs font-medium text-civic-muted">
+          <p className="um-meta mt-0.5">
             {pending} pending reports
           </p>
           <div className="mt-2 lg:hidden">
@@ -422,7 +409,7 @@ function MapFilters({
   return (
     <div className="space-y-2">
       <div className="relative" ref={boxRef}>
-        <label htmlFor={listId + "-q"} className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+        <label htmlFor={listId + "-q"} className="um-eyebrow mb-1.5 block">
           Search streets
         </label>
         <input
@@ -478,7 +465,7 @@ function MapFilters({
           </ul>
         ) : null}
       </div>
-      <p className="pt-1 text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+      <p className="um-eyebrow pt-2">
         Hazard type
       </p>
       <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
@@ -495,7 +482,7 @@ function MapFilters({
           </FilterChip>
         ))}
       </div>
-      <p className="pt-1 text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+      <p className="um-eyebrow pt-2">
         Status
       </p>
       <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">

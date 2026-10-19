@@ -66,11 +66,13 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function navClass(isActive: boolean, compact = false) {
   return compact
-    ? `flex flex-1 flex-col items-center justify-center gap-0.5 py-2 text-[11px] font-semibold ${
+    ? `flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${
         isActive ? "text-civic-accent" : "text-civic-muted"
       }`
-    : `rounded-[10px] px-3 py-2 text-sm font-semibold ${
-        isActive ? "bg-civic-mist text-civic-ink" : "text-civic-slate hover:bg-civic-paper"
+    : `rounded-sm px-3.5 py-2 text-sm font-semibold transition-colors ${
+        isActive
+          ? "bg-civic-mist text-civic-ink"
+          : "text-civic-slate hover:bg-civic-paper hover:text-civic-ink"
       }`;
 }
 
@@ -87,11 +89,11 @@ function TopBar({
 
   return (
     <header className="relative z-[2000] shrink-0 border-b border-civic-line bg-civic-surface pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex w-full max-w-[1440px] items-center gap-4 px-4 py-2.5 lg:px-6">
+      <div className="mx-auto flex w-full max-w-[1440px] items-center gap-3 px-4 py-3 lg:gap-5 lg:px-6">
         <Link to="/" aria-label="UrbanMesh home" className="shrink-0">
           <UrbanMeshLogo compact />
         </Link>
-        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-0.5 md:flex">
+        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -103,7 +105,7 @@ function TopBar({
             </NavLink>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-1.5">
+        <div className="ml-auto flex items-center gap-2">
           <InstallButton />
           <NoticeBell
             unreadCount={unreadCount}
@@ -115,8 +117,8 @@ function TopBar({
             aria-label="About UrbanMesh"
             title="About"
             className={({ isActive }) =>
-              `inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold ${
-                isActive ? "bg-civic-mist text-civic-ink" : "text-civic-slate"
+              `inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-civic-line px-3 text-xs font-semibold transition-colors ${
+                isActive ? "bg-civic-mist text-civic-ink" : "text-civic-slate hover:bg-civic-paper"
               }`
             }
           >
@@ -127,7 +129,7 @@ function TopBar({
             type="button"
             onClick={requestLocation}
             aria-label={coords ? "Refresh location" : "Use current location"}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-3 text-xs font-semibold text-civic-slate"
+            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-civic-line px-3 text-xs font-semibold text-civic-slate transition-colors hover:bg-civic-paper"
           >
             <span className="md:hidden">{locating ? "…" : coords ? "Located" : "Locate"}</span>
             <span className="hidden md:inline">

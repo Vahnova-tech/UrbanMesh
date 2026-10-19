@@ -181,41 +181,52 @@ export function HazardDetailPage() {
         )}
       </div>
 
-      <div className="px-4 pt-4 lg:overflow-y-auto lg:border-l lg:border-civic-line lg:bg-civic-surface lg:px-6 lg:py-6">
-        <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
+      <div className="px-4 pt-5 lg:overflow-y-auto lg:border-l lg:border-civic-line lg:bg-civic-surface lg:px-6 lg:py-8">
+        <p className="um-eyebrow">
           {incident.category_label}
           {incident.is_verified ? " · Community-supported cluster" : " · Individual report"}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+        <h1 className="um-display mt-2 text-2xl lg:text-3xl">
           {incident.description.split(/[.!?]/)[0]}
         </h1>
-        <div className="mt-3">
+        <div className="mt-4">
           <StatusBadge verified={incident.is_verified} />
         </div>
-        <p className="mt-3 text-sm leading-relaxed text-civic-slate">
+        <p className="um-body mt-4">
           {incident.is_verified
             ? `${incident.nearby_count} nearby same-category reports corroborate this hazard within 15 m. Nairobi City County has not inspected this site.`
             : "Pending corroboration: waiting for two more same-category reports within 15 m. This is not a field inspection."}
         </p>
-        <p className="text-sm font-medium text-civic-ink">{incident.corridor}</p>
-        <p className="text-sm text-civic-muted">
-          {incident.ward_name} · {formatCoords(incident.lat, incident.lng)}
-        </p>
-        <p className="mt-1 text-xs text-civic-muted">{formatWhen(incident.created_at)} EAT</p>
+        <dl className="mt-5 space-y-2 border-t border-civic-line pt-4">
+          <div>
+            <dt className="um-eyebrow">Corridor</dt>
+            <dd className="mt-0.5 text-sm font-medium text-civic-ink">{incident.corridor}</dd>
+          </div>
+          <div>
+            <dt className="um-eyebrow">Location</dt>
+            <dd className="um-meta mt-0.5">
+              {incident.ward_name} · {formatCoords(incident.lat, incident.lng)}
+            </dd>
+          </div>
+          <div>
+            <dt className="um-eyebrow">Reported</dt>
+            <dd className="um-meta mt-0.5">{formatWhen(incident.created_at)} EAT</dd>
+          </div>
+        </dl>
 
-        <div className="mt-5 flex gap-2">
+        <div className="mt-6 flex gap-2">
           <button
             type="button"
             onClick={() => void onConfirm()}
             disabled={confirming}
-            className="flex-1 min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-60"
+            className="flex-1 min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white transition-colors hover:bg-civic-accentDark disabled:pointer-events-none disabled:opacity-60"
           >
             {confirming ? "Confirming…" : "I'm seeing this too"}
           </button>
           <button
             type="button"
             onClick={() => void onShare()}
-            className="min-h-12 rounded-card border border-civic-line px-4 py-3 text-sm font-semibold"
+            className="min-h-12 rounded-card border border-civic-line px-4 py-3 text-sm font-semibold transition-colors hover:bg-civic-mist"
           >
             Share
           </button>

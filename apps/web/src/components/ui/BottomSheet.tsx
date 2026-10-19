@@ -1,4 +1,5 @@
 import { useEffect, type ReactNode } from "react";
+import { Button } from "./Button";
 
 export function BottomSheet({
   open,
@@ -34,22 +35,18 @@ export function BottomSheet({
         role="dialog"
         aria-modal="true"
         aria-labelledby="sheet-title"
-        className="relative w-full rounded-t-[12px] border-t border-civic-line bg-civic-surface px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-card"
+        className="um-sheet relative w-full rounded-t-card border-t border-civic-line bg-civic-surface px-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 shadow-card"
       >
         <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-civic-line" aria-hidden />
         <div className="flex items-start justify-between gap-3">
-          <h2 id="sheet-title" className="text-base font-semibold tracking-tight">
+          <h2 id="sheet-title" className="um-title text-base lg:text-base">
             {title}
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="inline-flex min-h-11 items-center rounded-xl border border-civic-line px-3 text-xs font-semibold text-civic-slate"
-          >
+          <Button variant="secondary" onClick={onClose} className="min-h-11 px-3 text-xs">
             Close
-          </button>
+          </Button>
         </div>
-        <div className="mt-3">{children}</div>
+        <div className="mt-4 space-y-3">{children}</div>
       </aside>
     </div>
   );

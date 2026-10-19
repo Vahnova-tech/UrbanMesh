@@ -112,6 +112,55 @@ body {
   }
 }
 
+.um-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--civic-muted);
+}
+
+.um-display {
+  font-size: 1.75rem;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--civic-ink);
+}
+
+@media (min-width: 1024px) {
+  .um-display {
+    font-size: 2.25rem;
+  }
+}
+
+.um-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--civic-ink);
+}
+
+@media (min-width: 1024px) {
+  .um-title {
+    font-size: 1.5rem;
+  }
+}
+
+.um-body {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--civic-slate);
+}
+
+.um-meta {
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--civic-muted);
+}
+
 .um-enter {
   animation: um-fade 180ms ease-out;
 }

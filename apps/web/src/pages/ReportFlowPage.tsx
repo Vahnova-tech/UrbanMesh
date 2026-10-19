@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   MapContainer,
   TileLayer,
@@ -25,6 +25,7 @@ import { rememberMyReport } from "../lib/myReports";
 import { useLocationState } from "../lib/location";
 import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
 import { ErrorBanner } from "../components/ui/ReportCard";
+import { ButtonLink } from "../components/ui/Button";
 import { ThemeToggle, useTheme } from "../lib/theme";
 import { tilesFor } from "../lib/mapStyle";
 import { prefersReducedMotion } from "../lib/motion";
@@ -124,13 +125,9 @@ export function ReportFlowPage() {
           {step === 1 ? (
             <section className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
               <div className="shrink-0 px-4 pb-2 pt-3 lg:hidden [@media(max-height:560px)]:hidden">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                  1 · Location
-                </p>
-                <h1 className="mt-1 text-lg font-semibold tracking-tight">
-                  Where is the problem?
-                </h1>
-                <p className="mt-0.5 text-sm text-civic-muted">
+                <p className="um-eyebrow">1 · Location</p>
+                <h1 className="um-title mt-1 text-lg lg:text-lg">Where is the problem?</h1>
+                <p className="um-meta mt-1">
                   Required. Pan the map so the crosshair sits on the hazard.
                 </p>
               </div>
@@ -159,13 +156,9 @@ export function ReportFlowPage() {
               </div>
               <div className="shrink-0 space-y-3 border-t border-civic-line bg-civic-surface px-4 py-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] lg:w-[380px] lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
                 <div className="hidden lg:block">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                    1 · Location
-                  </p>
-                  <h1 className="mt-1 text-xl font-semibold tracking-tight">
-                    Where is the problem?
-                  </h1>
-                  <p className="mt-1 text-sm text-civic-muted">
+                  <p className="um-eyebrow">1 · Location</p>
+                  <h1 className="um-title mt-1">Where is the problem?</h1>
+                  <p className="um-meta mt-1">
                     Required. Pan the map so the crosshair sits on the hazard.
                   </p>
                 </div>
@@ -208,14 +201,10 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                    2 · Hazard
-                  </p>
-                  <h1 className="mt-1 text-xl font-semibold tracking-tight">
-                    What is the problem?
-                  </h1>
-                  <p className="mt-1 text-sm text-civic-muted">Required. Pick one Kilimani hazard type.</p>
-                  <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
+                  <p className="um-eyebrow">2 · Hazard</p>
+                  <h1 className="um-title mt-1">What is the problem?</h1>
+                  <p className="um-meta mt-1">Required. Pick one Kilimani hazard type.</p>
+                  <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
                     {HAZARD_OPTIONS.map((opt) => (
                       <button
                         key={opt.value}
@@ -255,11 +244,9 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-5xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                    3 · Evidence
-                  </p>
-                  <h1 className="mt-1 text-xl font-semibold tracking-tight">Add evidence</h1>
-                  <p className="mt-1 text-sm text-civic-muted">
+                  <p className="um-eyebrow">3 · Evidence</p>
+                  <h1 className="um-title mt-1">Add evidence</h1>
+                  <p className="um-meta mt-1">
                     Photograph the hazard now. Gallery uploads are not accepted.
                   </p>
                   <div className="mt-4 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
@@ -319,10 +306,8 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-                    4 · Review
-                  </p>
-                  <h1 className="mt-1 text-xl font-semibold tracking-tight">Review and submit</h1>
+                  <p className="um-eyebrow">4 · Review</p>
+                  <h1 className="um-title mt-1">Review and submit</h1>
                   <dl className="mt-4 grid gap-4 rounded-card border border-civic-line bg-civic-surface p-4 text-sm lg:grid-cols-2">
                     <div>
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
@@ -428,32 +413,24 @@ function ResultState({ result }: { result: ReportResponse }) {
   const verified = result.is_verified;
   return (
     <div className="um-enter um-scroll mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:max-w-xl lg:justify-center">
-      <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-        5 · Submission
-      </p>
-      <h1 className="mt-2 text-3xl font-semibold tracking-tight">
+      <p className="um-eyebrow">5 · Submission</p>
+      <h1 className="um-display mt-3">
         {verified ? "Community-supported" : "Pending corroboration"}
       </h1>
-      <p className="mt-3 text-base leading-relaxed text-civic-slate">
+      <p className="um-body mt-4 text-base">
         {verified
           ? `${Math.max(result.nearby_count, 3)} same-category reports now sit within 15 metres. That spatial corroboration — not a field inspection — is what UrbanMesh treats as planning evidence.`
           : "Your report is logged as pending. It becomes community-supported only when two more same-category sightings land within 15 metres."}
       </p>
-      <p className="mt-6 text-sm leading-relaxed text-civic-muted">
+      <p className="um-meta mt-6">
         Nairobi City County has not inspected this site. Field-verified and Resolved are not live states yet.
       </p>
-      <Link
-        to={`/hazards/${result.incident_id}`}
-        className="mt-8 rounded-card bg-civic-accent py-3 text-center text-sm font-semibold text-white"
-      >
+      <ButtonLink to={`/hazards/${result.incident_id}`} className="mt-8 w-full">
         View evidence
-      </Link>
-      <Link
-        to="/"
-        className="mt-3 rounded-card border border-civic-line py-3 text-center text-sm font-semibold"
-      >
+      </ButtonLink>
+      <ButtonLink to="/" variant="secondary" className="mt-3 w-full">
         Back to map
-      </Link>
+      </ButtonLink>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { IncidentPublic } from "../../lib/api";
 import { formatRelative, shortTitle } from "../../lib/format";
@@ -55,14 +56,17 @@ export function ReportCard({
 export function EmptyState({
   title,
   body,
+  action,
 }: {
   title: string;
   body: string;
+  action?: ReactNode;
 }) {
   return (
-    <div className="rounded-card border border-dashed border-civic-line bg-civic-surface px-4 py-8 text-center">
-      <p className="text-sm font-semibold text-civic-ink">{title}</p>
-      <p className="mt-1 text-sm text-civic-muted">{body}</p>
+    <div className="rounded-card border border-dashed border-civic-line bg-civic-surface px-5 py-10 text-center">
+      <p className="um-title text-base lg:text-lg">{title}</p>
+      <p className="um-body mx-auto mt-2 max-w-sm">{body}</p>
+      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
 }
@@ -77,7 +81,7 @@ export function ErrorBanner({
   return (
     <div
       role="alert"
-      className="rounded-card bg-civic-criticalBg px-3 py-2.5 text-sm font-medium leading-snug text-civic-critical shadow-card"
+      className="rounded-card border border-civic-critical/20 bg-civic-criticalBg px-4 py-3 text-sm font-medium leading-snug text-civic-critical shadow-card"
     >
       <p>{message}</p>
       {onRetry ? (

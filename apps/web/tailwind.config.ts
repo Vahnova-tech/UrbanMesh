@@ -30,7 +30,16 @@ export default {
         card: "var(--civic-shadow)",
       },
       borderRadius: {
-        card: "12px",
+        sm: "var(--radius-sm)",
+        card: "var(--radius-md)",
+      },
+      spacing: {
+        um1: "var(--space-1)",
+        um2: "var(--space-2)",
+        um3: "var(--space-3)",
+        um4: "var(--space-4)",
+        um5: "var(--space-5)",
+        um6: "var(--space-6)",
       },
     },
   },

@@ -69,11 +69,27 @@ export function StatCard({
   value: number | string;
 }) {
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface p-4 shadow-card">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
+    <div className="rounded-card border border-civic-line bg-civic-surface px-4 py-5 shadow-card">
+      <p className="um-eyebrow">{label}</p>
+      <p className="mt-2 text-3xl font-semibold tracking-tight text-civic-ink">{value}</p>
+    </div>
+  );
+}
+
+export function EmptyState({
+  title,
+  body,
+  action,
+}: {
+  title: string;
+  body: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-card border border-dashed border-civic-line bg-civic-surface px-5 py-10 text-center">
+      <p className="um-title text-base lg:text-lg">{title}</p>
+      <p className="um-body mx-auto mt-2 max-w-md">{body}</p>
+      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
 }
@@ -115,7 +131,7 @@ export function ErrorNotice({
   return (
     <div
       role="alert"
-      className="rounded-card bg-civic-criticalBg px-4 py-3 text-sm font-medium leading-snug text-civic-critical"
+      className="rounded-card border border-civic-critical/20 bg-civic-criticalBg px-4 py-3 text-sm font-medium leading-snug text-civic-critical"
     >
       <p>{message}</p>
       {onRetry ? (
@@ -141,11 +157,11 @@ export function Panel({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-civic-line bg-civic-surface p-5 shadow-card">
-      <h2 className="text-sm font-semibold tracking-tight">{title}</h2>
-      {hint ? (
-        <p className="mb-4 mt-1 text-xs leading-relaxed text-civic-muted">{hint}</p>
-      ) : null}
+    <section className="rounded-card border border-civic-line bg-civic-surface p-5 shadow-card lg:p-6">
+      <header className="mb-5">
+        <h2 className="um-title text-base lg:text-lg">{title}</h2>
+        {hint ? <p className="um-meta mt-1.5">{hint}</p> : null}
+      </header>
       {children}
     </section>
   );
