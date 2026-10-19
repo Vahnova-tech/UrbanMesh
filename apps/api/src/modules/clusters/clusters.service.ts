@@ -16,7 +16,7 @@ export interface SpatialCluster {
   ward_id: string;
   ward_name: string;
   corridor: string;
-  verification_status: "3+ Confirmed Citizen Reports";
+  verification_status: "Community-supported (spatial corroboration)";
   first_reported: string;
   latest_report: string;
   radius_meters: number;
@@ -89,7 +89,7 @@ export async function listVerifiedClusters(options?: {
       ward_id: ward.id,
       ward_name: ward.name,
       corridor: corridorForCoordinates(lat, lng),
-      verification_status: "3+ Confirmed Citizen Reports" as const,
+      verification_status: "Community-supported (spatial corroboration)" as const,
       first_reported: new Date(row.first_reported).toISOString(),
       latest_report: new Date(row.latest_report).toISOString(),
       radius_meters: env.clusterRadiusMeters,

@@ -1,10 +1,10 @@
 export const HAZARD_LABELS: Record<string, string> = {
-  MOBILITY_SURFACE_DAMAGE: "Road damage",
-  NMT_PEDESTRIAN_HAZARD: "Blocked walkway",
-  DRAINAGE_STORMWATER: "Flooding / drainage",
-  SEWER_SANITATION: "Sewer / sanitation",
-  LIGHTING_SECURITY: "Broken lighting",
-  ILLEGAL_WASTE_DUMP: "Illegal dumping",
+  MOBILITY_SURFACE_DAMAGE: "Road surface damage",
+  NMT_PEDESTRIAN_HAZARD: "Pedestrian obstruction",
+  DRAINAGE_STORMWATER: "Drainage and stormwater",
+  SEWER_SANITATION: "Sewer and sanitation",
+  LIGHTING_SECURITY: "Lighting problems",
+  ILLEGAL_WASTE_DUMP: "Illegal waste dumping",
 };
 
 export const HAZARD_SEVERITY: Record<string, "critical" | "standard"> = {

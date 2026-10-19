@@ -18,6 +18,7 @@ import {
   type IncidentPublic,
   type SpatialCluster,
 } from "../lib/api";
+import { formatDataAsOf } from "../lib/format";
 import { ErrorNotice, Panel, Skeleton } from "../components/ui/Primitives";
 import { useChartColors } from "../lib/theme";
 
@@ -117,7 +118,7 @@ export function AnalyticsPage() {
     const verified = filteredIncidents.filter((i) => i.is_verified).length;
     const pending = filteredIncidents.length - verified;
     return [
-      { label: "Verified", count: verified },
+      { label: "Community-supported", count: verified },
       { label: "Pending", count: pending },
     ];
   }, [filteredIncidents]);
@@ -171,7 +172,7 @@ export function AnalyticsPage() {
         [
           row.id,
           row.category_label,
-          row.is_verified ? "verified" : "pending",
+          row.is_verified ? "community-supported" : "pending",
           row.corridor,
           row.ward_name,
           row.lat,
@@ -199,7 +200,10 @@ export function AnalyticsPage() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
           <p className="mt-1 text-sm text-civic-muted">
-            How Kilimani reports concentrate, verify, and emerge along pilot corridors.
+            How Kilimani reports concentrate, become community-supported, and emerge along pilot corridors.
+          </p>
+          <p className="mt-1 text-xs font-medium text-civic-muted">
+            {formatDataAsOf(metrics.generated_at)}
           </p>
         </div>
         <button
@@ -249,8 +253,8 @@ export function AnalyticsPage() {
       </div>
 
       <p className="mt-5 text-sm">
-        Verification ratio: <strong>{ratio}%</strong> of filtered reports sit inside a
-        confirmed 15 m cluster.
+        Community-supported ratio: <strong>{ratio}%</strong> of filtered reports sit inside a
+        15 m corroboration cluster.
       </p>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
@@ -263,12 +267,12 @@ export function AnalyticsPage() {
                 <YAxis allowDecimals={false} tick={{ fill: chart.muted }} />
                 <Tooltip />
                 <Line dataKey="total" name="Total" stroke={chart.ink} strokeWidth={2} dot={false} />
-                <Line dataKey="verified" name="Verified" stroke={chart.accent} strokeWidth={2} dot={false} />
+                <Line dataKey="verified" name="Community-supported" stroke={chart.accent} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Panel>
-        <Panel title="Verified vs pending">
+        <Panel title="Community-supported vs pending">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={mix}>
@@ -302,7 +306,7 @@ export function AnalyticsPage() {
                 <XAxis dataKey="ward_name" tick={{ fontSize: 10, fill: chart.muted }} interval={0} angle={-20} textAnchor="end" height={56} />
                 <YAxis allowDecimals={false} tick={{ fill: chart.muted }} />
                 <Tooltip />
-                <Bar dataKey="verified" name="Verified" stackId="a" fill={chart.accent} />
+                <Bar dataKey="verified" name="Community-supported" stackId="a" fill={chart.accent} />
                 <Bar dataKey="unverified" name="Pending" stackId="a" fill={chart.pending} />
               </BarChart>
             </ResponsiveContainer>
@@ -310,14 +314,14 @@ export function AnalyticsPage() {
         </Panel>
         <Panel
           title="Hazard density by corridor"
-          hint="Verified reports grouped by named Kilimani corridor"
+          hint="Community-supported reports grouped by named Kilimani corridor"
         >
           <ul className="space-y-3">
             {corridorChart.map((row) => (
               <li key={row.corridor} className="flex items-center justify-between text-sm">
                 <span className="font-medium">{row.corridor}</span>
                 <span className="text-civic-muted">
-                  {row.verified} verified · {row.total} total
+                  {row.verified} community-supported · {row.total} total
                 </span>
               </li>
             ))}
@@ -325,7 +329,7 @@ export function AnalyticsPage() {
         </Panel>
         <Panel
           title="Emerging clusters"
-          hint="Verified clusters with a report in the last 7 days"
+          hint="Community-supported clusters with a report in the last 7 days"
         >
           <ul className="mt-2 divide-y divide-civic-mist">
             {emerging.length === 0 ? (

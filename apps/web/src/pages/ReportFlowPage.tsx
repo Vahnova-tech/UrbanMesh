@@ -27,6 +27,7 @@ import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
 import { ErrorBanner } from "../components/ui/ReportCard";
 import { ThemeToggle, useTheme } from "../lib/theme";
 import { tilesFor } from "../lib/mapStyle";
+import { prefersReducedMotion } from "../lib/motion";
 
 export function ReportFlowPage() {
   const navigate = useNavigate();
@@ -57,7 +58,7 @@ export function ReportFlowPage() {
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!category) return;
+    if (!category || submitting) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -71,6 +72,7 @@ export function ReportFlowPage() {
               ? err.message
               : "Couldn't store the photo. Photograph the hazard again, or submit without it.",
           );
+          setSubmitting(false);
           return;
         }
       }
@@ -129,7 +131,7 @@ export function ReportFlowPage() {
                   Where is the problem?
                 </h1>
                 <p className="mt-0.5 text-sm text-civic-muted">
-                  Pan the map so the crosshair sits on the hazard.
+                  Required. Pan the map so the crosshair sits on the hazard.
                 </p>
               </div>
               <div className="relative min-h-[160px] flex-1 lg:min-h-0">
@@ -164,7 +166,7 @@ export function ReportFlowPage() {
                     Where is the problem?
                   </h1>
                   <p className="mt-1 text-sm text-civic-muted">
-                    Pan the map so the crosshair sits on the hazard.
+                    Required. Pan the map so the crosshair sits on the hazard.
                   </p>
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
@@ -212,6 +214,7 @@ export function ReportFlowPage() {
                   <h1 className="mt-1 text-xl font-semibold tracking-tight">
                     What is the problem?
                   </h1>
+                  <p className="mt-1 text-sm text-civic-muted">Required. Pick one Kilimani hazard type.</p>
                   <div className="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-3">
                     {HAZARD_OPTIONS.map((opt) => (
                       <button
@@ -261,7 +264,9 @@ export function ReportFlowPage() {
                   </p>
                   <div className="mt-4 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                     <div className="order-2 lg:order-none">
-                      <label className="block text-sm font-semibold">Photo</label>
+                      <label className="block text-sm font-semibold">
+                        Photo <span className="font-medium text-civic-muted">(optional)</span>
+                      </label>
                       <div className="mt-2">
                         <CameraCapture
                           photoData={photoData}
@@ -272,7 +277,7 @@ export function ReportFlowPage() {
                     </div>
                     <div className="order-1 lg:order-none">
                       <label className="block text-sm font-semibold" htmlFor="desc">
-                        Short description
+                        Short description <span className="font-medium text-civic-muted">(required)</span>
                       </label>
                       <textarea
                         id="desc"
@@ -321,25 +326,25 @@ export function ReportFlowPage() {
                   <dl className="mt-4 grid gap-4 rounded-card border border-civic-line bg-civic-surface p-4 text-sm lg:grid-cols-2">
                     <div>
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                        Location
+                        Location (required)
                       </dt>
                       <dd className="mt-1 font-medium">{formatCoords(center.lat, center.lng)}</dd>
                     </div>
                     <div>
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                        Hazard
+                        Hazard type (required)
                       </dt>
                       <dd className="mt-1 font-medium">{selected?.label}</dd>
                     </div>
                     <div>
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                        Evidence
+                        Description (required)
                       </dt>
                       <dd className="mt-1 font-medium">{description}</dd>
                     </div>
                     <div className="lg:row-span-3">
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-                        Photo
+                        Photo (optional)
                       </dt>
                       <dd className="mt-1">
                         {photoData ? (
@@ -361,7 +366,8 @@ export function ReportFlowPage() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:opacity-60"
+                  aria-busy={submitting}
+                  className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white disabled:pointer-events-none disabled:opacity-60"
                 >
                   {submitting ? "Sending…" : "Submit report"}
                 </button>
@@ -405,7 +411,7 @@ function InvalidateSize() {
 function FlyTo({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
   useEffect(() => {
-    map.flyTo([lat, lng], 17, { duration: 0.6 });
+    map.flyTo([lat, lng], 17, { duration: prefersReducedMotion() ? 0 : 0.6 });
   }, [map, lat, lng]);
   return null;
 }
@@ -426,16 +432,15 @@ function ResultState({ result }: { result: ReportResponse }) {
         5 · Submission
       </p>
       <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-        {verified ? "Community verified" : "Report logged"}
+        {verified ? "Community-supported" : "Pending corroboration"}
       </h1>
       <p className="mt-3 text-base leading-relaxed text-civic-slate">
         {verified
-          ? `${Math.max(result.nearby_count, 3)} nearby reports confirm this hazard.`
-          : "Waiting for nearby reports to confirm this hazard."}
+          ? `${Math.max(result.nearby_count, 3)} same-category reports now sit within 15 metres. That spatial corroboration — not a field inspection — is what UrbanMesh treats as planning evidence.`
+          : "Your report is logged as pending. It becomes community-supported only when two more same-category sightings land within 15 metres."}
       </p>
       <p className="mt-6 text-sm leading-relaxed text-civic-muted">
-        This is {verified ? "a verified spatial cluster" : "an individual report"}.
-        Three same-category sightings within 15 metres become planning evidence.
+        Nairobi City County has not inspected this site. Field-verified and Resolved are not live states yet.
       </p>
       <Link
         to={`/hazards/${result.incident_id}`}

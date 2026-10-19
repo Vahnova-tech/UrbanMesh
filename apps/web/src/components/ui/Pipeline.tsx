@@ -1,7 +1,7 @@
 export const PIPELINE = [
   "Report",
   "Nearby reports",
-  "Verified cluster",
+  "Community-supported cluster",
   "Urban intelligence",
   "LPDP evidence",
 ] as const;

@@ -138,7 +138,7 @@ export function NotificationsPane({
             </h2>
             <p className="mt-0.5 text-xs font-medium text-civic-muted">
               {unreadCount === 0
-                ? "Verified clusters and pending Kilimani reports"
+                ? "Community-supported clusters and pending Kilimani reports"
                 : `${unreadCount} unread update${unreadCount === 1 ? "" : "s"}`}
             </p>
           </div>
@@ -173,7 +173,7 @@ export function NotificationsPane({
             <div className="rounded-card border border-dashed border-civic-line px-4 py-8 text-center">
               <p className="text-sm font-semibold text-civic-ink">No updates yet</p>
               <p className="mt-1 text-sm text-civic-muted">
-                Verified 15 m clusters and pending reports will appear here as residents file them.
+                Community-supported 15 m clusters and pending reports will appear here as residents file them.
               </p>
             </div>
           ) : null}
@@ -214,7 +214,7 @@ export function NotificationsPane({
 }
 
 function kindLabel(kind: PlannerNoticeKind): string {
-  return kind === "cluster" ? "Verified cluster" : "Pending report";
+  return kind === "cluster" ? "Community-supported cluster" : "Pending report";
 }
 
 export function NoticeBell({

@@ -79,14 +79,18 @@ export function PlannerMap({
   meta,
   layers,
   selectedId,
+  selectedIncidentId,
   onSelectCluster,
+  onSelectIncident,
 }: {
   incidents: IncidentPublic[];
   clusters: SpatialCluster[];
   meta: PlatformMeta | null;
   layers: MapLayers;
   selectedId?: string | null;
+  selectedIncidentId?: string | null;
   onSelectCluster?: (cluster: SpatialCluster) => void;
+  onSelectIncident?: (incident: IncidentPublic) => void;
 }) {
   const { dark } = useTheme();
   const tiles = tilesFor(dark);
@@ -191,10 +195,13 @@ export function PlannerMap({
             <CircleMarker
               key={inc.id}
               center={[inc.lat, inc.lng]}
-              radius={5}
+              radius={selectedIncidentId === inc.id ? 8 : 5}
+              eventHandlers={{
+                click: () => onSelectIncident?.(inc),
+              }}
               pathOptions={{
                 color: ring,
-                weight: 1.5,
+                weight: selectedIncidentId === inc.id ? 3 : 1.5,
                 fillColor: MARKER.pending,
                 fillOpacity: 0.85,
                 dashArray: "3 3",

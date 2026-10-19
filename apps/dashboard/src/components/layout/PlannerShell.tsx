@@ -6,7 +6,7 @@ const NAV = [
   { to: "/", label: "Overview" },
   { to: "/map", label: "Live Map" },
   { to: "/reports", label: "Reports" },
-  { to: "/clusters", label: "Verified Clusters" },
+  { to: "/clusters", label: "Community-supported" },
   { to: "/analytics", label: "Analytics" },
   { to: "/evidence", label: "LPDP Evidence" },
   { to: "/briefs", label: "Policy Briefs" },

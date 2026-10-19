@@ -18,13 +18,13 @@ import {
 } from "../components/map/PlannerMap";
 
 const HAZARD_FILTERS = [
-  { value: "all", label: "All categories" },
-  { value: "MOBILITY_SURFACE_DAMAGE", label: "Road damage" },
-  { value: "NMT_PEDESTRIAN_HAZARD", label: "Blocked walkway" },
-  { value: "DRAINAGE_STORMWATER", label: "Flooding / drainage" },
-  { value: "SEWER_SANITATION", label: "Sewer / sanitation" },
-  { value: "LIGHTING_SECURITY", label: "Broken lighting" },
-  { value: "ILLEGAL_WASTE_DUMP", label: "Illegal dumping" },
+  { value: "all", label: "All hazards" },
+  { value: "MOBILITY_SURFACE_DAMAGE", label: "Road surface damage" },
+  { value: "NMT_PEDESTRIAN_HAZARD", label: "Pedestrian obstruction" },
+  { value: "DRAINAGE_STORMWATER", label: "Drainage and stormwater" },
+  { value: "SEWER_SANITATION", label: "Sewer and sanitation" },
+  { value: "LIGHTING_SECURITY", label: "Lighting problems" },
+  { value: "ILLEGAL_WASTE_DUMP", label: "Illegal waste dumping" },
 ];
 
 export function LiveMapPage() {
@@ -32,7 +32,8 @@ export function LiveMapPage() {
   const [clusters, setClusters] = useState<SpatialCluster[]>([]);
   const [meta, setMeta] = useState<PlatformMeta | null>(null);
   const [layers, setLayers] = useState<MapLayers>(DEFAULT_LAYERS);
-  const [selected, setSelected] = useState<SpatialCluster | null>(null);
+  const [selectedCluster, setSelectedCluster] = useState<SpatialCluster | null>(null);
+  const [selectedIncident, setSelectedIncident] = useState<IncidentPublic | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [category, setCategory] = useState("all");
   const [days, setDays] = useState("all");
@@ -84,8 +85,8 @@ export function LiveMapPage() {
     [clusters, category, cutoff],
   );
 
-  const members = selected
-    ? visibleIncidents.filter((row) => row.cluster_id === selected.cluster_id)
+  const members = selectedCluster
+    ? visibleIncidents.filter((row) => row.cluster_id === selectedCluster.cluster_id)
     : [];
 
   function toggle(key: keyof MapLayers) {
@@ -108,8 +109,16 @@ export function LiveMapPage() {
           clusters={visibleClusters}
           meta={meta}
           layers={layers}
-          selectedId={selected?.cluster_id}
-          onSelectCluster={setSelected}
+          selectedId={selectedCluster?.cluster_id}
+          selectedIncidentId={selectedIncident?.id}
+          onSelectCluster={(cluster) => {
+            setSelectedCluster(cluster);
+            setSelectedIncident(null);
+          }}
+          onSelectIncident={(incident) => {
+            setSelectedIncident(incident);
+            setSelectedCluster(null);
+          }}
         />
         <div className="absolute left-3 top-3 w-56 rounded-card border border-civic-line bg-civic-surface/95 p-3 shadow-card">
           <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
@@ -117,7 +126,7 @@ export function LiveMapPage() {
           </p>
           {(
             [
-              ["verified", "Verified clusters"],
+              ["verified", "Community-supported clusters"],
               ["pending", "Pending reports"],
               ["wards", "Ward boundaries"],
               ["roads", "Roads"],
@@ -166,24 +175,28 @@ export function LiveMapPage() {
       </div>
 
       <aside className="um-enter w-full max-w-sm overflow-y-auto border-l border-civic-line bg-civic-surface p-5">
-        {selected ? (
+        {selectedCluster ? (
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-civic-verified">
-              Verified cluster
+              Community-supported cluster
             </p>
-            <h2 className="mt-1 text-xl font-semibold">{selected.category_label}</h2>
+            <h2 className="mt-1 text-xl font-semibold">{selectedCluster.category_label}</h2>
             <div className="mt-3">
               <StatusBadge verified />
             </div>
+            <p className="mt-3 text-xs leading-relaxed text-civic-muted">
+              Spatial corroboration from ≥3 same-category reports within 15 m.
+              Not a field inspection.
+            </p>
             <dl className="mt-4 space-y-2 text-sm">
-              <Row label="Report count" value={String(selected.report_count)} />
-              <Row label="Radius" value={`${selected.radius_meters}m`} />
-              <Row label="First reported" value={formatWhen(selected.first_reported)} />
-              <Row label="Latest report" value={formatWhen(selected.latest_report)} />
-              <Row label="Planning area" value={selected.ward_name} />
-              <Row label="Corridor" value={selected.corridor} />
-              <Row label="Coordinates" value={formatCoords(selected.lat, selected.lng)} />
-              <Row label="Verification" value={selected.verification_status} />
+              <Row label="Report count" value={String(selectedCluster.report_count)} />
+              <Row label="Radius" value={`${selectedCluster.radius_meters}m`} />
+              <Row label="First reported" value={`${formatWhen(selectedCluster.first_reported)} EAT`} />
+              <Row label="Latest report" value={`${formatWhen(selectedCluster.latest_report)} EAT`} />
+              <Row label="Planning area" value={selectedCluster.ward_name} />
+              <Row label="Corridor" value={selectedCluster.corridor} />
+              <Row label="Coordinates" value={formatCoords(selectedCluster.lat, selectedCluster.lng)} />
+              <Row label="Status" value={selectedCluster.verification_status} />
             </dl>
             {members.length > 0 ? (
               <div className="mt-4">
@@ -200,7 +213,7 @@ export function LiveMapPage() {
                       <div className="min-w-0">
                         <p className="text-sm font-medium">{row.description}</p>
                         <p className="text-[11px] text-civic-muted">
-                          {formatWhen(row.created_at)}
+                          {formatWhen(row.created_at)} EAT
                         </p>
                       </div>
                     </li>
@@ -210,7 +223,7 @@ export function LiveMapPage() {
             ) : null}
             <div className="mt-5 flex flex-col gap-2">
               <Link
-                to={`/reports?cluster=${selected.cluster_id}`}
+                to={`/reports?cluster=${selectedCluster.cluster_id}`}
                 className="rounded-card border border-civic-line py-2 text-center text-sm font-semibold"
               >
                 View reports
@@ -218,7 +231,7 @@ export function LiveMapPage() {
               <button
                 type="button"
                 onClick={() => {
-                  addEvidenceCluster(selected.cluster_id);
+                  addEvidenceCluster(selectedCluster.cluster_id);
                   setMessage("Added to LPDP evidence. Open Evidence to generate the brief.");
                 }}
                 className="rounded-card bg-civic-accent py-2 text-sm font-semibold text-white"
@@ -230,13 +243,52 @@ export function LiveMapPage() {
               ) : null}
             </div>
           </div>
+        ) : selectedIncident ? (
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-civic-pending">
+              Pending report
+            </p>
+            <h2 className="mt-1 text-xl font-semibold">{selectedIncident.category_label}</h2>
+            <div className="mt-3">
+              <StatusBadge verified={false} />
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-civic-slate">
+              {selectedIncident.description}
+            </p>
+            <p className="mt-2 text-xs leading-relaxed text-civic-muted">
+              Awaiting nearby same-category corroboration. Not a field inspection,
+              and this dashboard has no moderation or resolution actions.
+            </p>
+            <dl className="mt-4 space-y-2 text-sm">
+              <Row label="Reported" value={`${formatWhen(selectedIncident.created_at)} EAT`} />
+              <Row label="Corridor" value={selectedIncident.corridor} />
+              <Row label="Planning area" value={selectedIncident.ward_name} />
+              <Row label="Coordinates" value={formatCoords(selectedIncident.lat, selectedIncident.lng)} />
+              <Row label="Nearby reports" value={String(selectedIncident.nearby_count)} />
+            </dl>
+            {selectedIncident.photo_url ? (
+              <div className="mt-4">
+                <EvidencePhoto
+                  url={selectedIncident.photo_url}
+                  alt="Pending report photograph"
+                  className="h-32 w-full"
+                />
+              </div>
+            ) : null}
+            <Link
+              to="/reports"
+              className="mt-5 block rounded-card border border-civic-line py-2 text-center text-sm font-semibold"
+            >
+              Open reports table
+            </Link>
+          </div>
         ) : (
           <div>
             <h2 className="text-lg font-semibold">Geospatial workspace</h2>
             <p className="mt-2 text-sm text-civic-slate">
-              Click a verified cluster on the Kilimani map to inspect report count,
-              15 m radius and planning area. Dashed pins are pending reports, not
-              verified evidence.
+              Click a community-supported cluster to inspect report count, 15 m
+              radius and planning area. Dashed pins are pending reports — they open
+              the report row here. There is no moderation queue on this dashboard.
             </p>
           </div>
         )}

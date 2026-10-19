@@ -38,7 +38,7 @@ export function buildPlannerNotices(
     notices.push({
       id: `cluster:${cluster.cluster_id}`,
       kind: "cluster",
-      title: "Verified cluster",
+      title: "Community-supported cluster",
       body: `${cluster.category_label} on ${cluster.corridor} · ${cluster.report_count} reports within 15 m.`,
       at: cluster.latest_report || cluster.first_reported,
       href: `/clusters?id=${encodeURIComponent(cluster.cluster_id)}`,
@@ -54,7 +54,7 @@ export function buildPlannerNotices(
     notices.push({
       id: `pending:${row.id}`,
       kind: "pending",
-      title: row.nearby_count >= 2 ? "Approaching verification" : "Pending report",
+      title: row.nearby_count >= 2 ? "Approaching community support" : "Pending report",
       body: `${row.category_label} in ${row.ward_name} · ${row.nearby_count} nearby report${
         row.nearby_count === 1 ? "" : "s"
       }.`,

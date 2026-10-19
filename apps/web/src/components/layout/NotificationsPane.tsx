@@ -96,7 +96,7 @@ export function NotificationsPane({
             <div className="rounded-card border border-dashed border-civic-line px-4 py-8 text-center">
               <p className="text-sm font-semibold text-civic-ink">No updates yet</p>
               <p className="mt-1 text-sm text-civic-muted">
-                Status changes on reports from this phone, and verified clusters near you, will
+                Status changes on reports from this phone, and community-supported clusters near you, will
                 appear here.
               </p>
             </div>
@@ -141,7 +141,7 @@ export function NotificationsPane({
 
 function kindLabel(kind: NoticeKind): string {
   if (kind === "verified") return "Your report";
-  if (kind === "nearby") return "Nearby cluster";
+  if (kind === "nearby") return "Nearby community-supported cluster";
   return "Needs confirmation";
 }
 

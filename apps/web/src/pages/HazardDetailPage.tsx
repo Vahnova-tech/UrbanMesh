@@ -79,8 +79,8 @@ export function HazardDetailPage() {
       rememberMyReport(result.incident_id);
       setConfirmMessage(
         result.is_verified
-          ? "Community verified — your confirmation completed this 15 m cluster."
-          : "Confirmation logged. Nearby reports are still needed.",
+          ? "Community-supported — your confirmation completed this 15 m cluster. That is spatial corroboration, not a field inspection."
+          : "Confirmation logged. Nearby same-category reports are still needed for community support.",
       );
       setData(await fetchEvidence(id));
     } catch (err) {
@@ -184,7 +184,7 @@ export function HazardDetailPage() {
       <div className="px-4 pt-4 lg:overflow-y-auto lg:border-l lg:border-civic-line lg:bg-civic-surface lg:px-6 lg:py-6">
         <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
           {incident.category_label}
-          {incident.is_verified ? " · Verified cluster" : " · Individual report"}
+          {incident.is_verified ? " · Community-supported cluster" : " · Individual report"}
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           {incident.description.split(/[.!?]/)[0]}
@@ -194,14 +194,14 @@ export function HazardDetailPage() {
         </div>
         <p className="mt-3 text-sm leading-relaxed text-civic-slate">
           {incident.is_verified
-            ? `${incident.nearby_count} nearby reports confirm this hazard within a 15 m cluster.`
-            : "Waiting for nearby reports to confirm this hazard."}
+            ? `${incident.nearby_count} nearby same-category reports corroborate this hazard within 15 m. Nairobi City County has not inspected this site.`
+            : "Pending corroboration: waiting for two more same-category reports within 15 m. This is not a field inspection."}
         </p>
         <p className="text-sm font-medium text-civic-ink">{incident.corridor}</p>
         <p className="text-sm text-civic-muted">
           {incident.ward_name} · {formatCoords(incident.lat, incident.lng)}
         </p>
-        <p className="mt-1 text-xs text-civic-muted">{formatWhen(incident.created_at)}</p>
+        <p className="mt-1 text-xs text-civic-muted">{formatWhen(incident.created_at)} EAT</p>
 
         <div className="mt-5 flex gap-2">
           <button

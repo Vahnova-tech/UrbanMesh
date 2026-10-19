@@ -64,7 +64,7 @@ export function EvidencePage() {
       const result = await generateLpdpBrief(selected);
       setReady(true);
       setMessage(
-        `Brief ready — ${result.cluster_count} verified cluster${result.cluster_count === 1 ? "" : "s"} compiled.`,
+        `Brief ready — ${result.cluster_count} community-supported cluster${result.cluster_count === 1 ? "" : "s"} compiled.`,
       );
     } catch (err) {
       setGenerateError(
@@ -91,8 +91,8 @@ export function EvidencePage() {
             Kilimani LPDP Evidence
           </h1>
           <p className="mt-1 max-w-xl text-sm leading-relaxed text-civic-muted">
-            {MONTH_LABEL}. The policy brief is compiled only from verified 15 m
-            clusters — not from pending individual reports.
+            {MONTH_LABEL}. The policy brief is compiled only from community-supported
+            15 m clusters — not from pending individual reports, and not from field inspection.
           </p>
         </div>
         <button
@@ -111,7 +111,7 @@ export function EvidencePage() {
       ) : null}
 
       <div className="mb-6 grid grid-cols-3 gap-3">
-        <StatCard label="Verified clusters" value={clusters.length} />
+        <StatCard label="Community-supported clusters" value={clusters.length} />
         <StatCard label="Priority corridors" value={grouped.length} />
         <StatCard label="Affected categories" value={categories} />
       </div>
@@ -156,7 +156,7 @@ export function EvidencePage() {
       <div className="space-y-6">
         {clusters.length === 0 ? (
           <p className="rounded-card border border-dashed border-civic-line bg-civic-surface px-4 py-8 text-center text-sm text-civic-muted">
-            No verified clusters yet. Individual reports become LPDP evidence only after
+            No community-supported clusters yet. Individual reports become LPDP evidence only after
             three same-category sightings within 15 metres.
           </p>
         ) : null}

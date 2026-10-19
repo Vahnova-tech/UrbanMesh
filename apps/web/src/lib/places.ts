@@ -83,7 +83,7 @@ export function searchIncidents(
     hits.push({
       id: `report-${item.id}`,
       name: item.category_label,
-      hint: `${item.corridor} · ${item.is_verified ? "Verified" : "Pending"}`,
+      hint: `${item.corridor} · ${item.is_verified ? "Community-supported" : "Pending"}`,
       lat: item.lat,
       lng: item.lng,
       kind: "report",

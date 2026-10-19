@@ -50,8 +50,8 @@ export function buildNotices(
     notices.push({
       id: `verified:${row.id}`,
       kind: "verified",
-      title: "Your report is verified",
-      body: `${row.category_label} on ${row.corridor} now meets the 15 m cluster rule.`,
+      title: "Your report is community-supported",
+      body: `${row.category_label} on ${row.corridor} now meets the 15 m corroboration rule.`,
       at: row.created_at,
       href: `/hazards/${row.id}`,
     });
@@ -66,7 +66,7 @@ export function buildNotices(
     notices.push({
       id: `nearby:${key}`,
       kind: "nearby",
-      title: "Verified cluster nearby",
+      title: "Community-supported cluster nearby",
       body: `${row.category_label} on ${row.corridor} · ${row.nearby_count} report${
         row.nearby_count === 1 ? "" : "s"
       } within 15 m.`,

@@ -47,8 +47,8 @@ export function renderLpdpHtml(clusters: LpdpCluster[]): string {
   const sections =
     clusters.length === 0
       ? `<section class="cluster empty">
-           <h2>No verified clusters</h2>
-           <p>No high-risk clusters currently meet the 3+ confirmed citizen report threshold.</p>
+           <h2>No community-supported clusters</h2>
+           <p>No clusters currently meet the 15&nbsp;m / ≥3 same-category corroboration rule. Individual pending reports are not included in this brief.</p>
          </section>`
       : clusters
           .map(
@@ -65,9 +65,11 @@ export function renderLpdpHtml(clusters: LpdpCluster[]): string {
         <div><dt>Cluster ID</dt><dd class="mono">${escapeHtml(c.cluster_id)}</dd></div>
       </dl>
       <p class="action">
-        <strong>Recommended LPDP action:</strong>
-        Prioritise site inspection and budget allocation for remedial works under the
-        ${escapeHtml(c.category_label)} intervention envelope for ${escapeHtml(c.ward_name)}.
+        <strong>Planning note:</strong>
+        This cluster is community-supported spatial corroboration, not a field inspection.
+        A county site visit would be required before treating it as field-verified works.
+        Consider inspection and budget review under the
+        ${escapeHtml(c.category_label)} envelope for ${escapeHtml(c.ward_name)}.
       </p>
     </section>`,
           )
@@ -140,6 +142,17 @@ export function renderLpdpHtml(clusters: LpdpCluster[]): string {
     .mono { font-family: ui-monospace, monospace; font-size: 9pt; }
     .action { margin: 12px 0 0; font-size: 10pt; }
     .empty { background: #f7fbfc; }
+    .method {
+      margin: 22px 0;
+      padding: 12px 14px;
+      border: 1px solid #c5d5dc;
+      border-radius: 8px;
+      font-size: 10pt;
+    }
+    .method h2 {
+      margin: 0 0 8px;
+      font-size: 12pt;
+    }
     footer {
       margin-top: 24px;
       padding-top: 10px;
@@ -151,24 +164,41 @@ export function renderLpdpHtml(clusters: LpdpCluster[]): string {
 </head>
 <body>
   <header class="title-block">
-    <p class="eyebrow">Nairobi County · Local Physical Development Plan</p>
-    <h1>UrbanMesh LPDP Policy Brief — Kilimani Walkability &amp; Safety</h1>
+    <p class="eyebrow">Kilimani walkability evidence · planning input</p>
+    <h1>UrbanMesh LPDP Evidence Brief — Kilimani Walkability &amp; Safety</h1>
     <p class="meta">
-      Crowdsourced verified hazard clusters for county planning prioritisation.<br />
-      Generated ${escapeHtml(generated)} (EAT) · Kilimani walkability &amp; safety · Nairobi City County
+      Community-supported hazard clusters for county planning prioritisation.<br />
+      Source timestamp ${escapeHtml(generated)} EAT · Kilimani pilot only · Nairobi City County
     </p>
   </header>
 
   <section class="summary">
-    <strong>${clusters.length}</strong> high-risk verified cluster${clusters.length === 1 ? "" : "s"}
-    currently meet the crowdsource threshold of three or more confirmed citizen reports within 15 metres.
+    <strong>${clusters.length}</strong> community-supported cluster${clusters.length === 1 ? "" : "s"}
+    currently meet the spatial corroboration rule of three or more same-category citizen reports within 15 metres.
+    This is not a field inspection and not an official county endorsement.
+  </section>
+
+  <section class="method">
+    <h2>Methodology and limitations</h2>
+    <p>
+      Residents file geotagged reports in the UrbanMesh citizen app (location, hazard type, description; camera photograph optional).
+      Coverage is the Kilimani pilot only. UrbanMesh then groups reports of the same category whose points fall within 15 metres
+      (PostGIS <code>ST_DWithin</code> on geography). When a group reaches three reports, all members are marked community-supported
+      and share a cluster id. That step is automated spatial corroboration. It is not a county inspector visiting the site.
+    </p>
+    <p>
+      Planning-area labels are approximate bounding boxes, not official Nairobi ward polygons.
+      Field-verified (in-person inspection) and Resolved (works completed) are not recorded in this dataset.
+      This brief is operational planning input. It is not a statutory Local Physical Development Plan, not a plan amendment,
+      and not an endorsement by Nairobi City County.
+    </p>
   </section>
 
   ${sections}
 
   <footer>
-    Source: UrbanMesh Incident API · Verification rule: ≥3 same-category reports within 15 m (PostGIS ST_DWithin).
-    This brief is an operational input to the Kilimani LPDP — not a statutory plan amendment.
+    Source: UrbanMesh Incident API · Community-supported rule: ≥3 same-category reports within 15 m (PostGIS ST_DWithin).
+    Generated ${escapeHtml(generated)} EAT. Not official county endorsement. Not field inspection.
   </footer>
 </body>
 </html>`;

@@ -30,7 +30,7 @@ export function SettingsPage() {
         <Row label="City" value={meta.city} />
         <Row label="County" value={meta.county} />
         <Row
-          label="Verification threshold"
+          label="Community corroboration threshold"
           value={`${meta.cluster_threshold} same-category reports`}
         />
         <Row label="Cluster radius" value={`${meta.cluster_radius_meters} metres`} />

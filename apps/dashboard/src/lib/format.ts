@@ -23,6 +23,10 @@ export function formatWhen(iso: string): string {
   });
 }
 
+export function formatDataAsOf(iso: string): string {
+  return `Data as of ${formatWhen(iso)} EAT`;
+}
+
 export function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString("en-KE", {
     day: "numeric",

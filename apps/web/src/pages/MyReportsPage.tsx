@@ -32,8 +32,8 @@ export function MyReportsPage() {
           if (newly.length > 0) {
             setUpdate(
               newly.length === 1
-                ? "One of your reports is now a community-verified cluster."
-                : `${newly.length} of your reports are now community-verified clusters.`,
+                ? "One of your reports is now community-supported."
+                : `${newly.length} of your reports are now community-supported.`,
             );
           }
         }
@@ -75,7 +75,7 @@ export function MyReportsPage() {
       <div className="mt-4 grid grid-cols-3 gap-2">
         <Stat label="Submitted" value={items.length} />
         <Stat label="Pending" value={pending.length} />
-        <Stat label="Verified" value={verified.length} />
+        <Stat label="Community-supported" value={verified.length} />
       </div>
 
       {update ? (
@@ -99,7 +99,7 @@ export function MyReportsPage() {
         <div className="mt-4">
           <EmptyState
             title="No reports from this phone yet"
-            body="When you submit a hazard, it will appear here until nearby residents verify a 15 m cluster."
+            body="When you submit a hazard, it will appear here until nearby residents corroborate a 15 m cluster."
           />
           <Link
             to="/report"
@@ -122,7 +122,7 @@ export function MyReportsPage() {
                   submittedAt.current.get(incident.id)
                     ? `Submitted ${formatWhen(submittedAt.current.get(incident.id) as string)}`
                     : incident.is_verified
-                      ? "Now inside a community-verified cluster"
+                      ? "Now inside a community-supported cluster"
                       : "Waiting for two more same-category reports within 15 m"
                 }
               />
@@ -133,7 +133,7 @@ export function MyReportsPage() {
 
       {verified.length > 0 ? (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Verified clusters</h2>
+          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Community-supported clusters</h2>
           <div className="grid gap-3 lg:grid-cols-2">
             {verified.map((incident) => (
               <ReportCard key={`v-${incident.id}`} incident={incident} />
@@ -144,7 +144,7 @@ export function MyReportsPage() {
 
       {pending.length > 0 ? (
         <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Pending verification</h2>
+          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Pending corroboration</h2>
           <div className="grid gap-3 lg:grid-cols-2">
             {pending.map((incident) => (
               <ReportCard key={`p-${incident.id}`} incident={incident} />

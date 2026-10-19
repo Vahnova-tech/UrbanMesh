@@ -21,6 +21,14 @@
   --civic-critical-bg: #f3e0db;
   --civic-shadow: 0 1px 2px rgba(22, 24, 29, 0.05), 0 8px 20px rgba(22, 24, 29, 0.06);
   --map-bg: #e6e1d6;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --radius-sm: 10px;
+  --radius-md: 12px;
 }
 
 html.dark {
@@ -116,5 +124,17 @@ body {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .um-enter,
+  .um-skeleton {
+    animation: none;
+  }
+
+  .leaflet-fade-anim .leaflet-map-pane .leaflet-popup,
+  .leaflet-fade-anim .leaflet-tile {
+    transition: none !important;
   }
 }

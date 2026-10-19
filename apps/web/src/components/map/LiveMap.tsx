@@ -16,6 +16,7 @@ import { splitMapFeatures } from "../../lib/clusterMap";
 import { StatusBadge } from "../ui/StatusBadge";
 import { Link } from "react-router-dom";
 import { useTheme } from "../../lib/theme";
+import { prefersReducedMotion } from "../../lib/motion";
 import { HEAT_DARK, HEAT_LIGHT, MARKER, tilesFor } from "../../lib/mapStyle";
 
 export const KILIMANI_CENTER: [number, number] = [-1.2921, 36.785];
@@ -77,7 +78,8 @@ function FlyToTarget({
   const map = useMap();
   useEffect(() => {
     if (!target || nonce === 0) return;
-    map.flyTo([target.lat, target.lng], target.zoom ?? 17, { duration: 0.7 });
+    const duration = prefersReducedMotion() ? 0 : 0.7;
+    map.flyTo([target.lat, target.lng], target.zoom ?? 17, { duration });
   }, [map, target?.lat, target?.lng, target?.zoom, nonce]);
   return null;
 }
@@ -129,6 +131,8 @@ export function LiveMap({
   className = "",
   showVerified = true,
   showPending = true,
+  selectedId = null,
+  onSelect,
 }: {
   incidents: IncidentPublic[];
   user: { lat: number; lng: number } | null;
@@ -137,6 +141,8 @@ export function LiveMap({
   className?: string;
   showVerified?: boolean;
   showPending?: boolean;
+  selectedId?: string | null;
+  onSelect?: (incident: IncidentPublic) => void;
 }) {
   const { dark } = useTheme();
   const tiles = tilesFor(dark);
@@ -145,6 +151,10 @@ export function LiveMap({
   const features = useMemo(() => splitMapFeatures(incidents), [incidents]);
   const flyTarget = focus ?? (locateNonce ? user : null);
   const flyNonce = (focus ? 1000 : 0) + locateNonce;
+  const byId = useMemo(
+    () => new Map(incidents.map((row) => [row.id, row])),
+    [incidents],
+  );
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -204,10 +214,16 @@ export function LiveMap({
                 radius={10}
                 pathOptions={{
                   color: dark ? "#EEE9E1" : "#FFFFFF",
-                  weight: 2,
+                  weight: selectedId === cluster.representativeId ? 3 : 2,
                   fillColor:
                     cluster.severity === "critical" ? MARKER.critical : MARKER.verified,
                   fillOpacity: 0.95,
+                }}
+                eventHandlers={{
+                  click: () => {
+                    const row = byId.get(cluster.representativeId);
+                    if (row) onSelect?.(row);
+                  },
                 }}
               >
                 <Popup>
@@ -238,9 +254,12 @@ export function LiveMap({
                 radius={8}
                 pathOptions={{
                   color: dark ? "#EEE9E1" : "#FFFFFF",
-                  weight: 2,
+                  weight: selectedId === inc.id ? 3 : 2,
                   fillColor: markerFill(inc),
                   fillOpacity: 0.95,
+                }}
+                eventHandlers={{
+                  click: () => onSelect?.(inc),
                 }}
               >
                 <Popup>
@@ -258,10 +277,13 @@ export function LiveMap({
                 radius={5}
                 pathOptions={{
                   color: dark ? "#EEE9E1" : "#FFFFFF",
-                  weight: 1.5,
+                  weight: selectedId === inc.id ? 3 : 1.5,
                   fillColor: MARKER.pending,
                   fillOpacity: 0.8,
                   dashArray: "3 3",
+                }}
+                eventHandlers={{
+                  click: () => onSelect?.(inc),
                 }}
               >
                 <Popup>
@@ -331,7 +353,7 @@ export function MapKey({ bare = false }: { bare?: boolean }) {
         Map key
       </p>
       <ul className="mt-1.5 space-y-1">
-        <LegendItem color={MARKER.verified} label="Verified cluster" hint="Solid pin · 15 m" />
+        <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
         <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
         <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
       </ul>

@@ -54,7 +54,7 @@ export function ReportsPage() {
       <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
       <p className="mt-1 text-sm text-civic-muted">
         Every geotagged citizen report in the Kilimani catchments.
-        {clusterFilter ? " Showing one verified cluster’s evidence." : ""}
+        {clusterFilter ? " Showing one community-supported cluster’s evidence." : ""}
       </p>
       {error ? (
         <div className="mt-4">
@@ -87,8 +87,8 @@ export function ReportsPage() {
             className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
           >
             <option value="all">All statuses</option>
-            <option value="verified">Verified clusters</option>
-            <option value="pending">Pending confirmation</option>
+            <option value="verified">Community-supported</option>
+            <option value="pending">Pending</option>
           </select>
         </label>
         <label className="flex flex-col gap-1">

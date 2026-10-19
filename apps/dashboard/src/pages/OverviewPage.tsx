@@ -21,7 +21,7 @@ import {
   type PlatformMeta,
   type SpatialCluster,
 } from "../lib/api";
-import { MONTH_LABEL } from "../lib/format";
+import { formatDataAsOf, MONTH_LABEL } from "../lib/format";
 import { ErrorNotice, Panel, PipelineStrip, Skeleton, StatCard, StatusBadge } from "../components/ui/Primitives";
 import { DEFAULT_LAYERS, PlannerMap } from "../components/map/PlannerMap";
 import { useChartColors } from "../lib/theme";
@@ -93,8 +93,13 @@ export function OverviewPage() {
           Kilimani walkability intelligence
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-civic-slate">
-          Residents report what they see. UrbanMesh verifies spatial patterns.
-          Planners receive structured evidence for the Kilimani LPDP.
+          Residents report what they see. UrbanMesh groups nearby same-category
+          reports into community-supported clusters. Planners receive that spatial
+          corroboration as Kilimani planning input — not as a field inspection or a
+          statutory LPDP.
+        </p>
+        <p className="mt-2 text-xs font-medium text-civic-muted">
+          {formatDataAsOf(metrics.generated_at)}
         </p>
         <div className="mt-4">
           <PipelineStrip />
@@ -103,10 +108,14 @@ export function OverviewPage() {
 
       <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatCard label="Total reports" value={metrics.totals.all} />
-        <StatCard label="Verified clusters" value={metrics.totals.clusters} />
+        <StatCard label="Community-supported clusters" value={metrics.totals.clusters} />
         <StatCard label="Pending reports" value={metrics.totals.unverified} />
         <StatCard label="Affected areas" value={metrics.totals.affected_areas} />
       </div>
+      <p className="mb-5 text-xs leading-relaxed text-civic-muted">
+        Affected areas use approximate Kilimani planning boxes, not official Nairobi ward polygons.
+        Community-supported means spatial corroboration (≥3 same-category reports within 15 m), not a field inspection.
+      </p>
 
       <div className="grid gap-5 xl:grid-cols-5">
         <div className="h-[420px] overflow-hidden rounded-card border border-civic-line xl:col-span-3">
@@ -144,7 +153,7 @@ export function OverviewPage() {
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <Panel title="Daily reporting trend" hint="Total vs verified, Africa/Nairobi dates">
+        <Panel title="Daily reporting trend" hint="Total vs community-supported, Africa/Nairobi dates">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={metrics.trend}>
@@ -153,13 +162,13 @@ export function OverviewPage() {
                 <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: chart.muted }} />
                 <Tooltip />
                 <Line dataKey="total" name="Total" stroke={chart.ink} strokeWidth={2} dot={false} />
-                <Line dataKey="verified" name="Verified" stroke={chart.accent} strokeWidth={2} dot={false} />
+                <Line dataKey="verified" name="Community-supported" stroke={chart.accent} strokeWidth={2} dot={false} />
                 <Line dataKey="unverified" name="Pending" stroke={chart.pending} strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
         </Panel>
-        <Panel title="Ward distribution" hint="Approximate Kilimani planning boxes">
+        <Panel title="Ward distribution" hint="Approximate bounding boxes, not official Nairobi ward polygons">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={metrics.by_ward} margin={{ bottom: 36 }}>
@@ -167,7 +176,7 @@ export function OverviewPage() {
                 <XAxis dataKey="ward_name" tick={{ fontSize: 10, fill: chart.muted }} interval={0} angle={-24} textAnchor="end" />
                 <YAxis allowDecimals={false} tick={{ fill: chart.muted }} />
                 <Tooltip />
-                <Bar dataKey="verified" name="Verified" stackId="a" fill={chart.accent} />
+                <Bar dataKey="verified" name="Community-supported" stackId="a" fill={chart.accent} />
                 <Bar dataKey="unverified" name="Pending" stackId="a" fill={chart.pending} />
               </BarChart>
             </ResponsiveContainer>
@@ -176,11 +185,11 @@ export function OverviewPage() {
       </div>
 
       <Panel
-        title="Recent verified clusters"
-        hint="Same-category reports within 15 m, newest activity first"
+        title="Recent community-supported clusters"
+        hint="Same-category reports within 15 m, newest activity first. Not field-verified."
       >
         {clusters.length === 0 ? (
-          <p className="text-sm text-civic-muted">No verified clusters yet.</p>
+          <p className="text-sm text-civic-muted">No community-supported clusters yet.</p>
         ) : (
           <ul className="divide-y divide-civic-mist">
             {[...clusters]

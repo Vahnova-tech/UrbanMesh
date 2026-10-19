@@ -20,15 +20,44 @@ export function EvidencePhoto({
   );
 }
 
+export function statusLabel(verified: boolean): string {
+  return verified ? "Community-supported" : "Pending";
+}
+
 export function StatusBadge({ verified }: { verified: boolean }) {
   return verified ? (
-    <span className="inline-flex items-center rounded-md bg-civic-verifiedBg px-2 py-0.5 text-[11px] font-semibold text-civic-verified">
-      Community verified
+    <span className="inline-flex items-center gap-1 rounded-md bg-civic-verifiedBg px-2 py-0.5 text-[11px] font-semibold text-civic-verified">
+      <CheckIcon />
+      Community-supported
     </span>
   ) : (
-    <span className="inline-flex items-center rounded-md bg-civic-pendingBg px-2 py-0.5 text-[11px] font-semibold text-civic-pending">
-      Pending confirmation
+    <span className="inline-flex items-center gap-1 rounded-md bg-civic-pendingBg px-2 py-0.5 text-[11px] font-semibold text-civic-pending">
+      <ClockIcon />
+      Pending
     </span>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+      <path
+        d="M2.5 6.2 4.8 8.5 9.5 3.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg className="h-3 w-3" viewBox="0 0 12 12" fill="none" aria-hidden>
+      <circle cx="6" cy="6" r="4.2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M6 3.8V6l1.7 1.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -53,7 +82,7 @@ export function PipelineStrip() {
   const steps = [
     "Report",
     "Nearby reports",
-    "Verified cluster",
+    "Community-supported cluster",
     "Urban intelligence",
     "LPDP evidence",
   ];

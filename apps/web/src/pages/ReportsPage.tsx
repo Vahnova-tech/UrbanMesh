@@ -115,7 +115,7 @@ export function ReportsPage() {
           [
             ["nearby", "Near me"],
             ["recent", "Recent"],
-            ["verified", "Verified"],
+            ["verified", "Community-supported"],
           ] as Array<[Tab, string]>
         ).map(([id, label]) => (
           <button
@@ -159,8 +159,8 @@ export function ReportsPage() {
             className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
           >
             <option value="all">All statuses</option>
-            <option value="verified">Verified clusters</option>
-            <option value="pending">Pending confirmation</option>
+            <option value="verified">Community-supported</option>
+            <option value="pending">Pending</option>
           </select>
         </label>
         <label className="flex shrink-0 flex-col gap-1">

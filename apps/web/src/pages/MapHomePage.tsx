@@ -4,7 +4,10 @@ import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
 import { ErrorBanner, ReportCard } from "../components/ui/ReportCard";
+import { BottomSheet } from "../components/ui/BottomSheet";
+import { StatusBadge } from "../components/ui/StatusBadge";
 import { LiveMap, MapKey, type MapFocus } from "../components/map/LiveMap";
+import { formatRelative, formatWhen } from "../lib/format";
 import {
   geocodeKilimani,
   mergeSearchHits,
@@ -30,6 +33,8 @@ export function MapHomePage() {
   const [focus, setFocus] = useState<MapFocus | null>(null);
   const [remoteHits, setRemoteHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selected, setSelected] = useState<IncidentPublic | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -141,14 +146,16 @@ export function MapHomePage() {
             focus={focus}
             showVerified={status !== "pending"}
             showPending={status !== "verified"}
+            selectedId={selected?.id ?? null}
+            onSelect={setSelected}
           />
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-44 lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-36 lg:hidden">
             {visible.length === 0 ? (
               <p className="text-sm font-medium text-civic-muted">
-                No reports match these filters.
+                No Kilimani reports match these filters.
               </p>
             ) : (
               <div className="space-y-3">
@@ -161,8 +168,36 @@ export function MapHomePage() {
         ) : null}
 
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] px-3 lg:hidden">
-          <div className="pointer-events-auto">
-            <MapFilters {...filterProps} />
+          <div className="pointer-events-auto space-y-2">
+            <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 shadow-card">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+                Kilimani pilot · Nairobi
+              </p>
+              <h1 className="mt-0.5 text-sm font-semibold tracking-tight text-civic-ink">
+                Report street hazards. UrbanMesh groups nearby reports into planning evidence.
+              </h1>
+              <div className="mt-2 flex gap-2">
+                <Link
+                  to="/about"
+                  className="text-xs font-semibold text-civic-accent"
+                >
+                  How reporting works
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setFiltersOpen((open) => !open)}
+                  className="ml-auto text-xs font-semibold text-civic-slate"
+                  aria-expanded={filtersOpen}
+                >
+                  {filtersOpen ? "Hide filters" : "Filters"}
+                </button>
+              </div>
+            </div>
+            {filtersOpen ? (
+              <div className="rounded-card border border-civic-line bg-civic-surface p-3 shadow-card">
+                <MapFilters {...filterProps} />
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -175,7 +210,7 @@ export function MapHomePage() {
           </div>
         ) : null}
 
-        <div className="absolute bottom-5 left-3 z-[1100] max-w-[calc(100%-8.5rem)] lg:hidden">
+        <div className={`absolute bottom-5 left-3 z-[1100] max-w-[calc(100%-8.5rem)] lg:hidden ${selected ? "hidden" : ""}`}>
           <SummaryCard
             loading={loading && incidents.length === 0}
             verified={verified}
@@ -203,12 +238,53 @@ export function MapHomePage() {
             to="/report"
             className="inline-flex min-h-14 items-center rounded-card bg-civic-accent px-5 text-sm font-semibold text-white shadow-card lg:hidden"
           >
-            Report a hazard
+            Report an issue
           </Link>
         </div>
+
+        <BottomSheet
+          open={Boolean(selected) && view === "map"}
+          title={selected?.category_label ?? "Report"}
+          onClose={() => setSelected(null)}
+        >
+          {selected ? (
+            <div className="space-y-2 pb-2">
+              <StatusBadge verified={selected.is_verified} size="sm" />
+              <p className="text-sm leading-relaxed text-civic-slate">{selected.description}</p>
+              <p className="text-xs font-medium text-civic-muted">
+                {selected.corridor} · {formatRelative(selected.created_at)} · {formatWhen(selected.created_at)}
+              </p>
+              <p className="text-xs leading-relaxed text-civic-muted">
+                {selected.is_verified
+                  ? "Community-supported: three or more same-category reports within 15 m. Not a field inspection."
+                  : "Pending: waiting for nearby same-category reports to corroborate this sighting."}
+              </p>
+              <Link
+                to={`/hazards/${selected.id}`}
+                className="inline-flex min-h-11 items-center text-sm font-semibold text-civic-accent"
+              >
+                Open full evidence
+              </Link>
+            </div>
+          ) : null}
+        </BottomSheet>
       </div>
 
       <aside className="hidden w-[380px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
+        <div className="border-b border-civic-line p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
+            Kilimani pilot · Nairobi City County
+          </p>
+          <h1 className="mt-1 text-base font-semibold tracking-tight">
+            Street hazards become planning evidence when neighbours corroborate them.
+          </h1>
+          <p className="mt-1 text-xs leading-relaxed text-civic-muted">
+            Scope is Kilimani only. Community-supported clusters are spatial corroboration, not county inspection.
+          </p>
+          <Link to="/about" className="mt-2 inline-block text-xs font-semibold text-civic-accent">
+            How reporting works
+          </Link>
+        </div>
         <div className="border-b border-civic-line p-4">
           <MapFilters {...filterProps} />
         </div>
@@ -224,7 +300,7 @@ export function MapHomePage() {
             Visible evidence
           </p>
           {visible.length === 0 ? (
-            <p className="text-sm text-civic-muted">No reports match these filters.</p>
+            <p className="text-sm text-civic-muted">No Kilimani reports match these filters.</p>
           ) : (
             <div className="space-y-3">
               {visible.slice(0, 40).map((incident) => (
@@ -238,7 +314,7 @@ export function MapHomePage() {
             to="/report"
             className="flex min-h-12 items-center justify-center rounded-card bg-civic-accent text-sm font-semibold text-white"
           >
-            Report a hazard
+            Report an issue
           </Link>
         </div>
       </aside>
@@ -262,7 +338,7 @@ function SummaryCard({
       ) : (
         <>
           <p className="text-sm font-semibold text-civic-ink">
-            {verified} verified hazards
+            {verified} community-supported
           </p>
           <p className="text-xs font-medium text-civic-muted">
             {pending} pending reports
@@ -430,7 +506,7 @@ function MapFilters({
           active={status === "verified"}
           onClick={() => onStatus("verified")}
         >
-          Verified clusters
+          Community-supported
         </FilterChip>
         <FilterChip
           active={status === "pending"}

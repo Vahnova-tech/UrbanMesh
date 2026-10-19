@@ -51,9 +51,10 @@ export function ClustersPage() {
 
   return (
     <div className="p-5 lg:p-7">
-      <h1 className="text-2xl font-semibold tracking-tight">Verified clusters</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Community-supported clusters</h1>
       <p className="mt-1 text-sm text-civic-muted">
-        Same-category reports within 15 metres, confirmed by at least three residents.
+        Same-category reports within 15 metres, corroborated by at least three residents.
+        This is spatial corroboration, not a field inspection.
       </p>
       {error ? (
         <div className="mt-4">

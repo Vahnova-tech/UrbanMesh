@@ -27,10 +27,10 @@ export function BriefsPage() {
     <div className="p-5 lg:p-7">
       <h1 className="text-2xl font-semibold tracking-tight">Policy briefs</h1>
       <p className="mt-1 max-w-xl text-sm text-civic-muted">
-        One-click A4 LPDP brief from{" "}
-        <span className="font-medium text-civic-ink">self-verified</span> Kilimani
-        clusters (≥3 same-category reports within 15 m) for the county planning
-        desk. Latest file: {MONTH_LABEL}.
+        One-click A4 planning brief from{" "}
+        <span className="font-medium text-civic-ink">community-supported</span> Kilimani
+        clusters (≥3 same-category reports within 15 m). This is spatial corroboration
+        for the planning desk, not a statutory LPDP. Latest file: {MONTH_LABEL}.
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -52,7 +52,7 @@ export function BriefsPage() {
 
       {count !== null ? (
         <p className="mt-3 text-sm text-civic-accentDark">
-          {count} verified clusters written to the brief.
+          {count} community-supported clusters written to the brief.
         </p>
       ) : null}
       {error ? (
@@ -69,7 +69,7 @@ export function BriefsPage() {
         />
       ) : (
         <p className="mt-8 text-sm text-civic-muted">
-          Generate a brief to preview the current verified-cluster evidence pack.
+          Generate a brief to preview the current community-supported evidence pack.
         </p>
       )}
     </div>
