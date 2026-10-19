@@ -1,121 +1,477 @@
-import { PipelineStrip } from "../components/ui/Pipeline";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { Link } from "react-router-dom";
 import { ButtonLink } from "../components/ui/Button";
+import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
+import { PIPELINE } from "../components/ui/Pipeline";
+
+const APPROACH = [
+  {
+    title: "Resident report",
+    body: "A Kilimani resident pins a tangible street hazard they can see — one of six scoped categories.",
+  },
+  {
+    title: "Nearby corroboration",
+    body: "Same-category reports nearby count as corroboration, not likes or votes.",
+  },
+  {
+    title: "Community-supported cluster",
+    body: "Three or more reports within 15 metres form a shared, community-supported cluster.",
+  },
+  {
+    title: "Planning evidence",
+    body: "Only those clusters feed the walkability heatmap and LPDP planning export — not a statutory plan.",
+  },
+] as const;
+
+const CAPABILITIES = [
+  {
+    title: "Street hazard reporting",
+    body: "Mobile-first capture of geotagged mobility and infrastructure hazards on Kilimani corridors.",
+  },
+  {
+    title: "Spatial corroboration",
+    body: "Automatic clustering when ≥3 same-category reports land within 15 metres — a priority signal, not a county inspection.",
+  },
+  {
+    title: "Planner-facing evidence",
+    body: "Community-supported clusters compile into walkability intelligence and LPDP policy-brief input for Nairobi City County workflows.",
+  },
+] as const;
+
+const DIFFERENCE = [
+  {
+    title: "Self-verifying, not open inbox",
+    body: "Trust is programmatic: heatmap and LPDP entries require spatial corroboration, so unverified single reports stay pending.",
+  },
+  {
+    title: "Scoped to street hazards",
+    body: "Six tangible point-hazard types only. No crime logs, water-rationing schedules, or public citizen profiles.",
+  },
+  {
+    title: "Built for Nairobi bandwidth",
+    body: "Progressive Web App with a lightweight shell and deferred map code so reporting still works on slower mobile networks.",
+  },
+  {
+    title: "Privacy by design",
+    body: "No public profile on this phone. “My Reports” stays on-device. Sensitive social domains stay out of scope.",
+  },
+] as const;
 
 export function AboutPage() {
   return (
-    <article className="um-enter mx-auto w-full max-w-[960px] px-4 py-8 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-10 lg:px-6 lg:py-12">
-      <p className="um-eyebrow">Kilimani · Nairobi City County</p>
-      <h1 className="um-display mt-2">About UrbanMesh</h1>
-      <p className="um-body mt-4 max-w-2xl text-base">
-        Residents report street hazards they can see. UrbanMesh groups nearby
-        same-category reports into community-supported clusters. Planners can use
-        that spatial corroboration as Kilimani planning input — grounded in a
-        neighbourhood of roughly{" "}
-        <span className="font-semibold text-civic-ink">
-          50,457 residents across 16.1 km²
-        </span>{" "}
-        (2019 census context). This is not a county inspection programme and not an
-        official Local Physical Development Plan.
-      </p>
+    <article className="um-about um-enter bg-civic-paper text-civic-ink">
+      <div className="mx-auto w-full max-w-[1100px] px-4 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] pt-8 md:pb-12 lg:px-6 lg:pt-14">
+        {/* 01 — Hero */}
+        <header className="grid gap-10 border-b border-civic-line pb-14 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] lg:items-end lg:gap-16 lg:pb-20">
+          <div>
+            <p className="um-eyebrow um-about-stagger" style={{ animationDelay: "40ms" }}>
+              About · Kilimani pilot
+            </p>
+            <h1 className="um-about-hero-title um-about-stagger mt-4 max-w-[14ch] text-balance">
+              Street evidence that planners can trust.
+            </h1>
+            <p
+              className="um-about-stagger mt-5 max-w-xl text-base leading-relaxed text-civic-slate lg:text-[1.05rem]"
+              style={{ animationDelay: "120ms" }}
+            >
+              UrbanMesh helps Kilimani residents document visible street hazards and turns
+              nearby agreement into community-supported clusters for Nairobi City County
+              planning input — not inspections, and not a statutory Local Physical
+              Development Plan.
+            </p>
+            <div
+              className="um-about-stagger mt-8 flex flex-wrap items-center gap-x-5 gap-y-3"
+              style={{ animationDelay: "180ms" }}
+            >
+              <a
+                href="#approach"
+                className="group inline-flex items-center gap-2 text-sm font-semibold text-civic-accent"
+              >
+                Explore our approach
+                <span
+                  aria-hidden
+                  className="transition-transform duration-200 group-hover:translate-y-0.5 motion-reduce:transition-none"
+                >
+                  ↘
+                </span>
+              </a>
+              <ButtonLink to="/reports/new" className="min-h-11 rounded-full px-4 text-sm">
+                Report a hazard
+              </ButtonLink>
+            </div>
+          </div>
 
-      <section className="mt-10 rounded-card border border-civic-line bg-civic-surface p-5 lg:p-6">
-        <h2 className="um-title text-base lg:text-lg">How corroboration works</h2>
-        <p className="um-body mt-3">
-          Single reports stay <span className="font-semibold text-civic-ink">Pending</span>.
-          Only when <span className="font-semibold text-civic-ink">three or more</span>{" "}
-          same-category reports land within <span className="font-semibold text-civic-ink">15 metres</span>{" "}
-          does UrbanMesh auto-cluster them as{" "}
-          <span className="font-semibold text-civic-ink">Community-supported</span>.
-          That rule is spatial corroboration from residents — not a field visit by
-          Nairobi City County.
-        </p>
-      </section>
+          <aside
+            className="um-about-stagger relative border border-civic-line bg-civic-surface px-5 py-6 lg:px-6 lg:py-8"
+            style={{ animationDelay: "220ms" }}
+            aria-label="Pilot context"
+          >
+            <p className="um-eyebrow">Pilot context</p>
+            <dl className="mt-5 space-y-5">
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
+                  Place
+                </dt>
+                <dd className="mt-1 text-sm font-semibold text-civic-ink">
+                  Kilimani · Nairobi City County
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
+                  Scale
+                </dt>
+                <dd className="mt-1 text-sm font-semibold text-civic-ink">
+                  ~50,457 residents · 16.1 km²
+                </dd>
+                <dd className="mt-0.5 text-xs text-civic-muted">2019 census context</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
+                  Corridors
+                </dt>
+                <dd className="mt-1 text-sm font-semibold leading-snug text-civic-ink">
+                  Argwings Kodhek Road · Kirichwa Kubwa
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
+                  Corroboration rule
+                </dt>
+                <dd className="mt-1 text-sm font-semibold text-civic-ink">
+                  ≥3 same-category reports within 15 m
+                </dd>
+              </div>
+            </dl>
+          </aside>
+        </header>
 
-      <section className="mt-10">
-        <h2 className="um-title text-base lg:text-lg">How a report becomes evidence</h2>
-        <div className="mt-4">
-          <PipelineStrip />
-        </div>
-      </section>
+        {/* 02 — Our story */}
+        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
+            <div>
+              <p className="um-eyebrow">Our story</p>
+              <h2 className="um-about-section-title mt-3 max-w-[12ch]">
+                Why UrbanMesh exists
+              </h2>
+            </div>
+            <div className="space-y-5 text-base leading-relaxed text-civic-slate lg:text-[1.05rem]">
+              <p>
+                Kilimani’s walkability problems are visible on the street — broken surfaces,
+                blocked paths, drainage failures — yet a single complaint rarely carries enough
+                weight for planning decisions.
+              </p>
+              <p>
+                UrbanMesh exists to turn resident sightings into spatial evidence: when
+                enough people report the same hazard type in the same place, the platform
+                forms a community-supported cluster that planners can use as{" "}
+                <span className="font-semibold text-civic-ink">Kilimani LPDP planning input</span>.
+              </p>
+              <p>
+                It is deliberately narrow. No public profiles. No sensitive social domains.
+                No claim that community support equals a county field inspection.
+              </p>
+            </div>
+          </div>
+        </Reveal>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <section>
-          <h2 className="um-title text-base lg:text-lg">How reporting works</h2>
-          <ol className="um-body mt-4 space-y-3">
-            <li>1. A resident reports a point hazard on Kilimani streets.</li>
-            <li>2. Nearby reports of the same type become corroboration — not likes.</li>
-            <li>3. Three reports within 15 m create a community-supported cluster.</li>
-            <li>4. Only those clusters feed the walkability heatmap.</li>
-            <li>5. Planners can export them as Kilimani LPDP planning input, not as a statutory plan.</li>
-          </ol>
-        </section>
+        {/* 03–04 — Mission & Vision */}
+        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <p className="font-semibold tracking-tight text-civic-mist select-none text-[clamp(3.5rem,10vw,6rem)] leading-none">
+                01
+              </p>
+              <p className="um-eyebrow mt-4">Mission</p>
+              <h2 className="um-about-section-title mt-2">Our purpose</h2>
+              <p className="mt-4 max-w-md text-base leading-relaxed text-civic-slate">
+                Give Kilimani residents a trustworthy way to document street hazards, and give
+                planners corroborated spatial evidence they can act on — without mistaking
+                community agreement for official inspection.
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold tracking-tight text-civic-mist select-none text-[clamp(3.5rem,10vw,6rem)] leading-none">
+                02
+              </p>
+              <p className="um-eyebrow mt-4">Vision</p>
+              <h2 className="um-about-section-title mt-2">Our direction</h2>
+              <p className="mt-4 max-w-md text-base leading-relaxed text-civic-slate">
+                Neighbourhood walkability intelligence that stays honest about what is live,
+                what is pending, and what still needs county or partner confirmation — starting
+                on Kilimani’s pilot corridors.
+              </p>
+            </div>
+          </div>
+        </Reveal>
 
-        <section className="rounded-card border border-civic-line bg-civic-surface p-5">
-          <h2 className="um-title text-base lg:text-lg">What you will see on the map</h2>
-          <ul className="um-body mt-4 space-y-3">
-            <li>
-              <span className="font-semibold text-civic-ink">Pending</span> — an
-              individual report, still waiting for nearby same-category corroboration.
-            </li>
-            <li>
-              <span className="font-semibold text-civic-ink">Community-supported</span>{" "}
-              — three or more same-category reports within 15 metres. Not a field inspection.
-            </li>
+        {/* 05 — What we do */}
+        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
+          <div className="max-w-2xl">
+            <p className="um-eyebrow">What we do</p>
+            <h2 className="um-about-section-title mt-3">
+              From resident sighting to planning evidence
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-civic-slate">
+              Three connected capabilities — not a generic service catalog.
+            </p>
+          </div>
+          <ul className="mt-10 divide-y divide-civic-line border-y border-civic-line">
+            {CAPABILITIES.map((item, index) => (
+              <li key={item.title}>
+                <Link
+                  to={index === 0 ? "/reports/new" : index === 1 ? "/reports" : "/"}
+                  className="group flex flex-col gap-2 py-6 transition-colors hover:bg-civic-mist/40 sm:flex-row sm:items-baseline sm:gap-8 motion-reduce:transition-none"
+                >
+                  <span className="shrink-0 text-xs font-semibold tabular-nums text-civic-muted">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                      <span className="text-lg font-semibold tracking-tight text-civic-ink">
+                        {item.title}
+                      </span>
+                      <span
+                        aria-hidden
+                        className="text-sm font-semibold text-civic-accent opacity-0 transition-all duration-200 group-hover:translate-x-0.5 group-hover:opacity-100 motion-reduce:transition-none"
+                      >
+                        →
+                      </span>
+                    </span>
+                    <span className="mt-2 block max-w-2xl text-sm leading-relaxed text-civic-slate">
+                      {item.body}
+                    </span>
+                  </span>
+                </Link>
+              </li>
+            ))}
           </ul>
-        </section>
-      </div>
+        </Reveal>
 
-      <section className="mt-10 rounded-card border border-civic-line bg-civic-surface p-5 lg:p-6">
-        <h2 className="um-title text-base lg:text-lg">Statuses that are not live yet</h2>
-        <ul className="um-body mt-4 space-y-3">
-          <li>
-            <span className="font-semibold text-civic-ink">Field-verified</span> —
-            a county or partner inspector would confirm the site in person. UrbanMesh
-            does not collect that status today, so it never appears as a badge on live reports.
-          </li>
-          <li>
-            <span className="font-semibold text-civic-ink">Resolved</span> —
-            works completed or the hazard removed. There is no resolution workflow yet.
-          </li>
-        </ul>
-      </section>
+        {/* 06 — Our approach */}
+        <Reveal
+          as="section"
+          id="approach"
+          className="scroll-mt-24 border-b border-civic-line py-14 lg:py-20"
+        >
+          <div className="max-w-2xl">
+            <p className="um-eyebrow">Our approach</p>
+            <h2 className="um-about-section-title mt-3">How a report becomes evidence</h2>
+            <p className="mt-4 text-base leading-relaxed text-civic-slate">
+              {PIPELINE.join(" → ")}.
+            </p>
+          </div>
 
-      <section className="mt-10 rounded-card border border-civic-line bg-civic-surface p-5">
-        <h2 className="um-title text-base lg:text-lg">Install on this phone</h2>
-        <p className="um-body mt-3">
-          Chrome and Edge show an install icon in the UrbanMesh header when
-          the app can be added. On iPhone, open Share and choose Add to Home
-          Screen. The map and reports you already loaded stay available if
-          the network drops; new reports still need a connection.
-        </p>
-      </section>
+          <ol className="mt-10 grid gap-0 lg:grid-cols-4 lg:gap-0">
+            {APPROACH.map((step, index) => (
+              <li
+                key={step.title}
+                className="relative border-t border-civic-line py-6 lg:border-t-0 lg:border-l lg:px-5 lg:py-0 lg:first:border-l-0 lg:first:pl-0"
+              >
+                <p className="text-xs font-semibold tabular-nums text-civic-muted">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3 className="mt-3 text-base font-semibold tracking-tight text-civic-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-civic-slate">{step.body}</p>
+              </li>
+            ))}
+          </ol>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
-        <section className="rounded-card border border-civic-line bg-civic-surface p-5">
-          <h2 className="um-title text-base lg:text-lg">Built for low bandwidth</h2>
-          <p className="um-body mt-3">
-            The citizen app is a lightweight, mobile-first Progressive Web App —
-            map code loads after the shell, so reporting still works on slower
-            Nairobi mobile networks.
+          <div className="mt-12 grid gap-8 border-t border-civic-line pt-10 lg:grid-cols-2 lg:gap-16">
+            <div>
+              <h3 className="text-sm font-semibold text-civic-ink">What you will see on the map</h3>
+              <ul className="mt-4 space-y-4 text-sm leading-relaxed text-civic-slate">
+                <li>
+                  <span className="font-semibold text-civic-pending">Pending</span> — an
+                  individual report still waiting for nearby same-category corroboration.
+                </li>
+                <li>
+                  <span className="font-semibold text-civic-verified">Community-supported</span>{" "}
+                  — three or more same-category reports within 15 metres. Spatial
+                  corroboration, not a field inspection.
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-civic-ink">Statuses that are not live yet</h3>
+              <ul className="mt-4 space-y-4 text-sm leading-relaxed text-civic-slate">
+                <li>
+                  <span className="font-semibold text-civic-ink">Field-verified</span> — a
+                  county or partner inspector would confirm the site in person. UrbanMesh does
+                  not collect that status today.
+                </li>
+                <li>
+                  <span className="font-semibold text-civic-ink">Resolved</span> — works
+                  completed or the hazard removed. There is no official resolution workflow yet;
+                  device-local “resolved” marks are personal only.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* 07 — Our difference */}
+        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
+          <div className="max-w-2xl">
+            <p className="um-eyebrow">Our difference</p>
+            <h2 className="um-about-section-title mt-3">
+              Thoughtful by design. Practical on Kilimani streets.
+            </h2>
+          </div>
+          <ul className="mt-10 grid gap-10 sm:grid-cols-2">
+            {DIFFERENCE.map((item) => (
+              <li key={item.title} className="max-w-md">
+                <h3 className="text-base font-semibold tracking-tight text-civic-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-2 text-sm leading-relaxed text-civic-slate">{item.body}</p>
+              </li>
+            ))}
+          </ul>
+        </Reveal>
+
+        {/* Credibility / people — only verified */}
+        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
+            <div>
+              <p className="um-eyebrow">People & product</p>
+              <h2 className="um-about-section-title mt-3">Who builds UrbanMesh</h2>
+            </div>
+            <div>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
+                <div
+                  className="flex h-20 w-20 shrink-0 items-center justify-center border border-civic-line bg-civic-mist text-sm font-semibold text-civic-slate"
+                  aria-hidden
+                >
+                  JM
+                </div>
+                <div>
+                  <p className="text-lg font-semibold tracking-tight text-civic-ink">
+                    Junior Maina
+                  </p>
+                  <p className="mt-1 text-sm text-civic-slate">
+                    Product direction, architecture, and shipping for the Kilimani pilot.
+                  </p>
+                  <a
+                    href="https://github.com/Juniormaina"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-3 inline-flex text-sm font-semibold text-civic-accent hover:underline"
+                  >
+                    GitHub ↗
+                  </a>
+                </div>
+              </div>
+              <p className="mt-8 max-w-xl text-sm leading-relaxed text-civic-slate">
+                Install UrbanMesh on this phone via the header install control (Chrome / Edge)
+                or Share → Add to Home Screen on iPhone. Cached map and reports stay available
+                offline; new submissions still need a connection.
+              </p>
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Closing CTA */}
+        <Reveal as="section" className="py-14 lg:py-20">
+          <p className="um-eyebrow">Next step</p>
+          <h2 className="um-about-hero-title mt-4 max-w-[16ch] text-balance">
+            See a hazard on your street?
+          </h2>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-civic-slate">
+            Add a report from this phone, or open the live map to explore community-supported
+            evidence already forming in Kilimani.
           </p>
-        </section>
-        <section className="rounded-card border border-civic-line bg-civic-surface p-5">
-          <h2 className="um-title text-base lg:text-lg">Privacy by scope</h2>
-          <p className="um-body mt-3">
-            No public profile on this phone. We deliberately exclude sensitive
-            domains such as crime logs or water-rationing schedules — UrbanMesh
-            stays on tangible street hazards only. Reports you submit for “My
-            Reports” stay on this device.
-          </p>
-        </section>
-      </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink to="/reports/new" className="min-h-12 rounded-full px-5">
+              Report a hazard
+            </ButtonLink>
+            <ButtonLink to="/" variant="secondary" className="min-h-12 rounded-full px-5">
+              Open the map
+            </ButtonLink>
+          </div>
+        </Reveal>
 
-      <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink to="/reports/new">Report an issue</ButtonLink>
-        <ButtonLink to="/" variant="secondary">
-          Open the map
-        </ButtonLink>
+        {/* Compact page footer */}
+        <footer className="border-t border-civic-line pt-8 pb-2">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <UrbanMeshLogo />
+              <p className="um-meta mt-2 max-w-sm">
+                Crowdsourced walkability intelligence for Kilimani — planning input, not a
+                statutory plan.
+              </p>
+            </div>
+            <nav
+              aria-label="About page links"
+              className="flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold text-civic-slate"
+            >
+              <Link to="/" className="hover:text-civic-ink">
+                Map
+              </Link>
+              <Link to="/reports" className="hover:text-civic-ink">
+                Reports
+              </Link>
+              <Link to="/reports/new" className="hover:text-civic-ink">
+                Report
+              </Link>
+              <Link to="/me" className="hover:text-civic-ink">
+                My reports
+              </Link>
+            </nav>
+          </div>
+        </footer>
       </div>
     </article>
+  );
+}
+
+function Reveal({
+  children,
+  className = "",
+  as: Tag = "div",
+  id,
+}: {
+  children: ReactNode;
+  className?: string;
+  as?: "div" | "section";
+  id?: string;
+}) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <Tag
+      id={id}
+      ref={ref as never}
+      className={`um-about-reveal ${visible ? "is-visible" : ""} ${className}`.trim()}
+    >
+      {children}
+    </Tag>
   );
 }

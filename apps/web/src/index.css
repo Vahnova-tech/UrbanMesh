@@ -387,8 +387,61 @@ a[aria-disabled="true"] {
   .um-enter,
   .um-sheet,
   .um-skeleton,
-  .um-selected-pin__mark {
+  .um-selected-pin__mark,
+  .um-about-stagger {
     animation: none;
   }
 
+  .um-about-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* About page — editorial type + restrained motion */
+.um-about-hero-title {
+  font-size: clamp(2rem, 5.5vw, 3.25rem);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+  color: var(--civic-ink);
+}
+
+.um-about-section-title {
+  font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  color: var(--civic-ink);
+}
+
+.um-about-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 420ms ease-out,
+    transform 420ms ease-out;
+}
+
+.um-about-reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .um-about-stagger {
+    animation: um-about-rise 480ms ease-out both;
+  }
+}
+
+@keyframes um-about-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
