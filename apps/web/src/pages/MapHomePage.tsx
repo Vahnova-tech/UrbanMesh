@@ -185,7 +185,7 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-[max(11rem,calc(9.5rem+env(safe-area-inset-top)))] lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(10rem,calc(8.5rem+env(safe-area-inset-bottom)))] pt-[max(11rem,calc(9.5rem+env(safe-area-inset-top)))] lg:hidden">
             {visible.length === 0 ? (
               <EmptyState
                 title="No Kilimani reports match these filters"
@@ -263,7 +263,7 @@ export function MapHomePage() {
           />
         </div>
 
-        <div className="absolute bottom-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
+        <div className="absolute bottom-[max(6.75rem,calc(5.5rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
           <button
             type="button"
             onClick={() => setView((v) => (v === "map" ? "list" : "map"))}

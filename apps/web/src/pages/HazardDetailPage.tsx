@@ -139,7 +139,7 @@ export function HazardDetailPage() {
   const photoMissing = Boolean(incident.photo_url) && (!photo || photoFailed);
 
   return (
-    <div className="um-scroll h-full pb-[max(2rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)] lg:overflow-hidden lg:pb-0">
+    <div className="um-scroll h-full pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)] lg:overflow-hidden lg:pb-0">
       <div className="relative h-48 lg:h-full lg:min-h-0">
         {photo ? (
           <>

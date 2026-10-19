@@ -89,6 +89,44 @@ html.dark .um-nav-pill {
   border-color: color-mix(in srgb, var(--civic-line) 90%, transparent);
 }
 
+.um-tab-bar {
+  border-radius: 1.75rem;
+  border: 1px solid color-mix(in srgb, var(--civic-line) 85%, transparent);
+  background: color-mix(in srgb, var(--civic-surface) 82%, transparent);
+  box-shadow: var(--civic-shadow);
+  backdrop-filter: blur(18px) saturate(1.35);
+  -webkit-backdrop-filter: blur(18px) saturate(1.35);
+}
+
+html.dark .um-tab-bar {
+  background: color-mix(in srgb, var(--civic-surface) 76%, transparent);
+}
+
+.um-tab-dot {
+  position: absolute;
+  bottom: 0.2rem;
+  left: 50%;
+  width: 0.25rem;
+  height: 0.25rem;
+  margin-left: -0.125rem;
+  border-radius: 9999px;
+  background: var(--civic-accent);
+}
+
+.um-tab-fab {
+  border: 3px solid color-mix(in srgb, var(--civic-surface) 92%, transparent);
+  box-shadow:
+    0 1px 2px rgba(22, 24, 29, 0.08),
+    0 10px 24px rgba(47, 107, 90, 0.35);
+}
+
+html.dark .um-tab-fab {
+  border-color: color-mix(in srgb, var(--civic-surface) 88%, transparent);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.35),
+    0 10px 24px rgba(90, 154, 134, 0.35);
+}
+
 :focus-visible {
   outline: 2px solid var(--civic-accent);
   outline-offset: 2px;

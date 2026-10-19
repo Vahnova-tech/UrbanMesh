@@ -3,7 +3,7 @@ import { ButtonLink } from "../components/ui/Button";
 
 export function AboutPage() {
   return (
-    <article className="um-enter mx-auto w-full max-w-[960px] px-4 py-8 pb-[max(6.5rem,calc(5rem+env(safe-area-inset-bottom)))] md:pb-10 lg:px-6 lg:py-12">
+    <article className="um-enter mx-auto w-full max-w-[960px] px-4 py-8 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-10 lg:px-6 lg:py-12">
       <p className="um-eyebrow">Kilimani · Nairobi City County</p>
       <h1 className="um-display mt-2">About UrbanMesh</h1>
       <p className="um-body mt-4 max-w-2xl text-base">

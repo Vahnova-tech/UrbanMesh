@@ -69,16 +69,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function navClass(isActive: boolean, compact = false) {
-  return compact
-    ? `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[11px] font-semibold transition-colors ${
-        isActive ? "bg-civic-mist text-civic-accent" : "text-civic-muted"
-      }`
-    : `rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
-        isActive
-          ? "bg-civic-mist text-civic-ink"
-          : "text-civic-slate hover:bg-civic-mist/70 hover:text-civic-ink"
-      }`;
+function navClass(isActive: boolean) {
+  return `rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+    isActive
+      ? "bg-civic-mist text-civic-ink"
+      : "text-civic-slate hover:bg-civic-mist/70 hover:text-civic-ink"
+  }`;
+}
+
+function tabClass(isActive: boolean) {
+  return `um-tab relative flex min-h-[3.25rem] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-1.5 text-[10px] font-semibold tracking-wide transition-colors ${
+    isActive ? "text-civic-accent" : "text-civic-muted"
+  }`;
 }
 
 const toolBtn =
@@ -162,7 +164,7 @@ function TopBar({
 
           <ButtonLink
             to="/report"
-            className="min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm"
+            className="hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm md:inline-flex"
           >
             Report an issue
           </ButtonLink>
@@ -180,28 +182,68 @@ function TopBar({
 function BottomNav() {
   return (
     <nav
-      aria-label="Mobile"
-      className="pointer-events-none absolute inset-x-0 bottom-0 z-[2000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
+      aria-label="Primary"
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-[2000] px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] md:hidden"
     >
-      <div className="um-nav-pill pointer-events-auto mx-auto flex min-h-14 max-w-lg items-stretch gap-1 p-1.5">
-        <NavLink to="/" end className={({ isActive }) => navClass(isActive, true)}>
-          <MapIcon />
-          Map
+      <div className="um-tab-bar pointer-events-auto relative mx-auto flex max-w-lg items-end gap-0.5 px-1.5 pb-1.5 pt-2">
+        <NavLink to="/" end className={({ isActive }) => tabClass(isActive)}>
+          {({ isActive }) => (
+            <>
+              <MapIcon filled={isActive} />
+              <span>Map</span>
+              {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
+            </>
+          )}
         </NavLink>
-        <NavLink to="/reports" className={({ isActive }) => navClass(isActive, true)}>
-          <ListIcon />
-          Reports
+
+        <NavLink to="/reports" className={({ isActive }) => tabClass(isActive)}>
+          {({ isActive }) => (
+            <>
+              <ListIcon filled={isActive} />
+              <span>Reports</span>
+              {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
+            </>
+          )}
         </NavLink>
-        <NavLink to="/me" className={({ isActive }) => navClass(isActive, true)}>
-          <UserIcon />
-          My Reports
+
+        <div className="relative flex w-[4.5rem] shrink-0 flex-col items-center justify-end">
+          <Link
+            to="/report"
+            aria-label="Report an issue"
+            className="um-tab-fab absolute -top-7 inline-flex h-14 w-14 items-center justify-center rounded-full bg-civic-accent text-white shadow-card transition-transform active:scale-95"
+          >
+            <PlusIcon />
+          </Link>
+          <span className="mt-[1.85rem] text-[10px] font-semibold text-civic-accent">
+            Report
+          </span>
+        </div>
+
+        <NavLink to="/me" className={({ isActive }) => tabClass(isActive)}>
+          {({ isActive }) => (
+            <>
+              <UserIcon filled={isActive} />
+              <span>My</span>
+              {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
+            </>
+          )}
+        </NavLink>
+
+        <NavLink to="/about" className={({ isActive }) => tabClass(isActive)}>
+          {({ isActive }) => (
+            <>
+              <AboutTabIcon filled={isActive} />
+              <span>About</span>
+              {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
+            </>
+          )}
         </NavLink>
       </div>
     </nav>
   );
 }
 
-function MapIcon() {
+function MapIcon({ filled = false }: { filled?: boolean }) {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path
@@ -209,15 +251,20 @@ function MapIcon() {
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinejoin="round"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.22 : 0}
       />
       <path d="M9 4.5v13M15.5 6.5v13" stroke="currentColor" strokeWidth="1.7" />
     </svg>
   );
 }
 
-function ListIcon() {
+function ListIcon({ filled = false }: { filled?: boolean }) {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      {filled ? (
+        <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" fill="currentColor" fillOpacity="0.22" />
+      ) : null}
       <path
         d="M5 7h14M5 12h14M5 17h10"
         stroke="currentColor"
@@ -228,14 +275,59 @@ function ListIcon() {
   );
 }
 
-function UserIcon() {
+function UserIcon({ filled = false }: { filled?: boolean }) {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.7" />
+      <circle
+        cx="12"
+        cy="8"
+        r="3.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.28 : 0}
+      />
       <path
         d="M5 19c1.5-3 4-4.5 7-4.5S17.5 16 19 19"
         stroke="currentColor"
         strokeWidth="1.7"
+        strokeLinecap="round"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.18 : 0}
+      />
+    </svg>
+  );
+}
+
+function AboutTabIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle
+        cx="12"
+        cy="12"
+        r="8.25"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        fill={filled ? "currentColor" : "none"}
+        fillOpacity={filled ? 0.2 : 0}
+      />
+      <path
+        d="M12 11.2V16.5M12 8.2v.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 6.5v11M6.5 12h11"
+        stroke="currentColor"
+        strokeWidth="2.2"
         strokeLinecap="round"
       />
     </svg>
