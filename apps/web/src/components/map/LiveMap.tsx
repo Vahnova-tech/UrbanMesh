@@ -120,9 +120,16 @@ function markerFill(incident: IncidentPublic): string {
 function selectedPinIcon(fill: string, ring: string): L.DivIcon {
   return L.divIcon({
     className: "um-selected-pin",
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
-    html: `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true"></span>`,
+    iconSize: [40, 52],
+    iconAnchor: [20, 50],
+    html: `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true">
+      <svg class="um-selected-pin__svg" viewBox="0 0 40 52" width="40" height="52" focusable="false">
+        <path class="um-selected-pin__shadow" d="M20 50c6-8 16-18 16-30A16 16 0 0 0 4 20c0 12 10 22 16 30z" fill="rgba(0,0,0,.18)"/>
+        <path d="M20 2c-9.4 0-17 7.6-17 17 0 12.4 14.2 28.2 16.2 30.4a1.1 1.1 0 0 0 1.6 0C22.8 47.2 37 31.4 37 19 37 9.6 29.4 2 20 2z" fill="${fill}" stroke="${ring}" stroke-width="2.5"/>
+        <circle cx="20" cy="19" r="6.5" fill="${ring}"/>
+        <circle cx="20" cy="19" r="3.25" fill="${fill}"/>
+      </svg>
+    </span>`,
   });
 }
 
@@ -141,13 +148,13 @@ function SelectedReportMarker({
     <>
       <Circle
         center={[incident.lat, incident.lng]}
-        radius={36}
+        radius={42}
         pathOptions={{
           color: fill,
           weight: 2,
           dashArray: "5 4",
           fillColor: fill,
-          fillOpacity: dark ? 0.16 : 0.12,
+          fillOpacity: dark ? 0.14 : 0.1,
         }}
       />
       <Marker
@@ -418,7 +425,7 @@ export function MapKey({ bare = false }: { bare?: boolean }) {
         <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
         <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
         <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
-        <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Target ring" />
+        <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Location pin" />
       </ul>
     </>
   );
