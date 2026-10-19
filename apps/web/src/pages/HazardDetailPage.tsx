@@ -30,6 +30,7 @@ export function HazardDetailPage() {
   const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
   const [confirmError, setConfirmError] = useState<string | null>(null);
   const [shareError, setShareError] = useState<string | null>(null);
+  const [photoFailed, setPhotoFailed] = useState(false);
   const [reload, setReload] = useState(0);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ export function HazardDetailPage() {
         const evidence = await fetchEvidence(id);
         if (!cancelled) {
           setData(evidence);
+          setPhotoFailed(false);
           setError(null);
         }
       } catch (err) {
@@ -142,14 +144,19 @@ export function HazardDetailPage() {
   }
 
   const { incident } = data;
-  const photo = photoSrc(incident.photo_url);
+  const photo = photoFailed ? null : photoSrc(incident.photo_url);
 
   return (
     <div className="um-scroll h-full pb-[max(2rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)] lg:overflow-hidden lg:pb-0">
       <div className="relative h-48 lg:h-full lg:min-h-0">
         {photo ? (
           <>
-            <img src={photo} alt="Hazard evidence photograph" className="h-full w-full object-cover" />
+            <img
+              src={photo}
+              alt="Hazard evidence photograph"
+              className="h-full w-full object-cover"
+              onError={() => setPhotoFailed(true)}
+            />
             <p className="absolute bottom-2 left-2 rounded-md bg-civic-surface/90 px-2 py-1 text-[11px] font-semibold text-civic-ink">
               Camera evidence
             </p>

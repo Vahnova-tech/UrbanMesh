@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { photoSrc } from "../../lib/api";
 
 export function EvidencePhoto({
@@ -11,11 +11,16 @@ export function EvidencePhoto({
   className?: string;
 }) {
   const src = photoSrc(url);
-  if (!src) return null;
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [src]);
+  if (!src || failed) return null;
   return (
     <img
       src={src}
       alt={alt}
+      onError={() => setFailed(true)}
       className={`shrink-0 rounded-[10px] object-cover ${className}`}
     />
   );
