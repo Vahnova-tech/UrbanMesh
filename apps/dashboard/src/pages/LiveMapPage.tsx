@@ -120,10 +120,8 @@ export function LiveMapPage() {
             setSelectedCluster(null);
           }}
         />
-        <div className="absolute left-3 top-3 w-56 rounded-card border border-civic-line bg-civic-surface/95 p-3 shadow-card">
-          <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
-            Map layers
-          </p>
+        <div className="absolute left-3 top-3 w-60 rounded-card border border-civic-line bg-civic-surface/95 p-3.5 shadow-card">
+          <p className="um-eyebrow">Map layers</p>
           {(
             [
               ["verified", "Community-supported clusters"],
@@ -174,13 +172,13 @@ export function LiveMapPage() {
         </div>
       </div>
 
-      <aside className="um-enter w-full max-w-sm overflow-y-auto border-l border-civic-line bg-civic-surface p-5">
+      <aside className="um-enter w-full max-w-md overflow-y-auto border-l border-civic-line bg-civic-surface p-5 lg:p-6">
         {selectedCluster ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-civic-verified">
+            <p className="um-eyebrow text-civic-verified">
               Community-supported cluster
             </p>
-            <h2 className="mt-1 text-xl font-semibold">{selectedCluster.category_label}</h2>
+            <h2 className="um-title mt-2 text-xl lg:text-xl">{selectedCluster.category_label}</h2>
             <div className="mt-3">
               <StatusBadge verified />
             </div>
@@ -245,10 +243,10 @@ export function LiveMapPage() {
           </div>
         ) : selectedIncident ? (
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-civic-pending">
+            <p className="um-eyebrow text-civic-pending">
               Pending report
             </p>
-            <h2 className="mt-1 text-xl font-semibold">{selectedIncident.category_label}</h2>
+            <h2 className="um-title mt-2 text-xl lg:text-xl">{selectedIncident.category_label}</h2>
             <div className="mt-3">
               <StatusBadge verified={false} />
             </div>
@@ -284,8 +282,8 @@ export function LiveMapPage() {
           </div>
         ) : (
           <div>
-            <h2 className="text-lg font-semibold">Geospatial workspace</h2>
-            <p className="mt-2 text-sm text-civic-slate">
+            <h2 className="um-title text-lg lg:text-xl">Geospatial workspace</h2>
+            <p className="um-body mt-3">
               Click a community-supported cluster to inspect report count, 15 m
               radius and planning area. Dashed pins are pending reports — they open
               the report row here. There is no moderation queue on this dashboard.

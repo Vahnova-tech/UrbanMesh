@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { photoSrc } from "../../lib/api";
 
 export function EvidencePhoto({
@@ -83,7 +84,7 @@ export function EmptyState({
 }: {
   title: string;
   body: string;
-  action?: React.ReactNode;
+  action?: ReactNode;
 }) {
   return (
     <div className="rounded-card border border-dashed border-civic-line bg-civic-surface px-5 py-10 text-center">
@@ -154,7 +155,7 @@ export function Panel({
 }: {
   title: string;
   hint?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <section className="rounded-card border border-civic-line bg-civic-surface p-5 shadow-card lg:p-6">

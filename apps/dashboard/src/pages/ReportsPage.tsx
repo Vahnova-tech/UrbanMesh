@@ -50,9 +50,9 @@ export function ReportsPage() {
   });
 
   return (
-    <div className="p-5 lg:p-7">
-      <h1 className="text-2xl font-semibold tracking-tight">Reports</h1>
-      <p className="mt-1 text-sm text-civic-muted">
+    <div className="p-5 lg:p-8">
+      <h1 className="um-display">Reports</h1>
+      <p className="um-body mt-2 max-w-2xl">
         Every geotagged citizen report in the Kilimani catchments.
         {clusterFilter ? " Showing one community-supported cluster’s evidence." : ""}
       </p>

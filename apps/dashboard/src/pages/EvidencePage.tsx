@@ -9,7 +9,7 @@ import {
 } from "../lib/api";
 import { loadEvidenceSelection, saveEvidenceSelection } from "../lib/evidenceStore";
 import { formatCoords, MONTH_LABEL } from "../lib/format";
-import { ErrorNotice, EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
+import { EmptyState, ErrorNotice, EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
 
 export function EvidencePage() {
   const [clusters, setClusters] = useState<SpatialCluster[]>([]);
@@ -84,13 +84,11 @@ export function EvidencePage() {
   }
 
   return (
-    <div className="p-5 lg:p-7">
-      <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
+    <div className="p-5 lg:p-8">
+      <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Kilimani LPDP Evidence
-          </h1>
-          <p className="mt-1 max-w-xl text-sm leading-relaxed text-civic-muted">
+          <h1 className="um-display">Kilimani LPDP Evidence</h1>
+          <p className="um-body mt-2 max-w-xl">
             {MONTH_LABEL}. The policy brief is compiled only from community-supported
             15 m clusters — not from pending individual reports, and not from field inspection.
           </p>
@@ -99,7 +97,7 @@ export function EvidencePage() {
           type="button"
           onClick={() => void onGenerate()}
           disabled={generating || selected.length === 0}
-          className="rounded-card bg-civic-accent px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+          className="min-h-10 rounded-card bg-civic-accent px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-civic-accentDark disabled:pointer-events-none disabled:opacity-60"
         >
           {generating ? "Generating brief…" : "Generate LPDP Brief"}
         </button>
@@ -155,10 +153,10 @@ export function EvidencePage() {
 
       <div className="space-y-6">
         {clusters.length === 0 ? (
-          <p className="rounded-card border border-dashed border-civic-line bg-civic-surface px-4 py-8 text-center text-sm text-civic-muted">
-            No community-supported clusters yet. Individual reports become LPDP evidence only after
-            three same-category sightings within 15 metres.
-          </p>
+          <EmptyState
+            title="No community-supported clusters yet"
+            body="Individual reports become LPDP evidence only after three same-category sightings within 15 metres."
+          />
         ) : null}
         {grouped.map(([corridor, rows]) => (
           <section key={corridor}>
