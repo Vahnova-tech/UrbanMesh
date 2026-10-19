@@ -145,6 +145,7 @@ export function HazardDetailPage() {
 
   const { incident } = data;
   const photo = photoFailed ? null : photoSrc(incident.photo_url);
+  const photoMissing = Boolean(incident.photo_url) && (!photo || photoFailed);
 
   return (
     <div className="um-scroll h-full pb-[max(2rem,env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,1.15fr)_minmax(380px,0.85fr)] lg:overflow-hidden lg:pb-0">
@@ -162,29 +163,36 @@ export function HazardDetailPage() {
             </p>
           </>
         ) : (
-          <MapContainer
-            center={[incident.lat, incident.lng]}
-            zoom={17}
-            scrollWheelZoom={false}
-            zoomControl={false}
-            className="h-full w-full"
-          >
-            <TileLayer
-              key={dark ? "dark" : "light"}
-              url={tiles.url}
-              attribution={tiles.attribution}
-            />
-            <CircleMarker
+          <>
+            <MapContainer
               center={[incident.lat, incident.lng]}
-              radius={10}
-              pathOptions={{
-                color: dark ? "#EEE9E1" : "#FFFFFF",
-                weight: 2,
-                fillColor: incident.is_verified ? MARKER.verified : MARKER.pending,
-                fillOpacity: 0.95,
-              }}
-            />
-          </MapContainer>
+              zoom={17}
+              scrollWheelZoom={false}
+              zoomControl={false}
+              className="h-full w-full"
+            >
+              <TileLayer
+                key={dark ? "dark" : "light"}
+                url={tiles.url}
+                attribution={tiles.attribution}
+              />
+              <CircleMarker
+                center={[incident.lat, incident.lng]}
+                radius={10}
+                pathOptions={{
+                  color: dark ? "#EEE9E1" : "#FFFFFF",
+                  weight: 2,
+                  fillColor: incident.is_verified ? MARKER.verified : MARKER.pending,
+                  fillOpacity: 0.95,
+                }}
+              />
+            </MapContainer>
+            {photoMissing ? (
+              <p className="absolute bottom-2 left-2 right-2 rounded-md bg-civic-surface/90 px-2 py-1 text-[11px] font-semibold text-civic-ink">
+                Photo was recorded but the file is no longer on the server.
+              </p>
+            ) : null}
+          </>
         )}
       </div>
 
