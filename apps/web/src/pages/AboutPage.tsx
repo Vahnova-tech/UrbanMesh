@@ -423,6 +423,9 @@ export function AboutPage() {
               <Link to="/me" className="hover:text-civic-ink">
                 My reports
               </Link>
+              <Link to="/cookies" className="hover:text-civic-ink">
+                Cookies
+              </Link>
             </nav>
           </div>
         </footer>

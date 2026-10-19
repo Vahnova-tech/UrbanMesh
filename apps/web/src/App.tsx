@@ -9,6 +9,7 @@ import { ReportDetailPage } from "./pages/ReportDetailPage";
 import { ReportSubmittedPage } from "./pages/ReportSubmittedPage";
 import { ReportFlowPage } from "./pages/ReportFlowPage";
 import { AboutPage } from "./pages/AboutPage";
+import { CookiesPolicyPage } from "./pages/CookiesPolicyPage";
 
 function HazardRedirect() {
   const { id = "" } = useParams();
@@ -69,6 +70,14 @@ export default function App() {
               element={
                 <AppShell>
                   <AboutPage />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/cookies"
+              element={
+                <AppShell>
+                  <CookiesPolicyPage />
                 </AppShell>
               }
             />

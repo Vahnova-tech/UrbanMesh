@@ -7,6 +7,7 @@ import { InstallButton } from "../../lib/install";
 import { useOnline } from "../../lib/online";
 import { useNotices } from "../../lib/useNotices";
 import { NoticeBell, NotificationsPane } from "./NotificationsPane";
+import { StorageNotice } from "./StorageNotice";
 import { ButtonLink } from "../ui/Button";
 
 const NAV = [
@@ -56,6 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         {children}
       </main>
       <BottomNav />
+      <StorageNotice />
       <NotificationsPane
         open={updatesOpen}
         onClose={() => setUpdatesOpen(false)}
