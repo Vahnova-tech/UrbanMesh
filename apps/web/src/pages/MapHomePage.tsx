@@ -203,16 +203,21 @@ export function MapHomePage() {
 
         <div className="pointer-events-none absolute inset-x-0 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
-            <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3.5 shadow-card">
-              <p className="um-eyebrow">Kilimani pilot · Nairobi</p>
-              <h1 className="mt-1.5 text-[1.05rem] font-semibold leading-snug tracking-tight text-civic-ink">
-                Street hazards, reported by neighbours. Corroborated into planning evidence.
+            <div className="um-map-card rounded-card px-3.5 py-3.5 shadow-card">
+              <span className="inline-flex items-center rounded-full border border-civic-line/80 bg-civic-mist/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
+                Kilimani pilot · Nairobi
+              </span>
+              <h1 className="mt-2.5 text-[1.15rem] font-semibold leading-snug tracking-tight text-civic-ink">
+                Street hazards in Kilimani
               </h1>
-              <p className="um-meta mt-1.5">
-                The live map is the product. Report what you see, or explore existing Kilimani evidence.
+              <p className="mt-1 text-sm font-medium leading-snug text-civic-slate">
+                Community reports corroborated into planning evidence.
               </p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <ButtonLink to="/report" className="min-h-10 px-3.5 text-xs">
+              <p className="um-meta mt-2">
+                The live map is the product. Report what you see, or explore existing evidence.
+              </p>
+              <div className="mt-3.5 flex items-center gap-2">
+                <ButtonLink to="/report" className="min-h-10 shrink-0 rounded-full px-3.5 text-xs">
                   Report an issue
                 </ButtonLink>
                 <button
@@ -221,14 +226,14 @@ export function MapHomePage() {
                     setView("map");
                     setFiltersOpen(false);
                   }}
-                  className="inline-flex min-h-10 items-center rounded-card border border-civic-line bg-civic-surface px-3.5 text-xs font-semibold text-civic-ink"
+                  className="inline-flex min-h-10 items-center rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
                 >
-                  Explore the map
+                  Explore
                 </button>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen((open) => !open)}
-                  className="ml-auto rounded-sm border border-civic-line px-2.5 py-1.5 text-xs font-semibold text-civic-slate"
+                  className="inline-flex min-h-10 items-center rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
                   aria-expanded={filtersOpen}
                 >
                   {filtersOpen ? "Hide filters" : "Filters"}
@@ -239,7 +244,7 @@ export function MapHomePage() {
               </Link>
             </div>
             {filtersOpen ? (
-              <div className="rounded-card border border-civic-line bg-civic-surface p-3.5 shadow-card">
+              <div className="um-map-card rounded-card p-3.5 shadow-card">
                 <MapFilters {...filterProps} />
               </div>
             ) : null}
