@@ -75,7 +75,13 @@ export function useTheme(): ThemeValue {
   return ctx;
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({
+  className = "inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-ink",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const { dark, toggleTheme } = useTheme();
   return (
     <button
@@ -83,10 +89,12 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
       title={dark ? "Light mode" : "Dark mode"}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-ink"
+      className={className}
     >
       {dark ? <SunIcon /> : <MoonIcon />}
-      <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
+      {compact ? null : (
+        <span className="hidden sm:inline">{dark ? "Light" : "Dark"}</span>
+      )}
     </button>
   );
 }

@@ -392,7 +392,7 @@ export function LiveMap({
       <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[220px] lg:block">
         <MapKey />
       </div>
-      <div className="absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-card border border-civic-line bg-civic-surface shadow-card lg:bottom-28 lg:right-6 lg:top-auto">
+      <div className="absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-full border border-civic-line bg-civic-surface/90 shadow-card backdrop-blur-md lg:bottom-28 lg:right-6 lg:top-auto">
         <button
           type="button"
           aria-label="Zoom in"

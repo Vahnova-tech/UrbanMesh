@@ -15,6 +15,10 @@ const NAV = [
   { to: "/me", label: "My Reports" },
 ] as const;
 
+/** Top clearance for the floating pill over page content (non–full-bleed). */
+export const NAV_PILL_OFFSET =
+  "pt-[max(4.75rem,calc(3.75rem+env(safe-area-inset-top)))] md:pt-[max(5.25rem,calc(4.25rem+env(safe-area-inset-top)))]";
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const fullBleed = pathname === "/" || pathname.startsWith("/hazards/");
@@ -27,11 +31,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="flex h-full max-h-full w-full flex-col overflow-hidden bg-civic-paper">
+    <div className="relative flex h-full max-h-full w-full flex-col overflow-hidden bg-civic-paper">
       {!online ? (
         <p
           role="status"
-          className="shrink-0 bg-civic-pendingBg px-4 py-2 text-center text-xs font-semibold text-civic-pending"
+          className="relative z-[2100] shrink-0 bg-civic-pendingBg px-4 py-2 text-center text-xs font-semibold text-civic-pending"
         >
           You are offline. Reports already on this phone remain visible.
         </p>
@@ -43,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       />
       <main
         className={`relative min-h-0 flex-1 ${
-          fullBleed ? "overflow-hidden" : "um-scroll"
+          fullBleed ? "overflow-hidden" : `um-scroll ${NAV_PILL_OFFSET}`
         }`}
       >
         {children}
@@ -67,15 +71,18 @@ export function AppShell({ children }: { children: ReactNode }) {
 
 function navClass(isActive: boolean, compact = false) {
   return compact
-    ? `flex flex-1 flex-col items-center justify-center gap-1 py-2.5 text-[11px] font-semibold transition-colors ${
-        isActive ? "text-civic-accent" : "text-civic-muted"
+    ? `flex flex-1 flex-col items-center justify-center gap-0.5 rounded-full py-2 text-[11px] font-semibold transition-colors ${
+        isActive ? "bg-civic-mist text-civic-accent" : "text-civic-muted"
       }`
-    : `rounded-sm px-3.5 py-2 text-sm font-semibold transition-colors ${
+    : `rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
         isActive
           ? "bg-civic-mist text-civic-ink"
-          : "text-civic-slate hover:bg-civic-paper hover:text-civic-ink"
+          : "text-civic-slate hover:bg-civic-mist/70 hover:text-civic-ink"
       }`;
 }
+
+const toolBtn =
+  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-transparent px-2.5 text-xs font-semibold text-civic-slate transition-colors hover:border-civic-line hover:bg-civic-mist/80";
 
 function TopBar({
   unreadCount,
@@ -89,12 +96,13 @@ function TopBar({
   const { requestLocation, locating, coords, error } = useLocationState();
 
   return (
-    <header className="relative z-[2000] shrink-0 border-b border-civic-line bg-civic-surface pt-[env(safe-area-inset-top)]">
-      <div className="mx-auto flex w-full max-w-[1440px] items-center gap-3 px-4 py-3 lg:gap-5 lg:px-6">
-        <Link to="/" aria-label="UrbanMesh home" className="shrink-0">
+    <header className="pointer-events-none absolute inset-x-0 top-0 z-[2000] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 lg:px-6">
+      <div className="um-nav-pill pointer-events-auto mx-auto flex w-full max-w-5xl items-center gap-1.5 px-2 py-1.5 sm:gap-2 sm:px-2.5 lg:max-w-6xl">
+        <Link to="/" aria-label="UrbanMesh home" className="shrink-0 rounded-full px-1.5 py-1">
           <UrbanMeshLogo compact />
         </Link>
-        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-1 md:flex">
+
+        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-0.5 md:flex">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -106,45 +114,62 @@ function TopBar({
             </NavLink>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <ButtonLink to="/report" className="hidden min-h-10 px-3.5 text-xs md:inline-flex">
+
+        <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-1.5">
+          <div className="hidden items-center gap-1 lg:flex">
+            <InstallButton className={toolBtn} />
+            <NoticeBell
+              unreadCount={unreadCount}
+              open={updatesOpen}
+              onToggle={onToggleUpdates}
+              className={toolBtn}
+            />
+            <NavLink
+              to="/about"
+              aria-label="About UrbanMesh"
+              title="About"
+              className={({ isActive }) =>
+                `${toolBtn} ${isActive ? "border-civic-line bg-civic-mist text-civic-ink" : ""}`
+              }
+            >
+              <AboutIcon />
+              <span className="hidden xl:inline">About</span>
+            </NavLink>
+            <button
+              type="button"
+              onClick={requestLocation}
+              aria-label={coords ? "Refresh location" : "Use current location"}
+              className={toolBtn}
+            >
+              <LocateIcon />
+              <span className="hidden xl:inline">
+                {locating ? "Locating…" : coords ? "Located" : "Location"}
+              </span>
+            </button>
+            <ThemeToggle className={toolBtn} />
+          </div>
+
+          <div className="flex items-center gap-1 lg:hidden">
+            <NoticeBell
+              unreadCount={unreadCount}
+              open={updatesOpen}
+              onToggle={onToggleUpdates}
+              className={toolBtn}
+              compact
+            />
+            <ThemeToggle className={toolBtn} compact />
+          </div>
+
+          <ButtonLink
+            to="/report"
+            className="min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm"
+          >
             Report an issue
           </ButtonLink>
-          <InstallButton />
-          <NoticeBell
-            unreadCount={unreadCount}
-            open={updatesOpen}
-            onToggle={onToggleUpdates}
-          />
-          <NavLink
-            to="/about"
-            aria-label="About UrbanMesh"
-            title="About"
-            className={({ isActive }) =>
-              `inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-civic-line px-3 text-xs font-semibold transition-colors ${
-                isActive ? "bg-civic-mist text-civic-ink" : "text-civic-slate hover:bg-civic-paper"
-              }`
-            }
-          >
-            <AboutIcon />
-            <span className="hidden sm:inline">About</span>
-          </NavLink>
-          <button
-            type="button"
-            onClick={requestLocation}
-            aria-label={coords ? "Refresh location" : "Use current location"}
-            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm border border-civic-line px-3 text-xs font-semibold text-civic-slate transition-colors hover:bg-civic-paper"
-          >
-            <span className="md:hidden">{locating ? "…" : coords ? "Located" : "Locate"}</span>
-            <span className="hidden md:inline">
-              {locating ? "Locating…" : coords ? "Kilimani · Located" : "Location"}
-            </span>
-          </button>
-          <ThemeToggle />
         </div>
       </div>
       {error ? (
-        <p className="border-t border-civic-line px-4 py-2 text-xs font-semibold text-civic-critical lg:px-6">
+        <p className="pointer-events-auto mx-auto mt-2 max-w-5xl rounded-full border border-civic-critical/30 bg-civic-criticalBg/95 px-4 py-2 text-center text-xs font-semibold text-civic-critical shadow-card backdrop-blur-md lg:max-w-6xl">
           {error}
         </p>
       ) : null}
@@ -156,28 +181,18 @@ function BottomNav() {
   return (
     <nav
       aria-label="Mobile"
-      className="relative z-[2000] shrink-0 border-t border-civic-line bg-civic-surface pb-[env(safe-area-inset-bottom)] md:hidden"
+      className="pointer-events-none absolute inset-x-0 bottom-0 z-[2000] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden"
     >
-      <div className="flex min-h-14">
-        <NavLink
-          to="/"
-          end
-          className={({ isActive }) => navClass(isActive, true)}
-        >
+      <div className="um-nav-pill pointer-events-auto mx-auto flex min-h-14 max-w-lg items-stretch gap-1 p-1.5">
+        <NavLink to="/" end className={({ isActive }) => navClass(isActive, true)}>
           <MapIcon />
           Map
         </NavLink>
-        <NavLink
-          to="/reports"
-          className={({ isActive }) => navClass(isActive, true)}
-        >
+        <NavLink to="/reports" className={({ isActive }) => navClass(isActive, true)}>
           <ListIcon />
           Reports
         </NavLink>
-        <NavLink
-          to="/me"
-          className={({ isActive }) => navClass(isActive, true)}
-        >
+        <NavLink to="/me" className={({ isActive }) => navClass(isActive, true)}>
           <UserIcon />
           My Reports
         </NavLink>
@@ -233,6 +248,20 @@ function AboutIcon() {
       <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.7" />
       <path
         d="M12 11.2V16.5M12 8.2v.2"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function LocateIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="3.25" stroke="currentColor" strokeWidth="1.7" />
+      <path
+        d="M12 3.5v2.2M12 18.3v2.2M3.5 12h2.2M18.3 12h2.2"
         stroke="currentColor"
         strokeWidth="1.7"
         strokeLinecap="round"

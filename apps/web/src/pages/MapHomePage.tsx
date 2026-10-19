@@ -185,7 +185,7 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-40 lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(9rem,calc(7.5rem+env(safe-area-inset-bottom)))] pt-[max(11rem,calc(9.5rem+env(safe-area-inset-top)))] lg:hidden">
             {visible.length === 0 ? (
               <EmptyState
                 title="No Kilimani reports match these filters"
@@ -201,7 +201,7 @@ export function MapHomePage() {
           </div>
         ) : null}
 
-        <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] px-3 lg:hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
             <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3.5 shadow-card">
               <p className="um-eyebrow">Kilimani pilot · Nairobi</p>
@@ -247,7 +247,7 @@ export function MapHomePage() {
         </div>
 
         {error || locationError ? (
-          <div className="absolute inset-x-3 top-[12.5rem] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-3 lg:w-[360px]">
+          <div className="absolute inset-x-3 top-[max(16rem,calc(14.5rem+env(safe-area-inset-top)))] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-[max(5rem,calc(4rem+env(safe-area-inset-top)))] lg:w-[360px]">
             {error ? (
               <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
             ) : null}
@@ -263,25 +263,22 @@ export function MapHomePage() {
           />
         </div>
 
-        <div className="absolute bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
+        <div className="absolute bottom-[max(5.5rem,calc(4.25rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
           <button
             type="button"
             onClick={() => setView((v) => (v === "map" ? "list" : "map"))}
             aria-pressed={view === "list"}
-            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card lg:hidden"
+            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md lg:hidden"
           >
             {view === "map" ? "List" : "Map"}
           </button>
           <button
             type="button"
             onClick={onLocate}
-            className="min-h-11 rounded-card border border-civic-line bg-civic-surface px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card"
+            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md"
           >
             {locating ? "Locating…" : "Recenter on me"}
           </button>
-          <ButtonLink to="/report" className="min-h-14 px-5 shadow-card lg:hidden">
-            Report an issue
-          </ButtonLink>
         </div>
 
         <BottomSheet

@@ -48,7 +48,11 @@ export function useInstallPrompt() {
   };
 }
 
-export function InstallButton() {
+export function InstallButton({
+  className = "inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate",
+}: {
+  className?: string;
+}) {
   const { canInstall, install } = useInstallPrompt();
   if (!canInstall) return null;
 
@@ -58,7 +62,7 @@ export function InstallButton() {
       onClick={() => void install()}
       aria-label="Install UrbanMesh"
       title="Install"
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate"
+      className={className}
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
         <path

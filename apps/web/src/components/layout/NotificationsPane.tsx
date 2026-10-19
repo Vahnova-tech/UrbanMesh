@@ -149,10 +149,14 @@ export function NoticeBell({
   unreadCount,
   open,
   onToggle,
+  className = "relative inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate",
+  compact = false,
 }: {
   unreadCount: number;
   open: boolean;
   onToggle: () => void;
+  className?: string;
+  compact?: boolean;
 }) {
   const label =
     unreadCount > 0
@@ -165,12 +169,18 @@ export function NoticeBell({
       aria-label={label}
       aria-expanded={open}
       title="Updates"
-      className="relative inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate"
+      className={`relative ${className}`}
     >
       <BellIcon />
-      <span>Updates</span>
+      {compact ? null : <span>Updates</span>}
       {unreadCount > 0 ? (
-        <span className="min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white">
+        <span
+          className={
+            compact
+              ? "absolute -right-0.5 -top-0.5 min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white"
+              : "min-w-4 rounded-full bg-civic-critical px-1 text-[10px] font-semibold leading-4 text-white"
+          }
+        >
           {unreadCount > 9 ? "9+" : unreadCount}
         </span>
       ) : null}
