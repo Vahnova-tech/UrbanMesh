@@ -9,6 +9,11 @@ import {
   reportPath,
   REPORT_NEW_PATH,
 } from "../../lib/reportStatus";
+import type { CollapsedReport } from "../../lib/collapseReports";
+import {
+  isGroupResolved,
+  setGroupResolved,
+} from "../../lib/resolvedReports";
 import { CategoryIcon } from "./StatusBadge";
 import { ReportStatusBadge } from "../reports/ReportStatus";
 import { ButtonLink } from "./Button";
@@ -17,18 +22,46 @@ export function ReportCard({
   incident,
   footnote,
   onSelect,
+  memberCount,
+  memberIds,
+  showResolved = true,
 }: {
   incident: IncidentPublic;
   footnote?: string;
   onSelect?: (incident: IncidentPublic) => void;
+  memberCount?: number;
+  memberIds?: string[];
+  showResolved?: boolean;
 }) {
+  const collapsed = incident as CollapsedReport;
+  const ids = memberIds?.length
+    ? memberIds
+    : collapsed.member_ids?.length
+      ? collapsed.member_ids
+      : [incident.id];
+  const sightings = memberCount ?? collapsed.member_count ?? 1;
+  const idKey = ids.join("|");
   const [photoFailed, setPhotoFailed] = useState(false);
+  const [resolved, setResolved] = useState(() => isGroupResolved(ids));
   const photo = photoFailed ? null : photoSrc(incident.photo_url);
-  const count = corroborationCount(incident.nearby_count);
+  const matching = corroborationCount(incident.nearby_count);
 
   useEffect(() => {
     setPhotoFailed(false);
   }, [incident.photo_url]);
+
+  useEffect(() => {
+    function sync() {
+      setResolved(isGroupResolved(ids));
+    }
+    sync();
+    window.addEventListener("urbanmesh:resolved-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("urbanmesh:resolved-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [idKey]);
 
   const thumb = photo ? (
     <img
@@ -53,58 +86,93 @@ export function ReportCard({
     <>
       {thumb}
       <div className="min-w-0 flex-1">
-        <p className="um-eyebrow">{incident.category_label}</p>
-        <p className="mt-1 text-sm font-semibold leading-snug text-civic-ink">
+        <div className="flex items-start justify-between gap-2">
+          <p className="um-eyebrow">{incident.category_label}</p>
+          {sightings > 1 ? (
+            <span className="shrink-0 rounded-full bg-civic-mist px-2 py-0.5 text-[10px] font-semibold text-civic-slate">
+              {sightings} sightings
+            </span>
+          ) : null}
+        </div>
+        <p
+          className={`mt-1 text-sm font-semibold leading-snug ${
+            resolved ? "text-civic-muted line-through" : "text-civic-ink"
+          }`}
+        >
           {shortTitle(incident.description, incident.category_label)}
         </p>
         <p className="mt-0.5 truncate text-xs font-medium text-civic-slate">
           {incident.corridor}
         </p>
         <p className="um-meta mt-1.5">
-          Reported {formatRelative(incident.created_at)} · {count} matching report
-          {count === 1 ? "" : "s"}
+          Reported {formatRelative(incident.created_at)} · {matching} matching report
+          {matching === 1 ? "" : "s"}
         </p>
-        <div className="mt-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <ReportStatusBadge verified={incident.is_verified} size="sm" />
+          {resolved ? (
+            <span className="inline-flex items-center gap-1 rounded-md bg-civic-mist px-1.5 py-0.5 text-[10px] font-semibold text-civic-slate">
+              Resolved
+            </span>
+          ) : null}
         </div>
         <div className="mt-2.5 rounded-md bg-civic-mist/80 px-2.5 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-civic-muted">
             Community evidence
           </p>
           <p className="mt-0.5 text-xs font-semibold text-civic-ink">
-            {Math.min(count, CORROBORATION_THRESHOLD)} of {CORROBORATION_THRESHOLD}{" "}
+            {Math.min(matching, CORROBORATION_THRESHOLD)} of {CORROBORATION_THRESHOLD}{" "}
             reports
+            {sightings > 1 ? ` · ${sightings} device sightings merged` : ""}
           </p>
         </div>
         {footnote ? (
           <p className="mt-1 text-[11px] text-civic-muted">{footnote}</p>
         ) : null}
         <p className="mt-2.5 text-xs font-semibold text-civic-accent">
-          View report details
+          {onSelect ? "Show on map" : "View report details"}
         </p>
       </div>
     </>
   );
 
-  const className =
-    "flex gap-3 rounded-card border border-civic-line bg-civic-surface p-3 transition-colors hover:border-civic-slate hover:bg-civic-paper";
+  const shellClass = `rounded-card border border-civic-line bg-civic-surface transition-colors hover:border-civic-slate hover:bg-civic-paper ${
+    resolved ? "opacity-75" : ""
+  }`;
+  const mainClass = "flex gap-3 p-3";
 
-  if (onSelect) {
-    return (
-      <button
-        type="button"
-        onClick={() => onSelect(incident)}
-        className={`${className} w-full text-left`}
-      >
-        {body}
-      </button>
-    );
-  }
-
-  return (
-    <Link to={reportPath(incident.id)} className={className}>
+  const main = onSelect ? (
+    <button
+      type="button"
+      onClick={() => onSelect(incident)}
+      className={`${mainClass} w-full text-left`}
+    >
+      {body}
+    </button>
+  ) : (
+    <Link to={reportPath(incident.id)} className={mainClass}>
       {body}
     </Link>
+  );
+
+  return (
+    <div className={shellClass}>
+      {main}
+      {showResolved ? (
+        <label className="flex cursor-pointer items-center gap-2 border-t border-civic-line/80 px-3 py-2.5 text-xs font-semibold text-civic-slate">
+          <input
+            type="checkbox"
+            checked={resolved}
+            onChange={(e) => {
+              setGroupResolved(ids, e.target.checked);
+              setResolved(e.target.checked);
+            }}
+            className="h-4 w-4 rounded border-civic-line text-civic-accent focus:ring-civic-accent"
+          />
+          Mark resolved on this device
+        </label>
+      ) : null}
+    </div>
   );
 }
 

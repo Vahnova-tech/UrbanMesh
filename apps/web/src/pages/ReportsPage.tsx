@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
+import { collapseRedundantReports } from "../lib/collapseReports";
+import { isGroupResolved } from "../lib/resolvedReports";
 import { EvidenceEmpty, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
 import { SkeletonList } from "../components/ui/Pipeline";
@@ -39,6 +41,8 @@ export function ReportsPage() {
   const [view, setView] = useState<ViewMode>("list");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [hideResolved, setHideResolved] = useState(true);
+  const [resolvedTick, setResolvedTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +69,18 @@ export function ReportsPage() {
   }, [reload]);
 
   useEffect(() => {
+    function sync() {
+      setResolvedTick((n) => n + 1);
+    }
+    window.addEventListener("urbanmesh:resolved-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("urbanmesh:resolved-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     const next = new URLSearchParams();
     if (query.trim()) next.set("q", query.trim());
     if (category !== "all") next.set("category", category);
@@ -75,7 +91,7 @@ export function ReportsPage() {
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    let rows = items.filter((item) => {
+    const matched = items.filter((item) => {
       if (category !== "all" && item.category !== category) return false;
       if (status === "verified" && !item.is_verified) return false;
       if (status === "pending" && item.is_verified) return false;
@@ -94,6 +110,11 @@ export function ReportsPage() {
       return true;
     });
 
+    let rows = collapseRedundantReports(matched);
+    if (hideResolved) {
+      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
+    }
+
     rows = [...rows].sort((a, b) => {
       if (sort === "corroborated") {
         return (
@@ -104,7 +125,7 @@ export function ReportsPage() {
       return b.created_at.localeCompare(a.created_at);
     });
     return rows;
-  }, [items, category, status, query, sort]);
+  }, [items, category, status, query, sort, hideResolved, resolvedTick]);
 
   const filtersActive =
     category !== "all" || status !== "all" || query.trim().length > 0;
@@ -249,12 +270,26 @@ export function ReportsPage() {
               <option value="corroborated">Most corroborated</option>
             </select>
           </label>
+          <label className="flex items-center gap-2 text-xs font-semibold text-civic-slate">
+            <input
+              type="checkbox"
+              checked={hideResolved}
+              onChange={(e) => {
+                setHideResolved(e.target.checked);
+                setVisibleCount(PAGE_SIZE);
+              }}
+              className="h-4 w-4 rounded border-civic-line text-civic-accent focus:ring-civic-accent"
+            />
+            Hide resolved
+          </label>
         </div>
       </div>
 
       <div className="mb-4 flex items-center justify-between gap-3 border-y border-civic-line py-3">
         <p className="text-sm font-semibold text-civic-ink">
-          {loading ? "Loading…" : `${filtered.length} report${filtered.length === 1 ? "" : "s"} found`}
+          {loading
+            ? "Loading…"
+            : `${filtered.length} hazard${filtered.length === 1 ? "" : "s"} · duplicates merged`}
         </p>
         <div
           role="group"
@@ -295,7 +330,12 @@ export function ReportsPage() {
       {!loading && page.length > 0 ? (
         <div className="grid gap-3 lg:grid-cols-2">
           {page.map((incident) => (
-            <ReportCard key={incident.id} incident={incident} />
+            <ReportCard
+              key={incident.member_ids.join("|")}
+              incident={incident}
+              memberIds={incident.member_ids}
+              memberCount={incident.member_count}
+            />
           ))}
         </div>
       ) : null}

@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { loadMyReportIds } from "../lib/myReports";
 import { formatWhen } from "../lib/format";
+import { collapseRedundantReports } from "../lib/collapseReports";
+import { isGroupResolved } from "../lib/resolvedReports";
 import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
 import { SkeletonList } from "../components/ui/Pipeline";
@@ -17,6 +19,8 @@ export function MyReportsPage() {
   const [update, setUpdate] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
+  const [hideResolved, setHideResolved] = useState(true);
+  const [resolvedTick, setResolvedTick] = useState(0);
   const knownVerified = useRef<Set<string> | null>(null);
   const submittedAt = useRef(new Map(loadMyReportIds().map((row) => [row.id, row.at])));
 
@@ -61,18 +65,34 @@ export function MyReportsPage() {
     };
   }, [reload]);
 
-  const pending = items.filter((i) => !i.is_verified);
-  const supported = items.filter((i) => i.is_verified);
+  useEffect(() => {
+    function sync() {
+      setResolvedTick((n) => n + 1);
+    }
+    window.addEventListener("urbanmesh:resolved-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("urbanmesh:resolved-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  const collapsed = useMemo(() => collapseRedundantReports(items), [items]);
+  const pending = collapsed.filter((i) => !i.is_verified);
+  const supported = collapsed.filter((i) => i.is_verified);
 
   const visible = useMemo(() => {
-    const rows =
+    let rows =
       filter === "pending"
         ? pending
         : filter === "supported"
           ? supported
-          : items;
+          : collapsed;
+    if (hideResolved) {
+      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
+    }
     return [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [items, pending, supported, filter]);
+  }, [collapsed, pending, supported, filter, hideResolved, resolvedTick]);
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-8 lg:px-6 lg:py-8">
@@ -108,32 +128,43 @@ export function MyReportsPage() {
         <Stat label="Supported" value={supported.length} />
       </div>
 
-      <div
-        role="group"
-        aria-label="Filter my reports"
-        className="mb-4 inline-flex w-full rounded-full border border-civic-line bg-civic-mist/60 p-0.5 sm:w-auto"
-      >
-        {(
-          [
-            { id: "all", label: "All" },
-            { id: "pending", label: "Pending" },
-            { id: "supported", label: "Supported" },
-          ] as const
-        ).map((opt) => (
-          <button
-            key={opt.id}
-            type="button"
-            onClick={() => setFilter(opt.id)}
-            aria-pressed={filter === opt.id}
-            className={`min-h-9 flex-1 rounded-full px-3 text-xs font-semibold sm:flex-none sm:px-4 ${
-              filter === opt.id
-                ? "bg-civic-surface text-civic-ink shadow-sm"
-                : "text-civic-muted hover:text-civic-ink"
-            }`}
-          >
-            {opt.label}
-          </button>
-        ))}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div
+          role="group"
+          aria-label="Filter my reports"
+          className="inline-flex w-full rounded-full border border-civic-line bg-civic-mist/60 p-0.5 sm:w-auto"
+        >
+          {(
+            [
+              { id: "all", label: "All" },
+              { id: "pending", label: "Pending" },
+              { id: "supported", label: "Supported" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setFilter(opt.id)}
+              aria-pressed={filter === opt.id}
+              className={`min-h-9 flex-1 rounded-full px-3 text-xs font-semibold sm:flex-none sm:px-4 ${
+                filter === opt.id
+                  ? "bg-civic-surface text-civic-ink shadow-sm"
+                  : "text-civic-muted hover:text-civic-ink"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <label className="flex items-center gap-2 text-xs font-semibold text-civic-slate">
+          <input
+            type="checkbox"
+            checked={hideResolved}
+            onChange={(e) => setHideResolved(e.target.checked)}
+            className="h-4 w-4 rounded border-civic-line text-civic-accent focus:ring-civic-accent"
+          />
+          Hide resolved
+        </label>
       </div>
 
       {update ? (
@@ -183,19 +214,26 @@ export function MyReportsPage() {
 
       {!loading && visible.length > 0 ? (
         <div className="grid gap-3 lg:grid-cols-2">
-          {visible.map((incident) => (
-            <ReportCard
-              key={incident.id}
-              incident={incident}
-              footnote={
-                submittedAt.current.get(incident.id)
-                  ? `Logged on this device · ${formatWhen(submittedAt.current.get(incident.id) as string)}`
-                  : incident.is_verified
-                    ? "Now inside a community-supported cluster"
-                    : "Waiting for more same-category reports within 15 m"
-              }
-            />
-          ))}
+          {visible.map((incident) => {
+            const loggedAt = incident.member_ids
+              .map((id) => submittedAt.current.get(id))
+              .find(Boolean);
+            return (
+              <ReportCard
+                key={incident.member_ids.join("|")}
+                incident={incident}
+                memberIds={incident.member_ids}
+                memberCount={incident.member_count}
+                footnote={
+                  loggedAt
+                    ? `Logged on this device · ${formatWhen(loggedAt)}`
+                    : incident.is_verified
+                      ? "Now inside a community-supported cluster"
+                      : "Waiting for more same-category reports within 15 m"
+                }
+              />
+            );
+          })}
         </div>
       ) : null}
     </div>

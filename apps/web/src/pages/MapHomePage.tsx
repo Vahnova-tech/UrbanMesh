@@ -3,6 +3,8 @@ import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
+import { collapseRedundantReports } from "../lib/collapseReports";
+import { isGroupResolved } from "../lib/resolvedReports";
 import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { ButtonLink } from "../components/ui/Button";
@@ -38,6 +40,8 @@ export function MapHomePage() {
   const [searching, setSearching] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<IncidentPublic | null>(null);
+  const [hideResolved, setHideResolved] = useState(true);
+  const [resolvedTick, setResolvedTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,6 +69,18 @@ export function MapHomePage() {
   }, [reload]);
 
   useEffect(() => {
+    function sync() {
+      setResolvedTick((n) => n + 1);
+    }
+    window.addEventListener("urbanmesh:resolved-change", sync);
+    window.addEventListener("storage", sync);
+    return () => {
+      window.removeEventListener("urbanmesh:resolved-change", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!selectParam || incidents.length === 0) return;
     const match = incidents.find((row) => row.id === selectParam);
     if (!match) return;
@@ -90,13 +106,18 @@ export function MapHomePage() {
   }
 
   const visible = useMemo(() => {
-    return incidents.filter((item) => {
+    const matched = incidents.filter((item) => {
       if (category !== "all" && item.category !== category) return false;
       if (status === "verified" && !item.is_verified) return false;
       if (status === "pending" && item.is_verified) return false;
       return true;
     });
-  }, [incidents, category, status]);
+    let rows = collapseRedundantReports(matched);
+    if (hideResolved) {
+      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
+    }
+    return rows;
+  }, [incidents, category, status, hideResolved, resolvedTick]);
 
   const verified = visible.filter((i) => i.is_verified).length;
   const pending = visible.length - verified;
@@ -179,6 +200,8 @@ export function MapHomePage() {
     onCategory: setCategory,
     status,
     onStatus: setStatus,
+    hideResolved,
+    onHideResolved: setHideResolved,
     filtersActive,
     onClearFilters: clearFilters,
     onPickFromMap: () => {
@@ -209,7 +232,7 @@ export function MapHomePage() {
               <p className="text-sm font-semibold text-civic-ink">
                 {loading && incidents.length === 0
                   ? "Loading…"
-                  : `${visible.length} report${visible.length === 1 ? "" : "s"} found`}
+                  : `${visible.length} hazard${visible.length === 1 ? "" : "s"} · duplicates merged`}
               </p>
               {filtersActive ? (
                 <button
@@ -226,7 +249,13 @@ export function MapHomePage() {
             ) : (
               <div className="space-y-3">
                 {visible.map((incident) => (
-                  <ReportCard key={incident.id} incident={incident} onSelect={selectReport} />
+                  <ReportCard
+                    key={incident.member_ids.join("|")}
+                    incident={incident}
+                    memberIds={incident.member_ids}
+                    memberCount={incident.member_count}
+                    onSelect={selectReport}
+                  />
                 ))}
               </div>
             )}
@@ -395,7 +424,7 @@ export function MapHomePage() {
               <p className="mt-1 text-sm font-semibold text-civic-ink">
                 {loading && incidents.length === 0
                   ? "Loading…"
-                  : `${visible.length} report${visible.length === 1 ? "" : "s"} found`}
+                  : `${visible.length} hazard${visible.length === 1 ? "" : "s"} · duplicates merged`}
               </p>
               {!loading || incidents.length > 0 ? (
                 <p className="um-meta mt-0.5">
@@ -418,7 +447,13 @@ export function MapHomePage() {
           ) : (
             <div className="space-y-3">
               {visible.slice(0, 40).map((incident) => (
-                <ReportCard key={incident.id} incident={incident} onSelect={selectReport} />
+                <ReportCard
+                  key={incident.member_ids.join("|")}
+                  incident={incident}
+                  memberIds={incident.member_ids}
+                  memberCount={incident.member_count}
+                  onSelect={selectReport}
+                />
               ))}
             </div>
           )}
@@ -474,6 +509,8 @@ function MapFilters({
   onCategory,
   status,
   onStatus,
+  hideResolved,
+  onHideResolved,
   filtersActive,
   onClearFilters,
   onPickFromMap,
@@ -487,6 +524,8 @@ function MapFilters({
   onCategory: (value: string) => void;
   status: StatusFilter;
   onStatus: (value: StatusFilter) => void;
+  hideResolved: boolean;
+  onHideResolved: (value: boolean) => void;
   filtersActive: boolean;
   onClearFilters: () => void;
   onPickFromMap: () => void;
@@ -692,6 +731,15 @@ function MapFilters({
         <p className="um-meta mt-1.5">
           Supported means ≥3 same-category reports within 15 m — not a county inspection.
         </p>
+        <label className="mt-2.5 flex items-center gap-2 text-xs font-semibold text-civic-slate">
+          <input
+            type="checkbox"
+            checked={hideResolved}
+            onChange={(e) => onHideResolved(e.target.checked)}
+            className="h-4 w-4 rounded border-civic-line text-civic-accent focus:ring-civic-accent"
+          />
+          Hide resolved on this device
+        </label>
       </div>
     </div>
   );
