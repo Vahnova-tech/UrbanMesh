@@ -245,10 +245,11 @@ export function HazardDetailPage() {
           <p className="mt-3 text-sm font-medium text-civic-accentDark">{confirmMessage}</p>
         ) : null}
 
-        <section className="mt-8">
-          <h2 className="text-sm font-semibold">Community evidence</h2>
-          <p className="mt-1 text-xs text-civic-muted">
-            Timeline of nearby same-category reports, not a social feed.
+        <section className="mt-10">
+          <h2 className="um-title text-base lg:text-lg">Community evidence</h2>
+          <p className="um-meta mt-1.5">
+            Timeline of nearby same-category reports, not a social feed. Spatial
+            corroboration is not field verification.
           </p>
           <ol className="mt-4 space-y-0 border-l border-civic-line pl-4">
             {timeline.map((row, index) => (

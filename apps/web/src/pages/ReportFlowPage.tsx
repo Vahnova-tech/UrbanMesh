@@ -181,14 +181,14 @@ export function ReportFlowPage() {
                       requestLocation();
                       if (coords) setCenter(coords);
                     }}
-                    className="w-full min-h-12 rounded-card border border-civic-line py-3 text-sm font-semibold"
+                    className="w-full min-h-12 rounded-card border border-civic-line py-3 text-sm font-semibold transition-colors hover:bg-civic-mist"
                   >
                     {locating ? "Locating…" : "Use my location"}
                   </button>
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white"
+                    className="w-full min-h-12 rounded-card bg-civic-accent py-3 text-sm font-semibold text-white transition-colors hover:bg-civic-accentDark active:scale-[0.98] motion-reduce:active:scale-100"
                   >
                     Confirm location
                   </button>
@@ -210,18 +210,18 @@ export function ReportFlowPage() {
                         key={opt.value}
                         type="button"
                         onClick={() => setCategory(opt.value)}
-                        className={`min-h-[6.5rem] rounded-card border p-3 text-left lg:min-h-[7.5rem] lg:p-4 ${
+                        className={`min-h-[6.5rem] rounded-card border p-3.5 text-left transition-colors lg:min-h-[8rem] lg:p-4 ${
                           category === opt.value
-                            ? "border-civic-ink bg-civic-mist"
-                            : "border-civic-line bg-civic-surface"
+                            ? "border-civic-ink bg-civic-mist shadow-card"
+                            : "border-civic-line bg-civic-surface hover:border-civic-slate hover:bg-civic-paper"
                         }`}
                       >
                         <CategoryIcon
                           category={opt.value}
-                          className="h-6 w-6 text-civic-accent"
+                          className="h-7 w-7 text-civic-accent"
                         />
-                        <p className="mt-3 text-sm font-semibold">{opt.label}</p>
-                        <p className="mt-1 text-xs text-civic-muted">{opt.hint}</p>
+                        <p className="mt-3 text-sm font-semibold tracking-tight">{opt.label}</p>
+                        <p className="um-meta mt-1.5">{opt.hint}</p>
                       </button>
                     ))}
                   </div>

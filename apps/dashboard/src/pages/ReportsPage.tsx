@@ -61,15 +61,13 @@ export function ReportsPage() {
           <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />
         </div>
       ) : null}
-      <div className="mt-4 flex flex-wrap gap-3">
-        <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Hazard type
-          </span>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <label className="flex flex-col gap-1.5">
+          <span className="um-eyebrow">Hazard type</span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+            className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
           >
             <option value="all">All hazards</option>
             {categories.map((c) => (
@@ -77,28 +75,24 @@ export function ReportsPage() {
             ))}
           </select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Status
-          </span>
+        <label className="flex flex-col gap-1.5">
+          <span className="um-eyebrow">Status</span>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+            className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
           >
             <option value="all">All statuses</option>
             <option value="verified">Community-supported</option>
             <option value="pending">Pending</option>
           </select>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Date
-          </span>
+        <label className="flex flex-col gap-1.5">
+          <span className="um-eyebrow">Date</span>
           <select
             value={days}
             onChange={(e) => setDays(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+            className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
           >
             <option value="all">Any date</option>
             <option value="7">Last 7 days</option>
@@ -108,30 +102,34 @@ export function ReportsPage() {
         </label>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-card border border-civic-line bg-civic-surface">
+      <div className="mt-6 overflow-x-auto rounded-card border border-civic-line bg-civic-surface shadow-card">
         <table className="w-full min-w-[720px] text-left text-sm">
-          <thead className="border-b border-civic-line text-xs uppercase tracking-wide text-civic-muted">
+          <thead className="border-b border-civic-line bg-civic-paper/60">
             <tr>
-              <th className="px-4 py-3">Photo</th>
-              <th className="px-4 py-3">Hazard</th>
-              <th className="px-4 py-3">Corridor</th>
-              <th className="px-4 py-3">Area</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Nearby</th>
-              <th className="px-4 py-3">Reported</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Photo</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Hazard</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Corridor</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Area</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Status</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Nearby</th>
+              <th className="um-eyebrow px-4 py-3.5 font-semibold">Reported</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-civic-muted">
-                  No reports match these filters.
+                <td colSpan={7} className="px-4 py-10 text-center">
+                  <p className="um-title text-base lg:text-base">No reports match these filters</p>
+                  <p className="um-meta mt-1">Widen the hazard type, status, or date filters.</p>
                 </td>
               </tr>
             ) : (
               filtered.map((row) => (
-                <tr key={row.id} className="border-b border-civic-mist">
-                  <td className="px-4 py-3">
+                <tr
+                  key={row.id}
+                  className="border-b border-civic-mist transition-colors hover:bg-civic-mist/50"
+                >
+                  <td className="px-4 py-3.5">
                     <EvidencePhoto
                       url={row.photo_url}
                       alt={`${row.category_label} evidence`}
@@ -140,17 +138,17 @@ export function ReportsPage() {
                       <span className="text-xs text-civic-muted">—</span>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3">
-                    <p className="font-medium">{row.category_label}</p>
-                    <p className="text-xs text-civic-muted">{row.description}</p>
+                  <td className="px-4 py-3.5">
+                    <p className="font-semibold tracking-tight text-civic-ink">{row.category_label}</p>
+                    <p className="um-meta mt-0.5 line-clamp-2">{row.description}</p>
                   </td>
-                  <td className="px-4 py-3">{row.corridor}</td>
-                  <td className="px-4 py-3">{row.ward_name}</td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3.5 font-medium">{row.corridor}</td>
+                  <td className="px-4 py-3.5 text-civic-slate">{row.ward_name}</td>
+                  <td className="px-4 py-3.5">
                     <StatusBadge verified={row.is_verified} />
                   </td>
-                  <td className="px-4 py-3">{row.nearby_count}</td>
-                  <td className="px-4 py-3 text-civic-muted">{formatWhen(row.created_at)}</td>
+                  <td className="px-4 py-3.5 tabular-nums">{row.nearby_count}</td>
+                  <td className="px-4 py-3.5 um-meta">{formatWhen(row.created_at)}</td>
                 </tr>
               ))
             )}

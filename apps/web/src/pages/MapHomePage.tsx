@@ -171,24 +171,40 @@ export function MapHomePage() {
 
         <div className="pointer-events-none absolute inset-x-0 top-3 z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
-            <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3 shadow-card">
+            <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3.5 shadow-card">
               <p className="um-eyebrow">Kilimani pilot · Nairobi</p>
-              <h1 className="mt-1 text-[0.95rem] font-semibold leading-snug tracking-tight text-civic-ink">
-                Report street hazards. Neighbours corroborate them into planning evidence.
+              <h1 className="mt-1.5 text-[1.05rem] font-semibold leading-snug tracking-tight text-civic-ink">
+                Street hazards, reported by neighbours. Corroborated into planning evidence.
               </h1>
-              <div className="mt-2.5 flex items-center gap-3">
-                <Link to="/about" className="text-xs font-semibold text-civic-accent">
-                  How reporting works
-                </Link>
+              <p className="um-meta mt-1.5">
+                The live map is the product. Report what you see, or explore existing Kilimani evidence.
+              </p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <ButtonLink to="/report" className="min-h-10 px-3.5 text-xs">
+                  Report an issue
+                </ButtonLink>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setView("map");
+                    setFiltersOpen(false);
+                  }}
+                  className="inline-flex min-h-10 items-center rounded-card border border-civic-line bg-civic-surface px-3.5 text-xs font-semibold text-civic-ink"
+                >
+                  Explore the map
+                </button>
                 <button
                   type="button"
                   onClick={() => setFiltersOpen((open) => !open)}
-                  className="ml-auto rounded-sm border border-civic-line px-2.5 py-1 text-xs font-semibold text-civic-slate"
+                  className="ml-auto rounded-sm border border-civic-line px-2.5 py-1.5 text-xs font-semibold text-civic-slate"
                   aria-expanded={filtersOpen}
                 >
                   {filtersOpen ? "Hide filters" : "Filters"}
                 </button>
               </div>
+              <Link to="/about" className="mt-2.5 inline-block text-xs font-semibold text-civic-accent">
+                How reporting works
+              </Link>
             </div>
             {filtersOpen ? (
               <div className="rounded-card border border-civic-line bg-civic-surface p-3.5 shadow-card">
@@ -199,7 +215,7 @@ export function MapHomePage() {
         </div>
 
         {error || locationError ? (
-          <div className="absolute inset-x-3 top-[9.5rem] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-3 lg:w-[360px]">
+          <div className="absolute inset-x-3 top-[12.5rem] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-3 lg:w-[360px]">
             {error ? (
               <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
             ) : null}
@@ -262,14 +278,31 @@ export function MapHomePage() {
       </div>
 
       <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
-        <div className="border-b border-civic-line px-5 py-5">
+        <div className="border-b border-civic-line px-5 py-6">
           <p className="um-eyebrow">Kilimani pilot · Nairobi City County</p>
-          <h1 className="um-title mt-2 text-lg lg:text-xl">
-            Street hazards become planning evidence when neighbours corroborate them.
+          <h1 className="um-display mt-2 text-2xl lg:text-[1.75rem]">
+            Report street hazards. Neighbours turn them into evidence.
           </h1>
-          <p className="um-body mt-2">
-            Scope is Kilimani only. Community-supported clusters are spatial corroboration, not county inspection.
+          <p className="um-body mt-3">
+            Scope is Kilimani only. Community-supported clusters are spatial corroboration
+            (≥3 same-category reports within 15 m), not county inspection.
           </p>
+          <div className="mt-5 flex flex-col gap-2">
+            <ButtonLink to="/report" className="w-full min-h-12">
+              Report an issue
+            </ButtonLink>
+            <button
+              type="button"
+              onClick={() => {
+                setSelected(null);
+                setFiltersOpen(false);
+                setView("map");
+              }}
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-card border border-civic-line text-sm font-semibold text-civic-ink transition-colors hover:bg-civic-mist"
+            >
+              Explore the map
+            </button>
+          </div>
           <Link to="/about" className="mt-3 inline-block text-sm font-semibold text-civic-accent">
             How reporting works
           </Link>
@@ -298,11 +331,6 @@ export function MapHomePage() {
               ))}
             </div>
           )}
-        </div>
-        <div className="border-t border-civic-line p-5">
-          <ButtonLink to="/report" className="w-full min-h-12">
-            Report an issue
-          </ButtonLink>
         </div>
       </aside>
     </div>
@@ -519,10 +547,10 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold shadow-card lg:shadow-none ${
+      className={`shrink-0 rounded-sm border px-3 py-1.5 text-xs font-semibold transition-colors ${
         active
           ? "border-civic-ink bg-civic-ink text-civic-paper"
-          : "border-civic-line bg-civic-surface text-civic-slate"
+          : "border-civic-line bg-civic-surface text-civic-slate hover:bg-civic-mist"
       }`}
       aria-pressed={active}
     >

@@ -7,6 +7,7 @@ import { InstallButton } from "../../lib/install";
 import { useOnline } from "../../lib/online";
 import { useNotices } from "../../lib/useNotices";
 import { NoticeBell, NotificationsPane } from "./NotificationsPane";
+import { ButtonLink } from "../ui/Button";
 
 const NAV = [
   { to: "/", label: "Map", end: true },
@@ -106,6 +107,9 @@ function TopBar({
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
+          <ButtonLink to="/report" className="hidden min-h-10 px-3.5 text-xs md:inline-flex">
+            Report an issue
+          </ButtonLink>
           <InstallButton />
           <NoticeBell
             unreadCount={unreadCount}
@@ -123,7 +127,7 @@ function TopBar({
             }
           >
             <AboutIcon />
-            <span>About</span>
+            <span className="hidden sm:inline">About</span>
           </NavLink>
           <button
             type="button"

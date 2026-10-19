@@ -215,11 +215,11 @@ export function AnalyticsPage() {
         </button>
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2.5">
         <select
           value={days}
           onChange={(e) => setDays(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
         >
           <option value="all">Any date</option>
           <option value="7">Last 7 days</option>
@@ -229,7 +229,7 @@ export function AnalyticsPage() {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
         >
           <option value="all">All categories</option>
           {metrics.by_category.map((row) => (
@@ -241,7 +241,7 @@ export function AnalyticsPage() {
         <select
           value={ward}
           onChange={(e) => setWard(e.target.value)}
-          className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-sm"
+          className="min-h-10 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-sm"
         >
           <option value="all">All wards</option>
           {metrics.by_ward.map((row) => (
@@ -252,12 +252,12 @@ export function AnalyticsPage() {
         </select>
       </div>
 
-      <p className="mt-5 text-sm">
-        Community-supported ratio: <strong>{ratio}%</strong> of filtered reports sit inside a
+      <p className="um-body mt-6">
+        Community-supported ratio: <strong className="text-civic-ink">{ratio}%</strong> of filtered reports sit inside a
         15 m corroboration cluster.
       </p>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
+      <div className="mt-6 grid gap-5 lg:grid-cols-2">
         <Panel title="Reports over time">
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">

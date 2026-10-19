@@ -119,8 +119,8 @@ export function ReportsPage() {
             key={id}
             type="button"
             onClick={() => setTab(id)}
-            className={`flex-1 rounded-[10px] py-2 text-xs font-semibold ${
-              tab === id ? "bg-civic-surface text-civic-ink shadow-card" : "text-civic-muted"
+            className={`flex-1 rounded-sm py-2.5 text-xs font-semibold transition-colors ${
+              tab === id ? "bg-civic-surface text-civic-ink shadow-card" : "text-civic-muted hover:text-civic-ink"
             }`}
           >
             {label}
@@ -130,13 +130,11 @@ export function ReportsPage() {
 
       <div className="mb-4 flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
         <label className="flex shrink-0 flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Hazard type
-          </span>
+          <span className="um-eyebrow">Hazard type</span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+            className="min-h-11 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:min-h-10 lg:text-xs"
           >
             <option value="all">All hazards</option>
             {HAZARD_OPTIONS.map((opt) => (
@@ -147,13 +145,11 @@ export function ReportsPage() {
           </select>
         </label>
         <label className="flex shrink-0 flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Status
-          </span>
+          <span className="um-eyebrow">Status</span>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+            className="min-h-11 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:min-h-10 lg:text-xs"
           >
             <option value="all">All statuses</option>
             <option value="verified">Community-supported</option>
@@ -161,13 +157,11 @@ export function ReportsPage() {
           </select>
         </label>
         <label className="flex shrink-0 flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Distance
-          </span>
+          <span className="um-eyebrow">Distance</span>
           <select
             value={distance}
             onChange={(e) => setDistance(Number(e.target.value))}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+            className="min-h-11 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:min-h-10 lg:text-xs"
           >
             {DISTANCES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -177,13 +171,11 @@ export function ReportsPage() {
           </select>
         </label>
         <label className="flex shrink-0 flex-col gap-1">
-          <span className="text-[11px] font-semibold uppercase tracking-wide text-civic-muted">
-            Date
-          </span>
+          <span className="um-eyebrow">Date</span>
           <select
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="rounded-xl border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:text-xs"
+            className="min-h-11 rounded-sm border border-civic-line bg-civic-surface px-3 py-2 text-base font-semibold lg:min-h-10 lg:text-xs"
           >
             {DATES.map((opt) => (
               <option key={opt.value} value={opt.value}>

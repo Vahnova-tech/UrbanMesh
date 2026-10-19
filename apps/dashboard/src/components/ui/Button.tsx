@@ -13,7 +13,7 @@ const VARIANT: Record<Variant, string> = {
 };
 
 const BASE =
-  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-card px-4 text-sm font-semibold transition-colors disabled:pointer-events-none";
+  "inline-flex min-h-10 items-center justify-center gap-1.5 rounded-card px-4 text-sm font-semibold transition-[color,background-color,transform,box-shadow] duration-150 active:scale-[0.98] disabled:pointer-events-none motion-reduce:active:scale-100";
 
 export function buttonClass(variant: Variant = "primary", className = "") {
   return `${BASE} ${VARIANT[variant]} ${className}`.trim();
