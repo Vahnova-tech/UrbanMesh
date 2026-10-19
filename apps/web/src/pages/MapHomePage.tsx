@@ -3,7 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
-import { EmptyState, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
+import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { ButtonLink } from "../components/ui/Button";
 import { StatusBadge } from "../components/ui/StatusBadge";
@@ -154,6 +154,19 @@ export function MapHomePage() {
     setFocus({ lat: place.lat, lng: place.lng, zoom: 17, label: place.name });
     setLocateNonce((n) => n + 1);
     setView("map");
+    if (place.kind === "report" && place.reportId) {
+      const match = incidents.find((row) => row.id === place.reportId);
+      if (match) setSelected(match);
+    }
+  }
+
+  const filtersActive = category !== "all" || status !== "all" || query.trim().length > 0;
+
+  function clearFilters() {
+    setCategory("all");
+    setStatus("all");
+    setQuery("");
+    setFocus(null);
   }
 
   const filterProps = {
@@ -166,6 +179,12 @@ export function MapHomePage() {
     onCategory: setCategory,
     status,
     onStatus: setStatus,
+    filtersActive,
+    onClearFilters: clearFilters,
+    onPickFromMap: () => {
+      setView("map");
+      setFiltersOpen(false);
+    },
   };
 
   return (
@@ -186,11 +205,24 @@ export function MapHomePage() {
 
         {view === "list" ? (
           <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(10rem,calc(8.5rem+env(safe-area-inset-bottom)))] pt-[max(11rem,calc(9.5rem+env(safe-area-inset-top)))] lg:hidden">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold text-civic-ink">
+                {loading && incidents.length === 0
+                  ? "Loading…"
+                  : `${visible.length} report${visible.length === 1 ? "" : "s"} found`}
+              </p>
+              {filtersActive ? (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="text-xs font-semibold text-civic-accent"
+                >
+                  Clear filters
+                </button>
+              ) : null}
+            </div>
             {visible.length === 0 ? (
-              <EmptyState
-                title="No Kilimani reports match these filters"
-                body="Widen the hazard type or status filters, or report what you see on the street."
-              />
+              <EvidenceEmpty onClear={clearFilters} filtersActive={filtersActive} />
             ) : (
               <div className="space-y-3">
                 {visible.map((incident) => (
@@ -204,21 +236,24 @@ export function MapHomePage() {
         <div className="pointer-events-none absolute inset-x-0 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
             <div className="um-map-card rounded-card px-3.5 py-3.5 shadow-card">
-              <span className="inline-flex items-center rounded-full border border-civic-line/80 bg-civic-mist/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
-                Kilimani pilot · Nairobi
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="inline-flex items-center rounded-full border border-civic-line/80 bg-civic-mist/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
+                  Kilimani · Nairobi
+                </span>
+                <span className="inline-flex items-center gap-1 rounded-full border border-civic-verified/25 bg-civic-verifiedBg px-2 py-0.5 text-[10px] font-semibold text-civic-verified">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-civic-verified" />
+                  Live area
+                </span>
+              </div>
               <h1 className="mt-2.5 text-[1.15rem] font-semibold leading-snug tracking-tight text-civic-ink">
-                Street hazards in Kilimani
+                Report a hazard. Build local evidence.
               </h1>
               <p className="mt-1 text-sm font-medium leading-snug text-civic-slate">
-                Community reports corroborated into planning evidence.
-              </p>
-              <p className="um-meta mt-2">
-                The live map is the product. Report what you see, or explore existing evidence.
+                Discover street hazards reported by your community.
               </p>
               <div className="mt-3.5 flex items-center gap-2">
-                <ButtonLink to="/report" className="min-h-10 shrink-0 rounded-full px-3.5 text-xs">
-                  Report an issue
+                <ButtonLink to="/reports/new" className="min-h-10 shrink-0 rounded-full px-3.5 text-xs">
+                  + Report a hazard
                 </ButtonLink>
                 <button
                   type="button"
@@ -226,9 +261,10 @@ export function MapHomePage() {
                     setView("map");
                     setFiltersOpen(false);
                   }}
-                  className="inline-flex min-h-10 items-center rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
+                  className="inline-flex min-h-10 items-center gap-1 rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
                 >
-                  Explore
+                  <MapPinIcon className="h-3.5 w-3.5" />
+                  Map
                 </button>
                 <button
                   type="button"
@@ -236,11 +272,11 @@ export function MapHomePage() {
                   className="inline-flex min-h-10 items-center rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
                   aria-expanded={filtersOpen}
                 >
-                  {filtersOpen ? "Hide filters" : "Filters"}
+                  {filtersOpen ? "Hide" : "Filters"}
                 </button>
               </div>
               <Link to="/about" className="mt-2.5 inline-block text-xs font-semibold text-civic-accent">
-                How reporting works
+                How it works
               </Link>
             </div>
             {filtersOpen ? (
@@ -303,7 +339,7 @@ export function MapHomePage() {
                   ? "Community-supported: three or more same-category reports within 15 m. Not a field inspection."
                   : "Pending: waiting for nearby same-category reports to corroborate this sighting."}
               </p>
-              <ButtonLink to={`/hazards/${selected.id}`} variant="ghost" className="min-h-11 px-0">
+              <ButtonLink to={`/reports/${selected.id}`} variant="ghost" className="min-h-11 px-0">
                 Open full evidence
               </ButtonLink>
             </>
@@ -312,18 +348,25 @@ export function MapHomePage() {
       </div>
 
       <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
-        <div className="border-b border-civic-line px-5 py-6">
-          <p className="um-eyebrow">Kilimani pilot · Nairobi City County</p>
-          <h1 className="um-display mt-2 text-2xl lg:text-[1.75rem]">
-            Report street hazards. Neighbours turn them into evidence.
+        <div className="border-b border-civic-line px-5 py-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center rounded-full border border-civic-line bg-civic-mist px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
+              Kilimani · Nairobi
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-civic-verified/25 bg-civic-verifiedBg px-2 py-0.5 text-[10px] font-semibold text-civic-verified">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-civic-verified" />
+              Live reporting area
+            </span>
+          </div>
+          <h1 className="mt-3 text-[1.35rem] font-semibold leading-snug tracking-tight text-civic-ink">
+            Report a hazard. Build local evidence.
           </h1>
-          <p className="um-body mt-3">
-            Scope is Kilimani only. Community-supported clusters are spatial corroboration
-            (≥3 same-category reports within 15 m), not county inspection.
+          <p className="mt-1.5 text-sm leading-snug text-civic-slate">
+            Discover street hazards reported by your community in Kilimani.
           </p>
-          <div className="mt-5 flex flex-col gap-2">
-            <ButtonLink to="/report" className="w-full min-h-12">
-              Report an issue
+          <div className="mt-4 flex items-center gap-2">
+            <ButtonLink to="/reports/new" className="min-h-11 flex-1 rounded-full text-sm">
+              + Report a hazard
             </ButtonLink>
             <button
               type="button"
@@ -332,32 +375,46 @@ export function MapHomePage() {
                 setFiltersOpen(false);
                 setView("map");
               }}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-card border border-civic-line text-sm font-semibold text-civic-ink transition-colors hover:bg-civic-mist"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-civic-line px-3.5 text-sm font-semibold text-civic-ink transition-colors hover:bg-civic-mist"
             >
-              Explore the map
+              <MapPinIcon />
+              Map view
             </button>
           </div>
           <Link to="/about" className="mt-3 inline-block text-sm font-semibold text-civic-accent">
-            How reporting works
+            How it works
           </Link>
         </div>
         <div className="border-b border-civic-line px-5 py-4">
           <MapFilters {...filterProps} />
         </div>
-        <div className="border-b border-civic-line px-5 py-4">
-          <SummaryCard
-            loading={loading && incidents.length === 0}
-            verified={verified}
-            pending={pending}
-          />
-        </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
-          <p className="um-eyebrow mb-3">Visible evidence</p>
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <div>
+              <p className="um-eyebrow">Community evidence</p>
+              <p className="mt-1 text-sm font-semibold text-civic-ink">
+                {loading && incidents.length === 0
+                  ? "Loading…"
+                  : `${visible.length} report${visible.length === 1 ? "" : "s"} found`}
+              </p>
+              {!loading || incidents.length > 0 ? (
+                <p className="um-meta mt-0.5">
+                  {verified} community-supported · {pending} pending corroboration
+                </p>
+              ) : null}
+            </div>
+            {filtersActive ? (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="shrink-0 text-xs font-semibold text-civic-accent"
+              >
+                Clear filters
+              </button>
+            ) : null}
+          </div>
           {visible.length === 0 ? (
-            <EmptyState
-              title="No Kilimani reports match these filters"
-              body="Widen the filters or report a hazard you see on the street."
-            />
+            <EvidenceEmpty onClear={clearFilters} filtersActive={filtersActive} />
           ) : (
             <div className="space-y-3">
               {visible.slice(0, 40).map((incident) => (
@@ -371,6 +428,15 @@ export function MapHomePage() {
   );
 }
 
+const HAZARD_CHIP: Record<string, string> = {
+  MOBILITY_SURFACE_DAMAGE: "Road damage",
+  NMT_PEDESTRIAN_HAZARD: "Obstruction",
+  DRAINAGE_STORMWATER: "Drainage",
+  SEWER_SANITATION: "Sanitation",
+  LIGHTING_SECURITY: "Lighting",
+  ILLEGAL_WASTE_DUMP: "Waste",
+};
+
 function SummaryCard({
   loading,
   verified,
@@ -381,18 +447,15 @@ function SummaryCard({
   pending: number;
 }) {
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface px-3.5 py-3 shadow-card lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+    <div className="um-map-card rounded-card px-3.5 py-3 shadow-card">
       {loading ? (
         <p className="um-meta">Loading Kilimani evidence…</p>
       ) : (
         <>
-          <p className="text-base font-semibold tracking-tight text-civic-ink">
-            {verified} community-supported
+          <p className="text-sm font-semibold tracking-tight text-civic-ink">
+            {verified} community-supported · {pending} pending
           </p>
-          <p className="um-meta mt-0.5">
-            {pending} pending reports
-          </p>
-          <div className="mt-2 lg:hidden">
+          <div className="mt-2">
             <MapKey bare />
           </div>
         </>
@@ -411,6 +474,9 @@ function MapFilters({
   onCategory,
   status,
   onStatus,
+  filtersActive,
+  onClearFilters,
+  onPickFromMap,
 }: {
   query: string;
   onQuery: (value: string) => void;
@@ -421,6 +487,9 @@ function MapFilters({
   onCategory: (value: string) => void;
   status: StatusFilter;
   onStatus: (value: StatusFilter) => void;
+  filtersActive: boolean;
+  onClearFilters: () => void;
+  onPickFromMap: () => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
@@ -469,30 +538,58 @@ function MapFilters({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <div className="relative" ref={boxRef}>
-        <label htmlFor={listId + "-q"} className="um-eyebrow mb-1.5 block">
-          Search streets
-        </label>
-        <input
-          id={listId + "-q"}
-          type="search"
-          value={query}
-          onChange={(e) => {
-            onQuery(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onKeyDown={onKeyDown}
-          placeholder="Yaya, Argwings Kodhek, Ngong Road…"
-          aria-label="Search Kilimani streets"
-          aria-autocomplete="list"
-          aria-expanded={showList}
-          aria-controls={listId}
-          autoComplete="off"
-          enterKeyHint="search"
-          className="w-full rounded-card border border-civic-line bg-civic-surface px-3 py-2.5 text-base shadow-card outline-none focus:border-civic-accent lg:text-sm lg:shadow-none"
-        />
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <label htmlFor={listId + "-q"} className="um-eyebrow">
+            Find street evidence
+          </label>
+          <button
+            type="button"
+            onClick={onPickFromMap}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-civic-accent"
+          >
+            <MapPinIcon className="h-3.5 w-3.5" />
+            Pick on map
+          </button>
+        </div>
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-civic-muted">
+            <SearchIcon />
+          </span>
+          <input
+            id={listId + "-q"}
+            type="search"
+            value={query}
+            onChange={(e) => {
+              onQuery(e.target.value);
+              setOpen(true);
+            }}
+            onFocus={() => setOpen(true)}
+            onKeyDown={onKeyDown}
+            placeholder="Search streets or landmarks…"
+            aria-label="Search Kilimani streets and landmarks"
+            aria-autocomplete="list"
+            aria-expanded={showList}
+            aria-controls={listId}
+            autoComplete="off"
+            enterKeyHint="search"
+            className="w-full rounded-card border border-civic-line bg-civic-surface py-2.5 pl-9 pr-9 text-base outline-none focus:border-civic-accent lg:text-sm"
+          />
+          {query ? (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => {
+                onQuery("");
+                setOpen(false);
+              }}
+              className="absolute inset-y-0 right-2 flex items-center rounded-full px-1.5 text-civic-muted hover:text-civic-ink"
+            >
+              <ClearIcon />
+            </button>
+          ) : null}
+        </div>
         {showList ? (
           <ul
             id={listId}
@@ -511,7 +608,13 @@ function MapFilters({
                 >
                   <span className="font-semibold">{place.name}</span>
                   <span className="text-xs text-civic-muted">
-                    {place.kind === "report" ? "Hazard report · " : "Street or landmark · "}
+                    {place.kind === "report"
+                      ? "Hazard report · "
+                      : place.hint === "Estate"
+                        ? "Estate · "
+                        : place.hint === "Landmark"
+                          ? "Landmark · "
+                          : "Street · "}
                     {place.hint}
                   </span>
                 </button>
@@ -521,50 +624,107 @@ function MapFilters({
               <li className="px-3 py-2.5 text-sm text-civic-muted">
                 {searching
                   ? "Looking up Kilimani streets…"
-                  : "No match. Try Argwings Kodhek, Yaya, Ngong Road, or a report category."}
+                  : "No match. Try Yaya, Argwings Kodhek, an estate, or a hazard type."}
               </li>
             ) : null}
           </ul>
         ) : null}
       </div>
-      <p className="um-eyebrow pt-2">
-        Hazard type
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
-        <FilterChip active={category === "all"} onClick={() => onCategory("all")}>
-          All hazards
-        </FilterChip>
-        {HAZARD_OPTIONS.map((opt) => (
-          <FilterChip
-            key={opt.value}
-            active={category === opt.value}
-            onClick={() => onCategory(opt.value)}
-          >
-            {opt.label}
+
+      <div>
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <p className="um-eyebrow">Hazard type</p>
+          {filtersActive ? (
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="text-[11px] font-semibold text-civic-accent"
+            >
+              Clear filters
+            </button>
+          ) : null}
+        </div>
+        <div className="flex gap-1.5 overflow-x-auto pb-0.5 lg:flex-wrap">
+          <FilterChip active={category === "all"} onClick={() => onCategory("all")}>
+            All hazards
           </FilterChip>
-        ))}
+          {HAZARD_OPTIONS.map((opt) => (
+            <FilterChip
+              key={opt.value}
+              active={category === opt.value}
+              onClick={() => onCategory(opt.value)}
+            >
+              {HAZARD_CHIP[opt.value] ?? opt.label}
+            </FilterChip>
+          ))}
+        </div>
       </div>
-      <p className="um-eyebrow pt-2">
-        Status
-      </p>
-      <div className="flex gap-2 overflow-x-auto pb-1 lg:flex-wrap">
-        <FilterChip active={status === "all"} onClick={() => onStatus("all")}>
-          All statuses
-        </FilterChip>
-        <FilterChip
-          active={status === "verified"}
-          onClick={() => onStatus("verified")}
+
+      <div>
+        <p className="um-eyebrow mb-1.5">Status</p>
+        <div
+          role="group"
+          aria-label="Report status"
+          className="inline-flex w-full rounded-full border border-civic-line bg-civic-mist/60 p-0.5"
         >
-          Community-supported
-        </FilterChip>
-        <FilterChip
-          active={status === "pending"}
-          onClick={() => onStatus("pending")}
-        >
-          Pending reports
-        </FilterChip>
+          {(
+            [
+              { id: "all", label: "All" },
+              { id: "verified", label: "Supported" },
+              { id: "pending", label: "Pending" },
+            ] as const
+          ).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => onStatus(opt.id)}
+              aria-pressed={status === opt.id}
+              className={`min-h-8 flex-1 rounded-full px-2 text-[11px] font-semibold transition-colors ${
+                status === opt.id
+                  ? "bg-civic-surface text-civic-ink shadow-sm"
+                  : "text-civic-muted hover:text-civic-ink"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <p className="um-meta mt-1.5">
+          Supported means ≥3 same-category reports within 15 m — not a county inspection.
+        </p>
       </div>
     </div>
+  );
+}
+
+function MapPinIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 21s7-6.2 7-11.2A7 7 0 1 0 5 9.8C5 14.8 12 21 12 21z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="9.5" r="2.25" stroke="currentColor" strokeWidth="1.7" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="6.25" stroke="currentColor" strokeWidth="1.7" />
+      <path d="m16 16 3.5 3.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ClearIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="m8 8 8 8M16 8l-8 8" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -581,7 +741,7 @@ function FilterChip({
     <button
       type="button"
       onClick={onClick}
-      className={`shrink-0 rounded-sm border px-3 py-1.5 text-xs font-semibold transition-colors ${
+      className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
         active
           ? "border-civic-ink bg-civic-ink text-civic-paper"
           : "border-civic-line bg-civic-surface text-civic-slate hover:bg-civic-mist"

@@ -1,11 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { cellForLatLng } from "../lib/geo";
-import {
-  submitHazardReport,
-  uploadPhoto,
-  type ReportResponse,
-} from "../lib/api";
+import { submitHazardReport, uploadPhoto } from "../lib/api";
 import {
   HAZARD_OPTIONS,
   type HazardCategoryValue,
@@ -19,7 +15,6 @@ import { rememberMyReport } from "../lib/myReports";
 import { useLocationState } from "../lib/location";
 import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
 import { ErrorBanner } from "../components/ui/ReportCard";
-import { ButtonLink } from "../components/ui/Button";
 import { ThemeToggle } from "../lib/theme";
 
 export function ReportFlowPage() {
@@ -34,7 +29,6 @@ export function ReportFlowPage() {
   const [photoData, setPhotoData] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ReportResponse | null>(null);
 
   const selected = HAZARD_OPTIONS.find((o) => o.value === category);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -45,7 +39,7 @@ export function ReportFlowPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
-  }, [step, result]);
+  }, [step]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -76,7 +70,8 @@ export function ReportFlowPage() {
         photo_url,
       });
       rememberMyReport(response.incident_id);
-      setResult(response);
+      navigate(`/reports/${response.incident_id}/submitted`, { replace: true });
+      return;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Couldn't send the report. Try again.");
     } finally {
@@ -90,7 +85,7 @@ export function ReportFlowPage() {
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-2.5 lg:px-6">
         <button
           type="button"
-          onClick={() => (step > 1 && !result ? setStep(step - 1) : navigate(-1))}
+          onClick={() => (step > 1 ? setStep(step - 1) : navigate(-1))}
           className="text-sm font-semibold text-civic-slate"
         >
           Back
@@ -99,15 +94,12 @@ export function ReportFlowPage() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <span className="text-xs font-semibold tabular-nums text-civic-muted">
-            {result ? "Submitted" : `${step} / 4`}
+            {step} / 4
           </span>
         </div>
         </div>
       </header>
 
-      {result ? (
-        <ResultState result={result} />
-      ) : (
         <form
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
           onSubmit={onSubmit}
@@ -181,8 +173,8 @@ export function ReportFlowPage() {
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
                   <p className="um-eyebrow">2 · Hazard</p>
-                  <h1 className="um-title mt-1">What is the problem?</h1>
-                  <p className="um-meta mt-1">Required. Pick one Kilimani hazard type.</p>
+                  <h1 className="um-title mt-1">What did you notice?</h1>
+                  <p className="um-meta mt-1">Required. One primary category keeps corroboration accurate.</p>
                   <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
                     {HAZARD_OPTIONS.map((opt) => (
                       <button
@@ -191,7 +183,7 @@ export function ReportFlowPage() {
                         onClick={() => setCategory(opt.value)}
                         className={`min-h-[6.5rem] rounded-card border p-3.5 text-left transition-colors lg:min-h-[8rem] lg:p-4 ${
                           category === opt.value
-                            ? "border-civic-ink bg-civic-mist shadow-card"
+                            ? "border-civic-accent bg-civic-verifiedBg"
                             : "border-civic-line bg-civic-surface hover:border-civic-slate hover:bg-civic-paper"
                         }`}
                       >
@@ -224,7 +216,7 @@ export function ReportFlowPage() {
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-5xl px-4 py-4 lg:px-6 lg:py-8">
                   <p className="um-eyebrow">3 · Evidence</p>
-                  <h1 className="um-title mt-1">Add evidence</h1>
+                  <h1 className="um-title mt-1">Add photos</h1>
                   <p className="um-meta mt-1">
                     Photograph the hazard now. Gallery uploads are not accepted.
                   </p>
@@ -339,7 +331,6 @@ export function ReportFlowPage() {
             </>
           ) : null}
         </form>
-      )}
     </div>
   );
 }
@@ -348,32 +339,6 @@ function ReportStepFooter({ children }: { children: ReactNode }) {
   return (
     <div className="shrink-0 border-t border-civic-line bg-civic-surface px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:px-6">
       <div className="mx-auto w-full max-w-4xl">{children}</div>
-    </div>
-  );
-}
-
-function ResultState({ result }: { result: ReportResponse }) {
-  const verified = result.is_verified;
-  return (
-    <div className="um-enter um-scroll mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))] lg:max-w-xl lg:justify-center">
-      <p className="um-eyebrow">5 · Submission</p>
-      <h1 className="um-display mt-3">
-        {verified ? "Community-supported" : "Pending corroboration"}
-      </h1>
-      <p className="um-body mt-4 text-base">
-        {verified
-          ? `${Math.max(result.nearby_count, 3)} same-category reports now sit within 15 metres. That spatial corroboration — not a field inspection — is what UrbanMesh treats as planning evidence.`
-          : "Your report is logged as pending. It becomes community-supported only when two more same-category sightings land within 15 metres."}
-      </p>
-      <p className="um-meta mt-6">
-        Nairobi City County has not inspected this site. Field-verified and Resolved are not live states yet.
-      </p>
-      <ButtonLink to={`/?select=${result.incident_id}`} className="mt-8 w-full">
-        View on map
-      </ButtonLink>
-      <ButtonLink to={`/hazards/${result.incident_id}`} variant="secondary" className="mt-3 w-full">
-        View evidence
-      </ButtonLink>
     </div>
   );
 }

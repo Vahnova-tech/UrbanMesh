@@ -1,10 +1,14 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { loadMyReportIds } from "../lib/myReports";
 import { formatWhen } from "../lib/format";
-import { EmptyState, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
+import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
-import { PipelineStrip, SkeletonList } from "../components/ui/Pipeline";
+import { SkeletonList } from "../components/ui/Pipeline";
+import { CORROBORATION_THRESHOLD, REPORT_NEW_PATH } from "../lib/reportStatus";
+
+type Filter = "all" | "pending" | "supported";
 
 export function MyReportsPage() {
   const [items, setItems] = useState<IncidentPublic[]>([]);
@@ -12,6 +16,7 @@ export function MyReportsPage() {
   const [loading, setLoading] = useState(true);
   const [update, setUpdate] = useState<string | null>(null);
   const [reload, setReload] = useState(0);
+  const [filter, setFilter] = useState<Filter>("all");
   const knownVerified = useRef<Set<string> | null>(null);
   const submittedAt = useRef(new Map(loadMyReportIds().map((row) => [row.id, row.at])));
 
@@ -57,95 +62,141 @@ export function MyReportsPage() {
   }, [reload]);
 
   const pending = items.filter((i) => !i.is_verified);
-  const verified = items.filter((i) => i.is_verified);
-  const history = [...items].sort((a, b) =>
-    b.created_at.localeCompare(a.created_at),
-  );
+  const supported = items.filter((i) => i.is_verified);
+
+  const visible = useMemo(() => {
+    const rows =
+      filter === "pending"
+        ? pending
+        : filter === "supported"
+          ? supported
+          : items;
+    return [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
+  }, [items, pending, supported, filter]);
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-8 lg:px-6 lg:py-8">
-      <h1 className="um-display text-2xl lg:text-3xl">My reports</h1>
-      <p className="um-body mt-2">
-        Stored on this device. No public profile — just the hazards you logged in Kilimani.
-      </p>
-      <div className="mt-4">
-        <PipelineStrip compact />
-      </div>
+      <header className="mb-5">
+        <p className="um-eyebrow">Kilimani pilot · This device</p>
+        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 max-w-xl">
+            <h1 className="text-2xl font-semibold tracking-tight text-civic-ink lg:text-[1.75rem]">
+              My reports
+            </h1>
+            <p className="mt-1.5 text-sm leading-snug text-civic-slate">
+              Stored on this phone only — no public profile. Track corroboration toward{" "}
+              {CORROBORATION_THRESHOLD} same-category reports within 15 m.
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <ButtonLink to={REPORT_NEW_PATH} className="min-h-11 rounded-full px-4 text-sm">
+              Report a hazard
+            </ButtonLink>
+            <Link
+              to="/reports"
+              className="inline-flex min-h-11 items-center rounded-full border border-civic-line px-3.5 text-sm font-semibold text-civic-ink hover:bg-civic-mist"
+            >
+              All reports
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      <div className="mt-6 grid grid-cols-3 gap-3">
+      <div className="mb-4 grid grid-cols-3 gap-2">
         <Stat label="Submitted" value={items.length} />
         <Stat label="Pending" value={pending.length} />
-        <Stat label="Community-supported" value={verified.length} />
+        <Stat label="Supported" value={supported.length} />
+      </div>
+
+      <div
+        role="group"
+        aria-label="Filter my reports"
+        className="mb-4 inline-flex w-full rounded-full border border-civic-line bg-civic-mist/60 p-0.5 sm:w-auto"
+      >
+        {(
+          [
+            { id: "all", label: "All" },
+            { id: "pending", label: "Pending" },
+            { id: "supported", label: "Supported" },
+          ] as const
+        ).map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => setFilter(opt.id)}
+            aria-pressed={filter === opt.id}
+            className={`min-h-9 flex-1 rounded-full px-3 text-xs font-semibold sm:flex-none sm:px-4 ${
+              filter === opt.id
+                ? "bg-civic-surface text-civic-ink shadow-sm"
+                : "text-civic-muted hover:text-civic-ink"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {update ? (
-        <p className="mt-4 rounded-card border border-civic-verified bg-civic-verifiedBg px-3 py-2 text-sm font-semibold text-civic-verified">
+        <p className="mb-4 rounded-card border border-civic-verified/30 bg-civic-verifiedBg px-3.5 py-2.5 text-sm font-semibold text-civic-verified">
           {update}
         </p>
       ) : null}
 
       {error ? (
-        <div className="mt-4">
+        <div className="mb-4">
           <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
         </div>
       ) : null}
-      {loading ? (
-        <div className="mt-4">
-          <SkeletonList rows={3} />
-        </div>
-      ) : null}
+
+      {loading ? <SkeletonList rows={3} /> : null}
+
+      <div className="mb-3 flex items-center justify-between gap-2 border-y border-civic-line py-3">
+        <p className="text-sm font-semibold text-civic-ink">
+          {loading
+            ? "Loading…"
+            : `${visible.length} report${visible.length === 1 ? "" : "s"}`}
+        </p>
+        <p className="um-meta">
+          {supported.length} community-supported · {pending.length} pending corroboration
+        </p>
+      </div>
 
       {!loading && items.length === 0 ? (
-        <div className="mt-6">
-          <EmptyState
-            title="No reports from this phone yet"
-            body="When you submit a hazard, it will appear here until nearby residents corroborate a 15 m cluster."
-            action={<ButtonLink to="/report">Report an issue</ButtonLink>}
-          />
+        <EvidenceEmpty />
+      ) : null}
+
+      {!loading && items.length > 0 && visible.length === 0 ? (
+        <div className="py-10 text-center">
+          <p className="text-base font-semibold text-civic-ink">No reports in this filter</p>
+          <p className="um-body mx-auto mt-1.5 max-w-sm">
+            Switch to All, or submit another hazard from this phone.
+          </p>
+          <button
+            type="button"
+            onClick={() => setFilter("all")}
+            className="mt-4 text-sm font-semibold text-civic-accent"
+          >
+            Show all my reports
+          </button>
         </div>
       ) : null}
 
-      {history.length > 0 ? (
-        <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Report history</h2>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {history.map((incident) => (
-              <ReportCard
-                key={incident.id}
-                incident={incident}
-                footnote={
-                  submittedAt.current.get(incident.id)
-                    ? `Submitted ${formatWhen(submittedAt.current.get(incident.id) as string)}`
-                    : incident.is_verified
-                      ? "Now inside a community-supported cluster"
-                      : "Waiting for two more same-category reports within 15 m"
-                }
-              />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {verified.length > 0 ? (
-        <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Community-supported clusters</h2>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {verified.map((incident) => (
-              <ReportCard key={`v-${incident.id}`} incident={incident} />
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      {pending.length > 0 ? (
-        <section className="mt-6">
-          <h2 className="mb-2 text-sm font-semibold text-civic-ink">Pending corroboration</h2>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {pending.map((incident) => (
-              <ReportCard key={`p-${incident.id}`} incident={incident} />
-            ))}
-          </div>
-        </section>
+      {!loading && visible.length > 0 ? (
+        <div className="grid gap-3 lg:grid-cols-2">
+          {visible.map((incident) => (
+            <ReportCard
+              key={incident.id}
+              incident={incident}
+              footnote={
+                submittedAt.current.get(incident.id)
+                  ? `Logged on this device · ${formatWhen(submittedAt.current.get(incident.id) as string)}`
+                  : incident.is_verified
+                    ? "Now inside a community-supported cluster"
+                    : "Waiting for more same-category reports within 15 m"
+              }
+            />
+          ))}
+        </div>
       ) : null}
     </div>
   );
@@ -153,9 +204,11 @@ export function MyReportsPage() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-4">
-      <p className="um-eyebrow">{label}</p>
-      <p className="mt-1.5 text-2xl font-semibold tracking-tight text-civic-ink">{value}</p>
+    <div className="rounded-card border border-civic-line bg-civic-surface px-3 py-3">
+      <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-civic-muted">
+        {label}
+      </p>
+      <p className="mt-1 text-xl font-semibold tracking-tight text-civic-ink">{value}</p>
     </div>
   );
 }

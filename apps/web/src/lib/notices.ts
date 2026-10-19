@@ -53,7 +53,7 @@ export function buildNotices(
       title: "Your report is community-supported",
       body: `${row.category_label} on ${row.corridor} now meets the 15 m corroboration rule.`,
       at: row.created_at,
-      href: `/hazards/${row.id}`,
+      href: `/reports/${row.id}`,
     });
   }
 
@@ -71,7 +71,7 @@ export function buildNotices(
         row.nearby_count === 1 ? "" : "s"
       } within 15 m.`,
       at: row.created_at,
-      href: `/hazards/${row.id}`,
+      href: `/reports/${row.id}`,
     });
   }
 
@@ -87,7 +87,7 @@ export function buildNotices(
       title: "Nearby report needs confirmation",
       body: `${row.category_label} on ${row.corridor}. Confirm if you see the same hazard.`,
       at: row.created_at,
-      href: `/hazards/${row.id}`,
+      href: `/reports/${row.id}`,
     });
   }
 

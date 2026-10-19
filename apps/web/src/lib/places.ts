@@ -38,6 +38,11 @@ export const KILIMANI_PLACES: SearchHit[] = [
   { id: "adlife", name: "Adlife Plaza", hint: "Landmark", lat: -1.2935, lng: 36.787, kind: "place" },
   { id: "prestige", name: "Prestige Plaza", hint: "Landmark", lat: -1.3005, lng: 36.7805, kind: "place" },
   { id: "valley-arcade", name: "Valley Arcade", hint: "Landmark", lat: -1.3, lng: 36.776, kind: "place" },
+  { id: "kilimani-estate", name: "Kilimani Estate", hint: "Estate", lat: -1.2918, lng: 36.7838, kind: "place" },
+  { id: "hatheru", name: "Hatheru Road Estate", hint: "Estate", lat: -1.2952, lng: 36.7798, kind: "place" },
+  { id: "riara-estate", name: "Riara Estate", hint: "Estate", lat: -1.3008, lng: 36.7748, kind: "place" },
+  { id: "dennis-pritt-estate", name: "Dennis Pritt Estate", hint: "Estate", lat: -1.293, lng: 36.7895, kind: "place" },
+  { id: "kirichwa-estate", name: "Kirichwa Road Estate", hint: "Estate", lat: -1.2955, lng: 36.7805, kind: "place" },
 ];
 
 const VIEWBOX = {
@@ -83,7 +88,7 @@ export function searchIncidents(
     hits.push({
       id: `report-${item.id}`,
       name: item.category_label,
-      hint: `${item.corridor} · ${item.is_verified ? "Community-supported" : "Pending"}`,
+      hint: `${item.corridor} · ${item.is_verified ? "Community-supported" : "Pending corroboration"}`,
       lat: item.lat,
       lng: item.lng,
       kind: "report",

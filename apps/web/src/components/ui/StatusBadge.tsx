@@ -68,7 +68,7 @@ export function CategoryIcon({
 }
 
 export function statusLabel(verified: boolean): string {
-  return verified ? "Community-supported" : "Pending";
+  return verified ? "Community-supported" : "Pending corroboration";
 }
 
 export function StatusBadge({
@@ -94,7 +94,7 @@ export function StatusBadge({
       className={`inline-flex items-center gap-1 rounded-md bg-civic-pendingBg font-semibold text-civic-pending ${pad}`}
     >
       <ClockIcon />
-      Pending
+      Pending corroboration
     </span>
   );
 }

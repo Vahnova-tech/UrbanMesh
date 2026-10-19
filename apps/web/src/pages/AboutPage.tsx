@@ -111,7 +111,7 @@ export function AboutPage() {
       </div>
 
       <div className="mt-10 flex flex-col gap-3 sm:flex-row">
-        <ButtonLink to="/report">Report an issue</ButtonLink>
+        <ButtonLink to="/reports/new">Report an issue</ButtonLink>
         <ButtonLink to="/" variant="secondary">
           Open the map
         </ButtonLink>

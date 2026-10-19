@@ -308,7 +308,7 @@ export function LiveMap({
             label: cluster.category_label,
             corridor: cluster.corridor,
             meta: `${cluster.report_count} same-category reports · 15 m cluster`,
-            href: `/hazards/${id}`,
+            href: `/reports/${id}`,
             verified: true,
           } satisfies MarkerProps,
         });
@@ -326,7 +326,7 @@ export function LiveMap({
             label: labelForCategory(inc.category),
             corridor: inc.corridor,
             meta: `${inc.nearby_count} nearby report${inc.nearby_count === 1 ? "" : "s"} · 15 m`,
-            href: `/hazards/${inc.id}`,
+            href: `/reports/${inc.id}`,
             verified: true,
           } satisfies MarkerProps,
         });
@@ -347,7 +347,7 @@ export function LiveMap({
             label: labelForCategory(inc.category),
             corridor: inc.corridor,
             meta: `${inc.nearby_count} nearby report${inc.nearby_count === 1 ? "" : "s"} · 15 m`,
-            href: `/hazards/${inc.id}`,
+            href: `/reports/${inc.id}`,
             verified: false,
           } satisfies MarkerProps,
         });

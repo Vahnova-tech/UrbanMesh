@@ -21,7 +21,10 @@ export const NAV_PILL_OFFSET =
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
-  const fullBleed = pathname === "/" || pathname.startsWith("/hazards/");
+  const fullBleed =
+    pathname === "/" ||
+    /^\/reports\/[^/]+$/.test(pathname) ||
+    pathname.startsWith("/hazards/");
   const online = useOnline();
   const notices = useNotices();
   const [updatesOpen, setUpdatesOpen] = useState(false);
@@ -163,7 +166,7 @@ function TopBar({
           </div>
 
           <ButtonLink
-            to="/report"
+            to="/reports/new"
             className="hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm md:inline-flex"
           >
             Report an issue
@@ -208,7 +211,7 @@ function BottomNav() {
 
         <div className="relative flex w-[4.5rem] shrink-0 flex-col items-center justify-end">
           <Link
-            to="/report"
+            to="/reports/new"
             aria-label="Report an issue"
             className="um-tab-fab absolute -top-7 inline-flex h-14 w-14 items-center justify-center rounded-full bg-civic-accent text-white shadow-card transition-transform active:scale-95"
           >
