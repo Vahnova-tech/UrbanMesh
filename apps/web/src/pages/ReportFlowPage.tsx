@@ -1,12 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  MapContainer,
-  TileLayer,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
 import { cellForLatLng } from "../lib/geo";
 import {
   submitHazardReport,
@@ -20,21 +13,18 @@ import {
 import { CategoryIcon } from "../components/ui/StatusBadge";
 import { CameraCapture } from "../components/report/CameraCapture";
 import { KILIMANI_CENTER } from "../components/map/LiveMap";
+import { LocationPickerMap } from "../components/map/LocationPickerMap";
 import { formatCoords } from "../lib/format";
 import { rememberMyReport } from "../lib/myReports";
 import { useLocationState } from "../lib/location";
 import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
 import { ErrorBanner } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
-import { ThemeToggle, useTheme } from "../lib/theme";
-import { tilesFor } from "../lib/mapStyle";
-import { prefersReducedMotion } from "../lib/motion";
+import { ThemeToggle } from "../lib/theme";
 
 export function ReportFlowPage() {
   const navigate = useNavigate();
   const { coords, requestLocation, locating, error: locationError } = useLocationState();
-  const { dark } = useTheme();
-  const tiles = tilesFor(dark);
   const [step, setStep] = useState(1);
   const [center, setCenter] = useState(
     coords ?? { lat: KILIMANI_CENTER[0], lng: KILIMANI_CENTER[1] },
@@ -133,22 +123,11 @@ export function ReportFlowPage() {
               </div>
               <div className="relative min-h-[160px] flex-1 lg:min-h-0">
                 <div className="absolute inset-0">
-                <MapContainer
-                  center={[center.lat, center.lng]}
-                  zoom={17}
-                  className="h-full w-full"
-                  scrollWheelZoom
-                  zoomControl={false}
-                >
-                  <TileLayer
-                    key={dark ? "dark" : "light"}
-                    url={tiles.url}
-                    attribution={tiles.attribution}
+                  <LocationPickerMap
+                    center={center}
+                    onMove={setCenter}
+                    flyTo={coords}
                   />
-                  <MoveTracker onMove={setCenter} />
-                  <InvalidateSize />
-                  {coords ? <FlyTo lat={coords.lat} lng={coords.lng} /> : null}
-                </MapContainer>
                 </div>
                 <div className="pointer-events-none absolute inset-0 z-[1100] flex items-center justify-center">
                   <div className="relative um-crosshair" />
@@ -363,42 +342,6 @@ export function ReportFlowPage() {
       )}
     </div>
   );
-}
-
-function MoveTracker({
-  onMove,
-}: {
-  onMove: (coords: { lat: number; lng: number }) => void;
-}) {
-  useMapEvents({
-    moveend(e) {
-      const c = e.target.getCenter();
-      onMove({ lat: c.lat, lng: c.lng });
-    },
-  });
-  return null;
-}
-
-function InvalidateSize() {
-  const map = useMap();
-  useEffect(() => {
-    const refresh = () => map.invalidateSize();
-    const timer = window.setTimeout(refresh, 80);
-    window.addEventListener("resize", refresh);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", refresh);
-    };
-  }, [map]);
-  return null;
-}
-
-function FlyTo({ lat, lng }: { lat: number; lng: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.flyTo([lat, lng], 17, { duration: prefersReducedMotion() ? 0 : 0.6 });
-  }, [map, lat, lng]);
-  return null;
 }
 
 function ReportStepFooter({ children }: { children: ReactNode }) {
