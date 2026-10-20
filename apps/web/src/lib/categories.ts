@@ -36,7 +36,3 @@ export type HazardCategoryValue = (typeof HAZARD_OPTIONS)[number]["value"];
 export function labelForCategory(value: string): string {
   return HAZARD_OPTIONS.find((o) => o.value === value)?.label ?? value;
 }
-
-export function isCriticalCategory(value: string): boolean {
-  return value === "SEWER_SANITATION" || value === "DRAINAGE_STORMWATER";
-}

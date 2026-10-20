@@ -56,14 +56,6 @@ export function styleUrlFor(dark: boolean): string {
   return dark ? VECTOR_STYLE.dark : VECTOR_STYLE.light;
 }
 
-export function tilesFor(dark: boolean) {
-  return {
-    url: styleUrlFor(dark),
-    attribution:
-      '&copy; <a href="https://openfreemap.org">OpenFreeMap</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  };
-}
-
 function firstSymbolLayerId(map: MapLibreMap): string | undefined {
   const layers = map.getStyle()?.layers;
   if (!layers) return undefined;

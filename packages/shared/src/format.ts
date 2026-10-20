@@ -27,14 +27,6 @@ export function formatDataAsOf(iso: string): string {
   return `Data as of ${formatWhen(iso)} EAT`;
 }
 
-export function formatDay(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-KE", {
-    day: "numeric",
-    month: "short",
-    timeZone: "Africa/Nairobi",
-  });
-}
-
 export function shortTitle(description: string, fallback: string): string {
   const clean = description.trim();
   if (!clean) return fallback;

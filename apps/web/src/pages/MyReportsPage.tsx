@@ -3,8 +3,7 @@ import { Link } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { loadMyReportIds } from "../lib/myReports";
 import { formatWhen } from "../lib/format";
-import { collapseRedundantReports } from "../lib/collapseReports";
-import { isGroupResolved } from "../lib/resolvedReports";
+import { useCollapsedReports } from "../lib/useCollapsedReports";
 import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
 import { SkeletonList } from "../components/ui/Pipeline";
@@ -20,7 +19,6 @@ export function MyReportsPage() {
   const [reload, setReload] = useState(0);
   const [filter, setFilter] = useState<Filter>("all");
   const [hideResolved, setHideResolved] = useState(true);
-  const [resolvedTick, setResolvedTick] = useState(0);
   const knownVerified = useRef<Set<string> | null>(null);
   const submittedAt = useRef(new Map(loadMyReportIds().map((row) => [row.id, row.at])));
 
@@ -65,34 +63,19 @@ export function MyReportsPage() {
     };
   }, [reload]);
 
-  useEffect(() => {
-    function sync() {
-      setResolvedTick((n) => n + 1);
-    }
-    window.addEventListener("urbanmesh:resolved-change", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("urbanmesh:resolved-change", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  const collapsed = useMemo(() => collapseRedundantReports(items), [items]);
+  const collapsed = useCollapsedReports(items, { hideResolved });
   const pending = collapsed.filter((i) => !i.is_verified);
   const supported = collapsed.filter((i) => i.is_verified);
 
   const visible = useMemo(() => {
-    let rows =
+    const rows =
       filter === "pending"
         ? pending
         : filter === "supported"
           ? supported
           : collapsed;
-    if (hideResolved) {
-      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
-    }
     return [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at));
-  }, [collapsed, pending, supported, filter, hideResolved, resolvedTick]);
+  }, [collapsed, pending, supported, filter]);
 
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-8 lg:px-6 lg:py-8">

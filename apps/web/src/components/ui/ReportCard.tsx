@@ -1,4 +1,4 @@
-import { useEffect, useState, type MouseEvent, type ReactNode } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Link } from "react-router-dom";
 import type { IncidentPublic, ReportResponse } from "../../lib/api";
 import { confirmHazard, photoSrc } from "../../lib/api";
@@ -321,24 +321,6 @@ export function EvidenceEmpty({
           Report a hazard
         </ButtonLink>
       </div>
-    </div>
-  );
-}
-
-export function EmptyState({
-  title,
-  body,
-  action,
-}: {
-  title: string;
-  body: string;
-  action?: ReactNode;
-}) {
-  return (
-    <div className="rounded-card border border-dashed border-civic-line bg-civic-surface px-5 py-10 text-center">
-      <p className="um-title text-base lg:text-lg">{title}</p>
-      <p className="um-body mx-auto mt-2 max-w-sm">{body}</p>
-      {action ? <div className="mt-5 flex justify-center">{action}</div> : null}
     </div>
   );
 }

@@ -3,8 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
 import { useLocationState } from "../lib/location";
-import { collapseRedundantReports } from "../lib/collapseReports";
-import { isGroupResolved } from "../lib/resolvedReports";
+import { useCollapsedReports } from "../lib/useCollapsedReports";
 import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { BottomSheet } from "../components/ui/BottomSheet";
 import { ButtonLink } from "../components/ui/Button";
@@ -41,7 +40,6 @@ export function MapHomePage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selected, setSelected] = useState<IncidentPublic | null>(null);
   const [hideResolved, setHideResolved] = useState(true);
-  const [resolvedTick, setResolvedTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,18 +67,6 @@ export function MapHomePage() {
   }, [reload]);
 
   useEffect(() => {
-    function sync() {
-      setResolvedTick((n) => n + 1);
-    }
-    window.addEventListener("urbanmesh:resolved-change", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("urbanmesh:resolved-change", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  useEffect(() => {
     if (!selectParam || incidents.length === 0) return;
     const match = incidents.find((row) => row.id === selectParam);
     if (!match) return;
@@ -105,19 +91,11 @@ export function MapHomePage() {
     setView("map");
   }
 
-  const visible = useMemo(() => {
-    const matched = incidents.filter((item) => {
-      if (category !== "all" && item.category !== category) return false;
-      if (status === "verified" && !item.is_verified) return false;
-      if (status === "pending" && item.is_verified) return false;
-      return true;
-    });
-    let rows = collapseRedundantReports(matched);
-    if (hideResolved) {
-      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
-    }
-    return rows;
-  }, [incidents, category, status, hideResolved, resolvedTick]);
+  const visible = useCollapsedReports(incidents, {
+    hideResolved,
+    category,
+    status,
+  });
 
   const verified = visible.filter((i) => i.is_verified).length;
   const pending = visible.length - verified;

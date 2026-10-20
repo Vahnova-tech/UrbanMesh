@@ -20,7 +20,6 @@ export type CollapsedReport = IncidentPublic & {
  * Collapse redundant reports from different devices into one list card:
  * - Shared cluster_id → one card
  * - Same category within 15 m → one card
- * - Near-identical descriptions within 15 m → one card
  * Representative prefers photo + verified + newest; summary uses latest corroboration time.
  */
 export function collapseRedundantReports(
@@ -69,15 +68,8 @@ export function collapseRedundantReports(
         rows[j].lat,
         rows[j].lng,
       );
-      if (dist > radiusMeters) continue;
-      const sameText =
-        fingerprint(rows[i].description) === fingerprint(rows[j].description) &&
-        fingerprint(rows[i].description).length > 0;
-      // Always merge within radius for same category (corroboration window).
-      // Identical text is a stronger signal but not required.
-      if (sameText || dist <= radiusMeters) {
-        union(i, j);
-      }
+      // Same category within the corroboration radius → one card.
+      if (dist <= radiusMeters) union(i, j);
     }
   }
 
@@ -92,15 +84,6 @@ export function collapseRedundantReports(
   return [...buckets.values()]
     .map((members) => toCollapsed(members))
     .sort((a, b) => b.latest_at.localeCompare(a.latest_at));
-}
-
-function fingerprint(description: string): string {
-  return description
-    .toLowerCase()
-    .replace(/^community confirmation:\s*/i, "")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function toCollapsed(members: IncidentPublic[]): CollapsedReport {

@@ -2,8 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
-import { collapseRedundantReports } from "../lib/collapseReports";
-import { isGroupResolved } from "../lib/resolvedReports";
+import { useCollapsedReports } from "../lib/useCollapsedReports";
 import { EvidenceEmpty, ErrorBanner, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
 import { SkeletonList } from "../components/ui/Pipeline";
@@ -42,7 +41,6 @@ export function ReportsPage() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [hideResolved, setHideResolved] = useState(true);
-  const [resolvedTick, setResolvedTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,18 +67,6 @@ export function ReportsPage() {
   }, [reload]);
 
   useEffect(() => {
-    function sync() {
-      setResolvedTick((n) => n + 1);
-    }
-    window.addEventListener("urbanmesh:resolved-change", sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener("urbanmesh:resolved-change", sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  useEffect(() => {
     const next = new URLSearchParams();
     if (query.trim()) next.set("q", query.trim());
     if (category !== "all") next.set("category", category);
@@ -89,13 +75,17 @@ export function ReportsPage() {
     setSearchParams(next, { replace: true });
   }, [query, category, status, sort, setSearchParams]);
 
+  const collapsed = useCollapsedReports(items, {
+    hideResolved,
+    category,
+    status,
+  });
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const matched = items.filter((item) => {
-      if (category !== "all" && item.category !== category) return false;
-      if (status === "verified" && !item.is_verified) return false;
-      if (status === "pending" && item.is_verified) return false;
-      if (needle) {
+    let rows = collapsed;
+    if (needle) {
+      rows = rows.filter((item) => {
         const blob = [
           item.id,
           item.category_label,
@@ -105,17 +95,10 @@ export function ReportsPage() {
         ]
           .join(" ")
           .toLowerCase();
-        if (!blob.includes(needle)) return false;
-      }
-      return true;
-    });
-
-    let rows = collapseRedundantReports(matched);
-    if (hideResolved) {
-      rows = rows.filter((row) => !isGroupResolved(row.member_ids));
+        return blob.includes(needle);
+      });
     }
-
-    rows = [...rows].sort((a, b) => {
+    return [...rows].sort((a, b) => {
       if (sort === "corroborated") {
         return (
           b.nearby_count - a.nearby_count ||
@@ -124,8 +107,7 @@ export function ReportsPage() {
       }
       return b.created_at.localeCompare(a.created_at);
     });
-    return rows;
-  }, [items, category, status, query, sort, hideResolved, resolvedTick]);
+  }, [collapsed, query, sort]);
 
   const filtersActive =
     category !== "all" || status !== "all" || query.trim().length > 0;
