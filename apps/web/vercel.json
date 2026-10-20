@@ -1,8 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
+  "installCommand": "sh ../../scripts/vercel-citizen-install.sh",
+  "buildCommand": "sh ../../scripts/vercel-citizen-build.sh",
   "outputDirectory": "dist",
   "env": {
     "API_ORIGIN": "https://urbanmesh-vitx.onrender.com"

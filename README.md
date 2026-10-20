@@ -230,18 +230,15 @@ Punchy path (aim ≤ 2–3 minutes on camera):
 
 ## Deploy (Vercel — citizen PWA)
 
-Do **not** set Root Directory to `apps/admin` (that is a separate local/dev panel).
+Install/build always run via [`scripts/vercel-citizen-*.sh`](./scripts) so the citizen app builds whether Root Directory is `.`, `apps/web`, or (mistakenly) `apps/admin`.
 
-**Option A — repo root (uses root [`vercel.json`](./vercel.json))**  
-- **Root Directory:** leave empty / `.`  
-- Install/build/output already point at `apps/web`  
+In Vercel → Project → Settings → General / Build & Development:
 
-**Option B — app folder (uses [`apps/web/vercel.json`](./apps/web/vercel.json))**  
-- **Root Directory:** `apps/web`  
-- Enable “Include source files outside of the Root Directory in the Build Step” so `packages/shared` resolves  
-- **Output:** `dist`  
+1. Prefer **Root Directory** empty (repo root) or `apps/web`
+2. Clear any **Override** on Install / Build Command (let `vercel.json` drive them)
+3. **Env:** `VITE_API_BASE` = public API URL  
 
-- **Env:** `VITE_API_BASE` = public API URL  
+`apps/admin` is a separate moderation UI (local / API-hosted), not the Vercel citizen site.
 
 ---
 
