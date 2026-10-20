@@ -34,6 +34,7 @@ interface IncidentRow {
   h3_index: string;
   cluster_id: string | null;
   is_verified: boolean;
+  review_status: string;
   photo_url: string | null;
   created_at: Date;
 }
@@ -85,9 +86,11 @@ async function loadIncidentRows(): Promise<IncidentRow[]> {
       h3_index,
       cluster_id::text AS cluster_id,
       is_verified,
+      COALESCE(review_status::text, 'PENDING') AS review_status,
       photo_url,
       created_at
     FROM incidents
+    WHERE COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
     ORDER BY created_at DESC
   `;
 
@@ -96,6 +99,7 @@ async function loadIncidentRows(): Promise<IncidentRow[]> {
     lat: Number(row.lat),
     lng: Number(row.lng),
     is_verified: Boolean(row.is_verified),
+    review_status: String(row.review_status ?? "PENDING"),
   }));
 }
 

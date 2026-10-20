@@ -1,4 +1,13 @@
+import type { NextFunction, Request, RequestHandler, Response } from "express";
 import { env } from "./env.js";
+
+export function asyncHandler(
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
+): RequestHandler {
+  return (req, res, next) => {
+    void fn(req, res, next).catch(next);
+  };
+}
 
 export class HttpError extends Error {
   readonly status: number;

@@ -59,10 +59,12 @@ export async function ingestHazardReport(
   `;
 
   // Same-category incidents within 15 m (geography → metres).
+  // Rejected field reviews must not count toward community corroboration.
   const nearby = await prisma.$queryRaw<NearbyRow[]>`
     SELECT id::text AS id
     FROM incidents
     WHERE category = ${input.category}::"HazardCategory"
+      AND COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
       AND ST_DWithin(
         location::geography,
         ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography,

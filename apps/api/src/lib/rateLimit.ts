@@ -18,7 +18,9 @@ export function rateLimit(
     }
     if (current.count >= max) {
       res.status(429).json({
-        error: "Too many reports from this connection. Wait a minute, then try again.",
+        error: req.path.startsWith("/api/v1/admin")
+          ? "Too many admin requests from this connection. Wait a minute, then try again."
+          : "Too many reports from this connection. Wait a minute, then try again.",
       });
       return;
     }

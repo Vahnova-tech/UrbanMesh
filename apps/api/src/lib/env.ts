@@ -46,13 +46,34 @@ export const env = {
 
   webDist: process.env.WEB_DIST ?? "",
   dashboardDist: process.env.DASHBOARD_DIST ?? "",
+  adminDist: process.env.ADMIN_DIST ?? "",
+
+  /**
+   * Bearer token for /api/v1/admin/*.
+   * Local default is only allowed when NODE_ENV !== "production".
+   */
+  adminApiToken: process.env.ADMIN_API_TOKEN ?? "",
 
   corsOrigins: csvEnv(
     process.env.CORS_ORIGINS,
     process.env.RENDER_EXTERNAL_URL,
     "http://localhost:5173",
     "http://localhost:5174",
+    "http://localhost:5175",
   ),
 
   nodeEnv: process.env.NODE_ENV ?? "development",
 };
+
+export const DEV_ADMIN_TOKEN = "urbanmesh-admin-dev";
+
+export function resolveAdminToken(): string {
+  const configured = env.adminApiToken.trim();
+  if (configured) return configured;
+  if (env.nodeEnv === "production") {
+    throw new Error(
+      "ADMIN_API_TOKEN is required in production. Set a strong secret before starting the API.",
+    );
+  }
+  return DEV_ADMIN_TOKEN;
+}

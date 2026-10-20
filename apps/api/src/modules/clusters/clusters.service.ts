@@ -50,6 +50,7 @@ export async function listVerifiedClusters(options?: {
         FROM incidents
         WHERE is_verified = true
           AND cluster_id IS NOT NULL
+          AND COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
           AND cluster_id IN (${Prisma.join(ids.map((id) => Prisma.sql`${id}::uuid`))})
         GROUP BY cluster_id
         HAVING COUNT(*) >= ${env.clusterThreshold}
@@ -69,6 +70,7 @@ export async function listVerifiedClusters(options?: {
         FROM incidents
         WHERE is_verified = true
           AND cluster_id IS NOT NULL
+          AND COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
         GROUP BY cluster_id
         HAVING COUNT(*) >= ${env.clusterThreshold}
         ORDER BY COUNT(*) DESC, cluster_id

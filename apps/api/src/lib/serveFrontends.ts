@@ -15,6 +15,10 @@ export function mountFrontends(app: Express) {
     env.dashboardDist && existsSync(path.join(env.dashboardDist, "index.html"))
       ? env.dashboardDist
       : null;
+  const adminDist =
+    env.adminDist && existsSync(path.join(env.adminDist, "index.html"))
+      ? env.adminDist
+      : null;
   const webDist =
     env.webDist && existsSync(path.join(env.webDist, "index.html"))
       ? env.webDist
@@ -26,6 +30,14 @@ export function mountFrontends(app: Express) {
       express.static(dashboardDist, { index: false, fallthrough: true }),
     );
     app.get(/^\/planner(?:\/.*)?$/, sendIndex(dashboardDist));
+  }
+
+  if (adminDist) {
+    app.use(
+      "/admin",
+      express.static(adminDist, { index: false, fallthrough: true }),
+    );
+    app.get(/^\/admin(?:\/.*)?$/, sendIndex(adminDist));
   }
 
   if (webDist) {
@@ -40,6 +52,7 @@ export function mountFrontends(app: Express) {
         url.startsWith("/api") ||
         url.startsWith("/uploads") ||
         url.startsWith("/planner") ||
+        url.startsWith("/admin") ||
         url === "/health"
       ) {
         next();

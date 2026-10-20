@@ -7,6 +7,8 @@
     "build:web": "npm run build --prefix apps/web",
     "dev:dashboard": "npm run dev --prefix apps/dashboard",
     "build:dashboard": "npm run build --prefix apps/dashboard",
+    "dev:admin": "npm run dev --prefix apps/admin",
+    "build:admin": "npm run build --prefix apps/admin",
     "dev:api": "npm run dev --prefix apps/api"
   }
 }

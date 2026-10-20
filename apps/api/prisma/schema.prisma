@@ -24,6 +24,13 @@ enum HazardCategory {
   ILLEGAL_WASTE_DUMP
 }
 
+/// Admin field-review outcome (separate from spatial community corroboration).
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Incident {
   id          String         @id @default(uuid()) @db.Uuid
   category    HazardCategory
@@ -38,8 +45,13 @@ model Incident {
   clusterId   String?        @map("cluster_id") @db.Uuid
   /// Reserved for future PWA photo upload (URL or object key)
   photoUrl    String?        @map("photo_url")
+  /// Field moderation: pending review, approved, or rejected (hidden from public feed)
+  reviewStatus ReviewStatus  @default(PENDING) @map("review_status")
+  reviewedAt  DateTime?      @map("reviewed_at")
+  reviewNote  String?        @map("review_note")
   createdAt   DateTime       @default(now()) @map("created_at")
 
   @@index([h3Index])
+  @@index([reviewStatus])
   @@map("incidents")
 }

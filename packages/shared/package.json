@@ -1,0 +1,10 @@
+{
+  "name": "@urbanmesh/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    "./format": "./src/format.ts"
+  },
+  "files": ["src"]
+}

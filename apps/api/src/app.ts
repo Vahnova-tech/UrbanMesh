@@ -12,6 +12,7 @@ import { lpdpRouter } from "./modules/reports/lpdp.routes.js";
 import { clustersRouter } from "./modules/clusters/clusters.routes.js";
 import { uploadsRouter } from "./modules/uploads/uploads.routes.js";
 import { metaRouter } from "./modules/meta/meta.routes.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
 import { mountFrontends } from "./lib/serveFrontends.js";
 
 export function createApp() {
@@ -28,7 +29,10 @@ export function createApp() {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
       res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
-      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+      res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization",
+      );
     }
     if (req.method === "OPTIONS") {
       res.status(204).end();
@@ -59,6 +63,7 @@ export function createApp() {
   app.use("/api/v1/dashboard", dashboardRouter);
   app.use("/api/v1/lpdp", lpdpRouter);
   app.use("/api/v1/uploads", uploadsRouter);
+  app.use("/api/v1/admin", adminRouter);
 
   app.use("/api", (_req: Request, res: Response) => {
     res.status(404).json({ error: "That UrbanMesh endpoint does not exist." });
