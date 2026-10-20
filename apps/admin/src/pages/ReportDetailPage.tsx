@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { EvidencePhoto } from "../components/EvidencePhoto";
 import { MiniMap } from "../components/MiniMap";
 import { ReportActions } from "../components/ReportActions";
 import {
   fetchAdminDetail,
-  photoSrc,
   type AdminAuditEntry,
   type AdminDetailResponse,
   type AdminIncident,
@@ -59,8 +59,6 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
 
   if (!data) return null;
   const { incident, nearby, cluster_members, audit, rules } = data;
-  const photo = photoSrc(incident.photo_url);
-
   return (
     <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
       <div className="mx-auto max-w-6xl">
@@ -137,17 +135,10 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
             <h3 className="text-sm font-semibold text-civic-ink">
               Evidence & location
             </h3>
-            {photo ? (
-              <img
-                src={photo}
-                alt=""
-                className="max-h-80 w-full rounded-card border border-civic-line object-cover"
-              />
-            ) : (
-              <p className="rounded-card border border-dashed border-civic-line px-4 py-10 text-center text-sm text-civic-muted">
-                No photo attached
-              </p>
-            )}
+            <EvidencePhoto
+              url={incident.photo_url}
+              className="max-h-80 w-full rounded-card border border-civic-line object-cover"
+            />
             <MiniMap
               lat={incident.lat}
               lng={incident.lng}

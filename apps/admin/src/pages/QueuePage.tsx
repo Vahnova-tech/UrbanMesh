@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ReportActions } from "../components/ReportActions";
+import { EvidencePhoto } from "../components/EvidencePhoto";
 import {
   fetchAdminReports,
-  photoSrc,
   type AdminIncident,
   type ReviewStatus,
 } from "../lib/api";
@@ -205,8 +205,6 @@ function QueueDetail({
   onError: (msg: string) => void;
   onAuthFail: () => void;
 }) {
-  const photo = photoSrc(incident.photo_url);
-
   return (
     <div className="p-4 lg:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -293,17 +291,9 @@ function QueueDetail({
         />
       </dl>
 
-      {photo ? (
-        <img
-          src={photo}
-          alt=""
-          className="mt-5 max-h-72 w-full rounded-card border border-civic-line object-cover"
-        />
-      ) : (
-        <p className="mt-5 rounded-card border border-dashed border-civic-line px-4 py-8 text-center text-sm text-civic-muted">
-          No photo attached
-        </p>
-      )}
+      <div className="mt-5">
+        <EvidencePhoto url={incident.photo_url} />
+      </div>
     </div>
   );
 }
