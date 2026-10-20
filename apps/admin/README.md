@@ -29,6 +29,16 @@ npm install --prefix apps/admin
 npm run dev:admin   # http://localhost:5175
 ```
 
+## Vercel
+
+Use a **separate** Vercel project from the citizen PWA:
+
+1. **Root Directory** = `apps/admin`
+2. Clear Install / Build **overrides** (use `apps/admin/vercel.json`)
+3. Redeploy
+
+`vercel.json` builds `@urbanmesh/admin` into `dist` (not `apps/web`).
+
 ## Navigation
 
 Overview · Reports map · Review queue · All reports · Disproved · Deleted/archived · Resolved · Analytics · PDF (planner pipeline) · Audit logs · Users (token auth today) · Settings (read-only thresholds)

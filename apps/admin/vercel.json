@@ -1,9 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": "vite",
-  "installCommand": "sh ../../scripts/vercel-citizen-install.sh",
-  "buildCommand": "sh ../../scripts/vercel-citizen-build.sh",
-  "outputDirectory": "../web/dist",
+  "installCommand": "sh ../../scripts/vercel-admin-install.sh",
+  "buildCommand": "sh ../../scripts/vercel-admin-build.sh",
+  "outputDirectory": "dist",
   "env": {
     "API_ORIGIN": "https://urbanmesh-vitx.onrender.com"
   },
@@ -17,7 +17,7 @@
       "destination": "https://urbanmesh-vitx.onrender.com/uploads/:path*"
     },
     {
-      "source": "/((?!assets/|icons/|api/|uploads/|sw\\.js|manifest\\.webmanifest|favicon\\.svg).*)",
+      "source": "/((?!assets/|icons/|api/|uploads/|favicon\\.svg).*)",
       "destination": "/index.html"
     }
   ]
