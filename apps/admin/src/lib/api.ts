@@ -239,8 +239,44 @@ export async function runAdminAction(
   );
 }
 
+const PHOTO_PATH =
+  /^\/uploads\/photos\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp)$/i;
+
+/**
+ * Resolve a stored photo_url to a browser src.
+ * Always uses a same-origin `/uploads/photos/…` path when possible so Vercel
+ * rewrites (or Vite proxy) hit the API — never open a bare filename.
+ */
 export function photoSrc(url: string | null): string | null {
   if (!url) return null;
-  if (/^https?:\/\//i.test(url)) return url;
-  return `${API_BASE}${url.startsWith("/") ? url : `/${url}`}`;
+  let pathName = url.trim();
+  if (/^https?:\/\//i.test(pathName)) {
+    try {
+      pathName = new URL(pathName).pathname;
+    } catch {
+      return null;
+    }
+  }
+  // Bare uuid.ext from bad clients / older rows
+  if (/^[0-9a-f-]{36}\.(jpg|jpeg|png|webp)$/i.test(pathName)) {
+    pathName = `/uploads/photos/${pathName}`;
+  }
+  if (!pathName.startsWith("/")) pathName = `/${pathName}`;
+  const clean = pathName.split("?")[0];
+  if (!PHOTO_PATH.test(clean)) return null;
+  return `${API_BASE}${clean}`;
+}
+
+/** Path only — useful for admin diagnostics when the file 404s. */
+export function photoPath(url: string | null): string | null {
+  const src = photoSrc(url);
+  if (!src) return null;
+  if (/^https?:\/\//i.test(src)) {
+    try {
+      return new URL(src).pathname;
+    } catch {
+      return null;
+    }
+  }
+  return src.split("?")[0];
 }
