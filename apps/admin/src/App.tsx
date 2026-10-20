@@ -2,12 +2,18 @@ import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AdminShell } from "./components/AdminShell";
 import { clearAdminToken, loadAdminToken, saveAdminToken } from "./lib/auth";
-import { verifySession } from "./lib/api";
+import { fetchDashboard, verifySession } from "./lib/api";
+import { AnalyticsPage } from "./pages/AnalyticsPage";
+import { AuditLogsPage } from "./pages/AuditLogsPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { MapPage } from "./pages/MapPage";
+import { PdfReportsPage } from "./pages/PdfReportsPage";
 import { QueuePage } from "./pages/QueuePage";
 import { ReportDetailPage } from "./pages/ReportDetailPage";
+import { ReportsListPage } from "./pages/ReportsListPage";
+import { SettingsPage } from "./pages/SettingsPage";
+import { UsersPage } from "./pages/UsersPage";
 
 const basename =
   import.meta.env.BASE_URL === "/"
@@ -17,6 +23,7 @@ const basename =
 export default function App() {
   const [ready, setReady] = useState(false);
   const [authed, setAuthed] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,10 +36,18 @@ export default function App() {
         }
         return;
       }
-      const ok = await verifySession();
+      const session = await verifySession();
       if (!cancelled) {
-        setAuthed(ok);
+        setAuthed(session.ok);
         setReady(true);
+      }
+      if (session.ok) {
+        try {
+          const dash = await fetchDashboard();
+          if (!cancelled) setPendingCount(dash.pending_review);
+        } catch {
+          /* ignore badge errors */
+        }
       }
     }
     void boot();
@@ -44,11 +59,15 @@ export default function App() {
   function onLogin(token: string) {
     saveAdminToken(token);
     setAuthed(true);
+    void fetchDashboard()
+      .then((d) => setPendingCount(d.pending_review))
+      .catch(() => undefined);
   }
 
   function onLogout() {
     clearAdminToken();
     setAuthed(false);
+    setPendingCount(0);
   }
 
   if (!ready) {
@@ -75,7 +94,7 @@ export default function App() {
         <Route
           element={
             authed ? (
-              <AdminShell onLogout={onLogout} />
+              <AdminShell onLogout={onLogout} pendingCount={pendingCount} />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -85,11 +104,69 @@ export default function App() {
           <Route path="/queue" element={<QueuePage onLogout={onLogout} />} />
           <Route path="/map" element={<MapPage onLogout={onLogout} />} />
           <Route
+            path="/reports"
+            element={
+              <ReportsListPage
+                title="All reports"
+                subtitle="Search, filter, and open any hazard report."
+                defaultReview="all"
+                onLogout={onLogout}
+              />
+            }
+          />
+          <Route
+            path="/reports/disproved"
+            element={
+              <ReportsListPage
+                title="Disproved reports"
+                subtitle="Claims marked disproved after authorized review. Excluded from public hazard views."
+                defaultReview="disproved"
+                onLogout={onLogout}
+              />
+            }
+          />
+          <Route
+            path="/reports/archived"
+            element={
+              <ReportsListPage
+                title="Deleted / archived"
+                subtitle="Soft-deleted records retained for audit and restore."
+                defaultReview="archived"
+                onLogout={onLogout}
+              />
+            }
+          />
+          <Route
+            path="/reports/resolved"
+            element={
+              <ReportsListPage
+                title="Resolved issues"
+                subtitle="Hazards marked resolved with supporting notes."
+                defaultReview="resolved"
+                onLogout={onLogout}
+              />
+            }
+          />
+          <Route
             path="/reports/:id"
             element={<ReportDetailPage onLogout={onLogout} />}
           />
+          <Route
+            path="/analytics"
+            element={<AnalyticsPage onLogout={onLogout} />}
+          />
+          <Route path="/pdf" element={<PdfReportsPage />} />
+          <Route
+            path="/audit"
+            element={<AuditLogsPage onLogout={onLogout} />}
+          />
+          <Route path="/users" element={<UsersPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
-        <Route path="*" element={<Navigate to={authed ? "/" : "/login"} replace />} />
+        <Route
+          path="*"
+          element={<Navigate to={authed ? "/" : "/login"} replace />}
+        />
       </Routes>
     </BrowserRouter>
   );

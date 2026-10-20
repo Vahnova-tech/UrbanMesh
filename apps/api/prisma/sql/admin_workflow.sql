@@ -14,6 +14,19 @@ DO $$ BEGIN
   ALTER TYPE "ReviewStatus" ADD VALUE IF NOT EXISTS 'ARCHIVED';
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+DO $$ BEGIN
+  ALTER TYPE "ReviewStatus" ADD VALUE IF NOT EXISTS 'DISPROVED';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+DO $$ BEGIN
+  ALTER TYPE "ReviewStatus" ADD VALUE IF NOT EXISTS 'UNDER_REVIEW';
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Prefer DISPROVED for prior "reject / remove" moderation decisions
+UPDATE incidents
+SET review_status = 'DISPROVED'
+WHERE review_status = 'REJECTED';
 
 ALTER TABLE incidents
   ADD COLUMN IF NOT EXISTS field_verified BOOLEAN NOT NULL DEFAULT false,

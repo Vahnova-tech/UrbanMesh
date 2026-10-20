@@ -5,6 +5,7 @@ import { haversineMeters } from "../../lib/geo.js";
 import { wardForCoordinates } from "../../lib/wards.js";
 import { env } from "../../lib/env.js";
 import { HttpError, isUuid } from "../../lib/httpError.js";
+import { resolveDisproveReason } from "./disproveReasons.js";
 
 export type ReviewStatus =
   | "pending"
@@ -12,15 +13,20 @@ export type ReviewStatus =
   | "rejected"
   | "flagged"
   | "resolved"
-  | "archived";
+  | "archived"
+  | "disproved"
+  | "under_review";
 
 export type AdminAction =
   | "approve_field"
+  | "disprove"
   | "reject"
   | "flag"
+  | "under_review"
   | "resolve"
   | "reopen"
   | "archive"
+  | "delete"
   | "restore"
   | "merge_duplicate"
   | "reset_queue"
@@ -72,12 +78,18 @@ export interface DashboardStats {
   pending_review: number;
   community_supported: number;
   field_verified: number;
+  awaiting_field_inspection: number;
+  disproved: number;
   resolved: number;
   flagged: number;
   rejected: number;
   archived: number;
+  under_review: number;
+  cluster_threshold: number;
+  cluster_radius_meters: number;
   by_category: { category: string; label: string; count: number }[];
   recent_actions: AdminAuditEntry[];
+  recent_reports: AdminIncident[];
 }
 
 interface AdminRow {
@@ -108,6 +120,8 @@ const REVIEW_STATUSES: ReviewStatus[] = [
   "flagged",
   "resolved",
   "archived",
+  "disproved",
+  "under_review",
 ];
 
 function toReviewStatus(raw: string): ReviewStatus {
@@ -224,13 +238,27 @@ async function loadAdminRows(): Promise<AdminRow[]> {
   }));
 }
 
+/** Eligible nearby for corroboration — excludes disproved/archived/rejected. */
+function eligibleForCorroboration(row: AdminRow): boolean {
+  const status = toReviewStatus(row.review_status);
+  return (
+    status !== "disproved" &&
+    status !== "archived" &&
+    status !== "rejected"
+  );
+}
+
 function withNearby(rows: AdminRow[]): AdminIncident[] {
   const radius = env.clusterRadiusMeters;
   return rows.map((row) => {
+    if (!eligibleForCorroboration(row)) {
+      return toAdmin(row, 0);
+    }
     const nearby = rows.filter(
       (other) =>
         other.id !== row.id &&
         other.category === row.category &&
+        eligibleForCorroboration(other) &&
         haversineMeters(row.lat, row.lng, other.lat, other.lng) <= radius,
     ).length;
     return toAdmin(row, nearby + 1);
@@ -246,13 +274,52 @@ async function getRow(id: string): Promise<AdminIncident> {
   return row;
 }
 
+/**
+ * After disprove/delete: drop this report from community corroboration and
+ * loosen any cluster that falls below threshold.
+ */
+async function stripFromCorroboration(id: string, previousClusterId: string | null) {
+  await prisma.$executeRaw`
+    UPDATE incidents SET
+      is_verified = false,
+      cluster_id = NULL
+    WHERE id = CAST(${id} AS uuid)
+  `;
+
+  if (!previousClusterId) return;
+
+  const remaining = await prisma.$queryRaw<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count
+    FROM incidents
+    WHERE cluster_id = CAST(${previousClusterId} AS uuid)
+      AND COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED', 'DISPROVED')
+  `;
+  const count = Number(remaining[0]?.count ?? 0);
+  if (count < env.clusterThreshold) {
+    await prisma.$executeRaw`
+      UPDATE incidents SET
+        is_verified = false,
+        cluster_id = NULL
+      WHERE cluster_id = CAST(${previousClusterId} AS uuid)
+        AND COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED', 'DISPROVED')
+    `;
+  }
+}
+
 export async function listAdminReports(query: {
   review?: ReviewStatus | "all" | "queue";
   category?: string;
   q?: string;
+  field?: "any" | "verified" | "unverified";
+  community?: "any" | "supported" | "pending";
+  sort?: "created_desc" | "created_asc" | "updated_desc";
   limit?: number;
+  offset?: number;
 }): Promise<{
   count: number;
+  total_matching: number;
+  offset: number;
+  limit: number;
   summary: Record<ReviewStatus, number> & {
     community_supported: number;
     field_verified: number;
@@ -268,6 +335,8 @@ export async function listAdminReports(query: {
     flagged: all.filter((i) => i.review_status === "flagged").length,
     resolved: all.filter((i) => i.review_status === "resolved").length,
     archived: all.filter((i) => i.review_status === "archived").length,
+    disproved: all.filter((i) => i.review_status === "disproved").length,
+    under_review: all.filter((i) => i.review_status === "under_review").length,
     community_supported: all.filter((i) => i.community_supported).length,
     field_verified: all.filter((i) => i.field_verified).length,
   };
@@ -275,13 +344,26 @@ export async function listAdminReports(query: {
   let incidents = all;
   if (query.review === "queue") {
     incidents = incidents.filter(
-      (i) => i.review_status === "pending" || i.review_status === "flagged",
+      (i) =>
+        i.review_status === "pending" ||
+        i.review_status === "flagged" ||
+        i.review_status === "under_review",
     );
   } else if (query.review && query.review !== "all") {
     incidents = incidents.filter((i) => i.review_status === query.review);
   }
   if (query.category && query.category !== "all") {
     incidents = incidents.filter((i) => i.category === query.category);
+  }
+  if (query.field === "verified") {
+    incidents = incidents.filter((i) => i.field_verified);
+  } else if (query.field === "unverified") {
+    incidents = incidents.filter((i) => !i.field_verified);
+  }
+  if (query.community === "supported") {
+    incidents = incidents.filter((i) => i.community_supported);
+  } else if (query.community === "pending") {
+    incidents = incidents.filter((i) => !i.community_supported);
   }
   if (query.q?.trim()) {
     const needle = query.q.trim().toLowerCase();
@@ -293,8 +375,30 @@ export async function listAdminReports(query: {
     );
   }
 
-  const limit = query.limit && query.limit > 0 ? query.limit : 500;
-  return { count: incidents.length, summary, incidents: incidents.slice(0, limit) };
+  if (query.sort === "created_asc") {
+    incidents = [...incidents].sort((a, b) =>
+      a.created_at.localeCompare(b.created_at),
+    );
+  } else if (query.sort === "updated_desc") {
+    incidents = [...incidents].sort((a, b) => {
+      const aT = a.reviewed_at ?? a.created_at;
+      const bT = b.reviewed_at ?? b.created_at;
+      return bT.localeCompare(aT);
+    });
+  }
+
+  const total_matching = incidents.length;
+  const limit = query.limit && query.limit > 0 ? Math.min(query.limit, 500) : 100;
+  const offset = query.offset && query.offset > 0 ? query.offset : 0;
+
+  return {
+    count: Math.min(limit, Math.max(0, total_matching - offset)),
+    total_matching,
+    offset,
+    limit,
+    summary,
+    incidents: incidents.slice(offset, offset + limit),
+  };
 }
 
 export async function getAdminReportDetail(id: string): Promise<{
@@ -302,6 +406,10 @@ export async function getAdminReportDetail(id: string): Promise<{
   nearby: AdminIncident[];
   cluster_members: AdminIncident[];
   audit: AdminAuditEntry[];
+  rules: {
+    cluster_threshold: number;
+    cluster_radius_meters: number;
+  };
 }> {
   const all = withNearby(await loadAdminRows());
   const incident = all.find((i) => i.id === id);
@@ -312,6 +420,9 @@ export async function getAdminReportDetail(id: string): Promise<{
       (other) =>
         other.id !== incident.id &&
         other.category === incident.category &&
+        other.review_status !== "disproved" &&
+        other.review_status !== "archived" &&
+        other.review_status !== "rejected" &&
         haversineMeters(
           incident.lat,
           incident.lng,
@@ -328,7 +439,16 @@ export async function getAdminReportDetail(id: string): Promise<{
     : [];
 
   const audit = await listAuditForIncident(id);
-  return { incident, nearby, cluster_members, audit };
+  return {
+    incident,
+    nearby,
+    cluster_members,
+    audit,
+    rules: {
+      cluster_threshold: env.clusterThreshold,
+      cluster_radius_meters: env.clusterRadiusMeters,
+    },
+  };
 }
 
 export async function listAuditForIncident(
@@ -360,28 +480,11 @@ export async function listAuditForIncident(
     ORDER BY created_at DESC
     LIMIT 100
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    incident_id: row.incident_id,
-    action: row.action,
-    actor: row.actor,
-    reason: row.reason,
-    before_json: row.before_json,
-    after_json: row.after_json,
-    created_at: new Date(row.created_at).toISOString(),
-  }));
+  return rows.map(mapAudit);
 }
 
-export async function getDashboardStats(): Promise<DashboardStats> {
-  const { summary, incidents } = await listAdminReports({
-    review: "all",
-    limit: 5000,
-  });
-  const byCat = new Map<string, number>();
-  for (const row of incidents) {
-    byCat.set(row.category, (byCat.get(row.category) ?? 0) + 1);
-  }
-  const recent = await prisma.$queryRaw<
+export async function listGlobalAudit(limit = 100): Promise<AdminAuditEntry[]> {
+  const rows = await prisma.$queryRaw<
     {
       id: string;
       incident_id: string | null;
@@ -404,33 +507,75 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       created_at
     FROM admin_audit_logs
     ORDER BY created_at DESC
-    LIMIT 12
+    LIMIT ${Math.min(Math.max(limit, 1), 500)}
   `;
+  return rows.map(mapAudit);
+}
+
+function mapAudit(row: {
+  id: string;
+  incident_id: string | null;
+  action: string;
+  actor: string;
+  reason: string | null;
+  before_json: string | null;
+  after_json: string | null;
+  created_at: Date;
+}): AdminAuditEntry {
+  return {
+    id: row.id,
+    incident_id: row.incident_id,
+    action: row.action,
+    actor: row.actor,
+    reason: row.reason,
+    before_json: row.before_json,
+    after_json: row.after_json,
+    created_at: new Date(row.created_at).toISOString(),
+  };
+}
+
+export async function getDashboardStats(): Promise<DashboardStats> {
+  const { summary, incidents } = await listAdminReports({
+    review: "all",
+    limit: 5000,
+  });
+  const byCat = new Map<string, number>();
+  for (const row of incidents) {
+    byCat.set(row.category, (byCat.get(row.category) ?? 0) + 1);
+  }
+  const recent = await listGlobalAudit(12);
+
+  const awaiting_field_inspection = incidents.filter(
+    (i) =>
+      !i.field_verified &&
+      i.review_status !== "disproved" &&
+      i.review_status !== "archived" &&
+      i.review_status !== "rejected" &&
+      i.review_status !== "resolved",
+  ).length;
 
   return {
     total: incidents.length,
-    pending_review: summary.pending + summary.flagged,
+    pending_review:
+      summary.pending + summary.flagged + summary.under_review,
     community_supported: summary.community_supported,
     field_verified: summary.field_verified,
+    awaiting_field_inspection,
+    disproved: summary.disproved + summary.rejected,
     resolved: summary.resolved,
     flagged: summary.flagged,
     rejected: summary.rejected,
     archived: summary.archived,
+    under_review: summary.under_review,
+    cluster_threshold: env.clusterThreshold,
+    cluster_radius_meters: env.clusterRadiusMeters,
     by_category: [...byCat.entries()].map(([category, count]) => ({
       category,
       label: labelForCategory(category),
       count,
     })),
-    recent_actions: recent.map((row) => ({
-      id: row.id,
-      incident_id: row.incident_id,
-      action: row.action,
-      actor: row.actor,
-      reason: row.reason,
-      before_json: row.before_json,
-      after_json: row.after_json,
-      created_at: new Date(row.created_at).toISOString(),
-    })),
+    recent_actions: recent,
+    recent_reports: incidents.slice(0, 8),
   };
 }
 
@@ -440,6 +585,7 @@ export async function applyAdminAction(
   input: {
     reason?: string | null;
     note?: string | null;
+    reasonCode?: string | null;
     category?: string;
     duplicateOfId?: string;
   } = {},
@@ -469,22 +615,63 @@ export async function applyAdminAction(
       });
       break;
     }
+    case "disprove":
     case "reject": {
-      const reason = requireReason(input.reason ?? input.note, "reject this report");
+      let auditReason: string;
+      try {
+        if (input.reasonCode || action === "disprove") {
+          const resolved = resolveDisproveReason(
+            input.reasonCode ?? input.reason,
+            input.note,
+          );
+          auditReason = resolved.auditReason;
+        } else {
+          auditReason = requireReason(
+            input.reason ?? input.note,
+            "disprove this report",
+          );
+        }
+      } catch (err) {
+        throw new HttpError(
+          400,
+          err instanceof Error ? err.message : "Invalid disprove reason.",
+        );
+      }
+
       await prisma.$executeRaw`
         UPDATE incidents SET
-          review_status = CAST('REJECTED' AS "ReviewStatus"),
+          review_status = CAST('DISPROVED' AS "ReviewStatus"),
           reviewed_at = NOW(),
-          review_note = ${reason},
+          review_note = ${auditReason},
           field_verified = false,
           field_verified_at = NULL
+        WHERE id = CAST(${id} AS uuid)
+      `;
+      await stripFromCorroboration(id, before.cluster_id);
+      after = await getRow(id);
+      await writeAudit({
+        incidentId: id,
+        action: "disprove",
+        reason: auditReason,
+        before,
+        after,
+      });
+      break;
+    }
+    case "under_review": {
+      const note = input.note?.trim() || input.reason?.trim() || "Marked under review";
+      await prisma.$executeRaw`
+        UPDATE incidents SET
+          review_status = CAST('UNDER_REVIEW' AS "ReviewStatus"),
+          reviewed_at = NOW(),
+          review_note = ${note}
         WHERE id = CAST(${id} AS uuid)
       `;
       after = await getRow(id);
       await writeAudit({
         incidentId: id,
-        action: "reject",
-        reason,
+        action: "under_review",
+        reason: note,
         before,
         after,
       });
@@ -554,8 +741,12 @@ export async function applyAdminAction(
       });
       break;
     }
-    case "archive": {
-      const reason = requireReason(input.reason ?? input.note, "archive this report");
+    case "archive":
+    case "delete": {
+      const reason = requireReason(
+        input.reason ?? input.note,
+        action === "delete" ? "delete this report" : "archive this report",
+      );
       await prisma.$executeRaw`
         UPDATE incidents SET
           review_status = CAST('ARCHIVED' AS "ReviewStatus"),
@@ -563,10 +754,11 @@ export async function applyAdminAction(
           review_note = ${reason}
         WHERE id = CAST(${id} AS uuid)
       `;
+      await stripFromCorroboration(id, before.cluster_id);
       after = await getRow(id);
       await writeAudit({
         incidentId: id,
-        action: "archive",
+        action: action === "delete" ? "delete" : "archive",
         reason,
         before,
         after,
@@ -633,6 +825,7 @@ export async function applyAdminAction(
           review_note = ${reason}
         WHERE id = CAST(${id} AS uuid)
       `;
+      await stripFromCorroboration(id, before.cluster_id);
       after = await getRow(id);
       await writeAudit({
         incidentId: id,
@@ -684,7 +877,10 @@ export async function setReviewStatus(
     return applyAdminAction(id, "approve_field", { note });
   }
   if (status === "REJECTED") {
-    return applyAdminAction(id, "reject", { reason: note });
+    return applyAdminAction(id, "disprove", {
+      reasonCode: "other",
+      note: note ?? "Rejected via legacy endpoint",
+    });
   }
   return applyAdminAction(id, "reset_queue", { reason: note });
 }

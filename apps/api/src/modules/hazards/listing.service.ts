@@ -90,7 +90,7 @@ async function loadIncidentRows(): Promise<IncidentRow[]> {
       photo_url,
       created_at
     FROM incidents
-    WHERE COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED')
+    WHERE COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED', 'DISPROVED')
     ORDER BY created_at DESC
   `;
 

@@ -25,6 +25,8 @@ export function QueuePage({ onLogout }: { onLogout: () => void }) {
     flagged: 0,
     resolved: 0,
     archived: 0,
+    disproved: 0,
+    under_review: 0,
     community_supported: 0,
     field_verified: 0,
   });
@@ -36,7 +38,13 @@ export function QueuePage({ onLogout }: { onLogout: () => void }) {
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchAdminReports({ review: filter, category, q });
+      const data = await fetchAdminReports({
+        review: filter,
+        category,
+        q,
+        limit: 200,
+        offset: 0,
+      });
       setItems(data.incidents);
       setSummary(data.summary);
       setSelected((prev) => {
@@ -63,9 +71,12 @@ export function QueuePage({ onLogout }: { onLogout: () => void }) {
     <div className="mx-auto flex h-full min-h-0 max-w-6xl flex-col gap-4 px-4 py-4 lg:flex-row lg:px-6">
       <aside className="flex w-full shrink-0 flex-col lg:w-[380px]">
         <div className="mb-3 grid grid-cols-3 gap-2">
-          <Stat label="Queue" value={summary.pending + summary.flagged} />
+          <Stat
+            label="Queue"
+            value={summary.pending + summary.flagged + summary.under_review}
+          />
           <Stat label="Field OK" value={summary.field_verified} />
-          <Stat label="Resolved" value={summary.resolved} />
+          <Stat label="Disproved" value={summary.disproved + summary.rejected} />
         </div>
 
         <div
@@ -76,11 +87,12 @@ export function QueuePage({ onLogout }: { onLogout: () => void }) {
           {(
             [
               { id: "queue", label: "Queue" },
+              { id: "under_review", label: "In review" },
               { id: "flagged", label: "Flagged" },
               { id: "approved", label: "Verified" },
               { id: "resolved", label: "Resolved" },
-              { id: "rejected", label: "Rejected" },
-              { id: "archived", label: "Archived" },
+              { id: "disproved", label: "Disproved" },
+              { id: "archived", label: "Deleted" },
               { id: "all", label: "All" },
             ] as const
           ).map((opt) => (
@@ -260,8 +272,8 @@ function QueueDetail({
       </div>
 
       <p className="mt-3 text-xs leading-relaxed text-civic-muted">
-        Remove / archive take the report off the public map. Field verification does not
-        replace the ≥3 / 15 m community corroboration rule.
+        Disprove invalidates a claim; Delete archives the record. Both leave the public
+        map. Field inspection does not replace the ≥3 / 15 m corroboration rule.
       </p>
 
       <p className="mt-4 text-sm leading-relaxed text-civic-slate">

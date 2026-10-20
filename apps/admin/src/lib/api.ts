@@ -8,15 +8,20 @@ export type ReviewStatus =
   | "rejected"
   | "flagged"
   | "resolved"
-  | "archived";
+  | "archived"
+  | "disproved"
+  | "under_review";
 
 export type AdminAction =
   | "approve_field"
+  | "disprove"
   | "reject"
   | "flag"
+  | "under_review"
   | "resolve"
   | "reopen"
   | "archive"
+  | "delete"
   | "restore"
   | "merge_duplicate"
   | "reset_queue"
@@ -60,6 +65,9 @@ export interface AdminAuditEntry {
 
 export interface AdminListResponse {
   count: number;
+  total_matching: number;
+  offset: number;
+  limit: number;
   summary: Record<ReviewStatus, number> & {
     community_supported: number;
     field_verified: number;
@@ -72,6 +80,10 @@ export interface AdminDetailResponse {
   nearby: AdminIncident[];
   cluster_members: AdminIncident[];
   audit: AdminAuditEntry[];
+  rules: {
+    cluster_threshold: number;
+    cluster_radius_meters: number;
+  };
 }
 
 export interface DashboardStats {
@@ -79,12 +91,49 @@ export interface DashboardStats {
   pending_review: number;
   community_supported: number;
   field_verified: number;
+  awaiting_field_inspection: number;
+  disproved: number;
   resolved: number;
   flagged: number;
   rejected: number;
   archived: number;
+  under_review: number;
+  cluster_threshold: number;
+  cluster_radius_meters: number;
   by_category: { category: string; label: string; count: number }[];
   recent_actions: AdminAuditEntry[];
+  recent_reports: AdminIncident[];
+}
+
+export interface DisproveReason {
+  id: string;
+  label: string;
+  requiresNote: boolean;
+}
+
+export interface PlannerMetrics {
+  generated_at: string;
+  totals: {
+    all: number;
+    verified: number;
+    unverified: number;
+    clusters: number;
+    affected_areas: number;
+  };
+  by_category: {
+    category: string;
+    label: string;
+    count: number;
+    verified: number;
+    unverified: number;
+  }[];
+  by_ward: {
+    ward_id: string;
+    ward_name: string;
+    total: number;
+    verified: number;
+    unverified: number;
+  }[];
 }
 
 async function requestJson<T>(
@@ -113,12 +162,18 @@ async function requestJson<T>(
   return data;
 }
 
-export async function verifySession(): Promise<boolean> {
+export async function verifySession(): Promise<{
+  ok: boolean;
+  disprove_reasons?: DisproveReason[];
+  rules?: {
+    cluster_threshold: number;
+    cluster_radius_meters: number;
+  };
+}> {
   try {
-    await requestJson<{ ok: boolean }>("/api/v1/admin/session");
-    return true;
+    return await requestJson("/api/v1/admin/session");
   } catch {
-    return false;
+    return { ok: false };
   }
 }
 
@@ -130,19 +185,47 @@ export async function fetchAdminReports(params: {
   review?: ReviewStatus | "all" | "queue";
   category?: string;
   q?: string;
+  field?: "any" | "verified" | "unverified";
+  community?: "any" | "supported" | "pending";
+  sort?: "created_desc" | "created_asc" | "updated_desc";
+  limit?: number;
+  offset?: number;
 }): Promise<AdminListResponse> {
   const qs = new URLSearchParams();
-  qs.set("review", params.review ?? "queue");
-  qs.set("limit", "400");
+  qs.set("review", params.review ?? "all");
+  qs.set("limit", String(params.limit ?? 50));
+  qs.set("offset", String(params.offset ?? 0));
+  qs.set("sort", params.sort ?? "created_desc");
   if (params.category && params.category !== "all") {
     qs.set("category", params.category);
   }
   if (params.q?.trim()) qs.set("q", params.q.trim());
+  if (params.field && params.field !== "any") qs.set("field", params.field);
+  if (params.community && params.community !== "any") {
+    qs.set("community", params.community);
+  }
   return requestJson<AdminListResponse>(`/api/v1/admin/reports?${qs}`);
 }
 
 export async function fetchAdminDetail(id: string): Promise<AdminDetailResponse> {
   return requestJson<AdminDetailResponse>(`/api/v1/admin/reports/${id}`);
+}
+
+export async function fetchGlobalAudit(limit = 100) {
+  return requestJson<{ count: number; audit: AdminAuditEntry[] }>(
+    `/api/v1/admin/audit?limit=${limit}`,
+  );
+}
+
+export async function fetchDisproveReasons(): Promise<DisproveReason[]> {
+  const data = await requestJson<{ reasons: DisproveReason[] }>(
+    "/api/v1/admin/disprove-reasons",
+  );
+  return data.reasons;
+}
+
+export async function fetchPlannerMetrics(): Promise<PlannerMetrics> {
+  return requestJson<PlannerMetrics>("/api/v1/dashboard/metrics");
 }
 
 export async function runAdminAction(

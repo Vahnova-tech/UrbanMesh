@@ -28,10 +28,15 @@ enum HazardCategory {
 enum ReviewStatus {
   PENDING
   APPROVED
+  /// @deprecated Prefer DISPROVED for moderated invalid claims
   REJECTED
   FLAGGED
   RESOLVED
   ARCHIVED
+  /// Admin disproved the hazard claim; evidence retained for audit
+  DISPROVED
+  /// Admin actively reviewing (not yet decided)
+  UNDER_REVIEW
 }
 
 model Incident {

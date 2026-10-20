@@ -1,58 +1,47 @@
-# UrbanMesh Admin — field operations
+# UrbanMesh Admin
 
-Action-focused admin for reviewing, verifying, moderating, and resolving hazard reports.
+Production admin for hazard report moderation: review queue, disprove, soft-delete, field inspection, resolution, map, analytics, and audit logs.
 
-**Community-supported ≠ field-verified.** Spatial corroboration (≥3 same-category reports within 15 m) does not prove a hazard was inspected. Field verification is recorded separately and audited.
+**Semantics**
 
-## Capabilities (built)
-
-| Area | Actions |
+| Status | Meaning |
 | --- | --- |
-| Dashboard | Totals, pending queue, community-supported, field-verified, resolved, flagged, category breakdown, recent audit |
-| Review queue | Search, filter, inspect evidence, contextual actions |
-| Report detail | Evidence, map, nearby/cluster, audit history |
-| Map | Geographic browse with status/category filters |
-| Workflow | Verify in field, flag, reject, resolve, reopen, archive, restore, merge duplicate, edit category |
+| Community-supported | Spatial corroboration only (≥N within radius) — **not** field verification |
+| Field-verified (`APPROVED`) | Admin recorded an on-site inspection |
+| Disproved | Claim invalidated after review; evidence retained; excluded from public maps/clusters |
+| Deleted / archived | Soft-deleted; recoverable; excluded from public views |
+| Resolved | Issue addressed with a resolution note |
 
-Reasons are required for reject, flag, archive, merge, resolve, and category edits. Destructive actions use confirmation dialogs. Consequential actions write to `admin_audit_logs`.
+Disprove ≠ delete. Lack of corroboration alone is not grounds to disprove.
 
 ## Setup
 
-1. Apply schema (once):
-
 ```bash
-psql "$DATABASE_URL" -f apps/api/prisma/sql/admin_workflow.sql
-# or from apps/api:
-npx prisma db push
-```
+# Schema (includes DISPROVED / UNDER_REVIEW)
+psql "$DATABASE_URL" -f apps/api/prisma/sql/add_disproved_status.sql
+# or
+cd apps/api && npx prisma db push
 
-2. Set `ADMIN_API_TOKEN` in `apps/api/.env`. Production **must** set a strong secret.
+# Required in production
+ADMIN_API_TOKEN=<strong-secret>
 
-3. Run:
-
-```bash
 npm install --prefix apps/admin
-npm run dev:admin
+npm run dev:admin   # http://localhost:5175
 ```
 
-Open [http://localhost:5175](http://localhost:5175) and sign in with the admin token.
+## Navigation
 
-## API
+Overview · Reports map · Review queue · All reports · Disproved · Deleted/archived · Resolved · Analytics · PDF (planner pipeline) · Audit logs · Users (token auth today) · Settings (read-only thresholds)
 
-| Method | Path | Notes |
-| --- | --- | --- |
-| GET | `/api/v1/admin/session` | Bearer auth check |
-| GET | `/api/v1/admin/dashboard` | Stats + recent audit |
-| GET | `/api/v1/admin/reports?review=queue\|all\|…` | List + summary (`q`, `category`) |
-| GET | `/api/v1/admin/reports/:id` | Detail, nearby, cluster, audit |
-| POST | `/api/v1/admin/reports/:id/actions/:action` | See actions below |
+## Key API
 
-**Actions:** `approve_field`, `reject`, `flag`, `resolve`, `reopen`, `archive`, `restore`, `merge_duplicate`, `reset_queue`, `edit_category`
+| Method | Path |
+| --- | --- |
+| GET | `/api/v1/admin/dashboard` |
+| GET | `/api/v1/admin/reports?review=&q=&category=&field=&community=&sort=&limit=&offset=` |
+| GET | `/api/v1/admin/reports/:id` |
+| GET | `/api/v1/admin/audit` |
+| GET | `/api/v1/admin/disprove-reasons` |
+| POST | `/api/v1/admin/reports/:id/actions/:action` |
 
-Back-compat: `POST …/approve`, `…/reject`, `…/reset`.
-
-## Not yet
-
-- Analytics charts / PDF evidence briefs
-- User accounts & role management (no auth accounts yet)
-- Settings UI for thresholds (env-driven today)
+Actions: `approve_field`, `disprove`, `delete` (archive), `under_review`, `flag`, `resolve`, `reopen`, `restore`, `merge_duplicate`, `edit_category`, `reset_queue`

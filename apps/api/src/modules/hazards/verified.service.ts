@@ -36,7 +36,7 @@ export async function listVerifiedIncidents(): Promise<VerifiedIncident[]> {
       is_verified
     FROM incidents
     WHERE is_verified = true
-      AND COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED')
+      AND COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED', 'DISPROVED')
     ORDER BY created_at DESC
     LIMIT 2000
   `;

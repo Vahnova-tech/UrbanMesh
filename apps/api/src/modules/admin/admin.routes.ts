@@ -2,12 +2,14 @@ import { Router } from "express";
 import { asyncHandler, HttpError } from "../../lib/httpError.js";
 import { env } from "../../lib/env.js";
 import { adminRateLimit, requireAdmin } from "./adminAuth.js";
+import { DISPROVE_REASONS } from "./disproveReasons.js";
 import {
   applyAdminAction,
   getAdminReportDetail,
   getDashboardStats,
   listAdminReports,
   listAuditForIncident,
+  listGlobalAudit,
   type AdminAction,
   type ReviewStatus,
 } from "./admin.service.js";
@@ -26,8 +28,9 @@ adminRouter.get(
       rules: {
         cluster_threshold: env.clusterThreshold,
         cluster_radius_meters: env.clusterRadiusMeters,
-        note: "Community-supported (spatial) is not field-verified.",
+        note: "Community-supported (spatial) is not field-verified. Disproved and archived reports are excluded from public maps and corroboration.",
       },
+      disprove_reasons: DISPROVE_REASONS,
     });
   }),
 );
@@ -36,6 +39,22 @@ adminRouter.get(
   "/dashboard",
   asyncHandler(async (_req, res) => {
     res.json(await getDashboardStats());
+  }),
+);
+
+adminRouter.get(
+  "/audit",
+  asyncHandler(async (req, res) => {
+    const limit = Number(req.query.limit ?? 100);
+    const audit = await listGlobalAudit(Number.isFinite(limit) ? limit : 100);
+    res.json({ count: audit.length, audit });
+  }),
+);
+
+adminRouter.get(
+  "/disprove-reasons",
+  asyncHandler(async (_req, res) => {
+    res.json({ reasons: DISPROVE_REASONS });
   }),
 );
 
@@ -52,16 +71,37 @@ adminRouter.get(
       "flagged",
       "resolved",
       "archived",
+      "disproved",
+      "under_review",
     ] as const;
     const review = (allowed as readonly string[]).includes(reviewRaw)
       ? (reviewRaw as ReviewStatus | "all" | "queue")
       : "queue";
-    const limit = Number(req.query.limit ?? 300);
+    const limit = Number(req.query.limit ?? 100);
+    const offset = Number(req.query.offset ?? 0);
+    const sortRaw = String(req.query.sort ?? "created_desc");
+    const sort =
+      sortRaw === "created_asc" || sortRaw === "updated_desc"
+        ? sortRaw
+        : "created_desc";
+    const fieldRaw = String(req.query.field ?? "any");
+    const field =
+      fieldRaw === "verified" || fieldRaw === "unverified" ? fieldRaw : "any";
+    const communityRaw = String(req.query.community ?? "any");
+    const community =
+      communityRaw === "supported" || communityRaw === "pending"
+        ? communityRaw
+        : "any";
+
     const result = await listAdminReports({
       review,
       category: typeof req.query.category === "string" ? req.query.category : undefined,
       q: typeof req.query.q === "string" ? req.query.q : undefined,
-      limit: Number.isFinite(limit) ? limit : 300,
+      field,
+      community,
+      sort,
+      limit: Number.isFinite(limit) ? limit : 100,
+      offset: Number.isFinite(offset) ? offset : 0,
     });
     res.json(result);
   }),
@@ -84,11 +124,14 @@ adminRouter.get(
 
 const ACTIONS: AdminAction[] = [
   "approve_field",
+  "disprove",
   "reject",
   "flag",
+  "under_review",
   "resolve",
   "reopen",
   "archive",
+  "delete",
   "restore",
   "merge_duplicate",
   "reset_queue",
@@ -105,6 +148,10 @@ adminRouter.post(
     const incident = await applyAdminAction(req.params.id, action, {
       reason: typeof req.body?.reason === "string" ? req.body.reason : undefined,
       note: typeof req.body?.note === "string" ? req.body.note : undefined,
+      reasonCode:
+        typeof req.body?.reason_code === "string"
+          ? req.body.reason_code
+          : undefined,
       category:
         typeof req.body?.category === "string" ? req.body.category : undefined,
       duplicateOfId:
@@ -130,10 +177,19 @@ adminRouter.post(
 adminRouter.post(
   "/reports/:id/reject",
   asyncHandler(async (req, res) => {
-    const incident = await applyAdminAction(req.params.id, "reject", {
-      reason: typeof req.body?.note === "string" ? req.body.note : req.body?.reason,
+    const incident = await applyAdminAction(req.params.id, "disprove", {
+      reasonCode:
+        typeof req.body?.reason_code === "string"
+          ? req.body.reason_code
+          : "other",
+      note:
+        typeof req.body?.note === "string"
+          ? req.body.note
+          : typeof req.body?.reason === "string"
+            ? req.body.reason
+            : "Disproved via legacy endpoint",
     });
-    res.json({ ok: true, action: "rejected", incident });
+    res.json({ ok: true, action: "disproved", incident });
   }),
 );
 

@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
+  fetchDisproveReasons,
   runAdminAction,
   type AdminAction,
   type AdminIncident,
+  type DisproveReason,
   type ReviewStatus,
 } from "../lib/api";
 import { HAZARD_CATEGORIES } from "../lib/categories";
@@ -10,107 +12,17 @@ import { ActionDialog } from "./ActionDialog";
 
 type DialogKind =
   | "approve_field"
-  | "reject"
+  | "disprove"
   | "flag"
+  | "under_review"
   | "resolve"
   | "reopen"
-  | "archive"
+  | "delete"
   | "restore"
   | "merge_duplicate"
   | "reset_queue"
   | "edit_category"
   | null;
-
-const DIALOG_META: Record<
-  Exclude<DialogKind, null>,
-  {
-    title: string;
-    description: string;
-    confirmLabel: string;
-    requireReason: boolean;
-    destructive?: boolean;
-    reasonLabel?: string;
-    reasonPlaceholder?: string;
-  }
-> = {
-  approve_field: {
-    title: "Verify in field",
-    description:
-      "Record that an actual inspection confirmed this hazard. This is separate from community spatial corroboration.",
-    confirmLabel: "Mark field-verified",
-    requireReason: false,
-    reasonLabel: "Inspection note",
-    reasonPlaceholder: "What was observed on site…",
-  },
-  reject: {
-    title: "Remove report",
-    description:
-      "Marks the report invalid and removes it from the public map and listings. A reason is required and logged.",
-    confirmLabel: "Remove report",
-    requireReason: true,
-    destructive: true,
-    reasonPlaceholder: "Why this report is invalid…",
-  },
-  flag: {
-    title: "Flag for review",
-    description: "Send this submission to the moderation queue for further investigation.",
-    confirmLabel: "Flag report",
-    requireReason: true,
-    reasonPlaceholder: "What looks suspicious…",
-  },
-  resolve: {
-    title: "Mark resolved",
-    description:
-      "Record that the issue is resolved, with supporting notes. Mention follow-up evidence in the note when available.",
-    confirmLabel: "Mark resolved",
-    requireReason: true,
-    reasonLabel: "Resolution note",
-    reasonPlaceholder: "How it was resolved and supporting evidence…",
-  },
-  reopen: {
-    title: "Reopen report",
-    description: "Return a resolved hazard to the review queue (e.g. recurring issue).",
-    confirmLabel: "Reopen",
-    requireReason: false,
-    reasonPlaceholder: "Why this is being reopened…",
-  },
-  archive: {
-    title: "Archive report",
-    description: "Hide from active queues while keeping history. Reason is required.",
-    confirmLabel: "Archive",
-    requireReason: true,
-    destructive: true,
-  },
-  restore: {
-    title: "Restore to queue",
-    description: "Return an archived or removed report to pending review.",
-    confirmLabel: "Restore",
-    requireReason: false,
-  },
-  merge_duplicate: {
-    title: "Resolve duplicate",
-    description:
-      "Link this report to a primary record without losing history. The duplicate is archived.",
-    confirmLabel: "Merge duplicate",
-    requireReason: true,
-    reasonPlaceholder: "How you confirmed these are the same hazard…",
-  },
-  reset_queue: {
-    title: "Reset to queue",
-    description:
-      "Clear field-verification and resolution marks and return this report to pending. History is logged.",
-    confirmLabel: "Reset",
-    requireReason: false,
-    destructive: true,
-  },
-  edit_category: {
-    title: "Edit category",
-    description: "Correct permitted category metadata. Reason is required and audited.",
-    confirmLabel: "Save category",
-    requireReason: true,
-    reasonPlaceholder: "Why the category is changing…",
-  },
-};
 
 function normalizeStatus(raw: string | undefined | null): ReviewStatus {
   const value = String(raw ?? "pending").toLowerCase() as ReviewStatus;
@@ -121,6 +33,8 @@ function normalizeStatus(raw: string | undefined | null): ReviewStatus {
     "flagged",
     "resolved",
     "archived",
+    "disproved",
+    "under_review",
   ];
   return allowed.includes(value) ? value : "pending";
 }
@@ -140,17 +54,46 @@ export function ReportActions({
   const [busy, setBusy] = useState(false);
   const [duplicateOf, setDuplicateOf] = useState(nearbyIds[0] ?? "");
   const [category, setCategory] = useState(incident.category);
+  const [reasons, setReasons] = useState<DisproveReason[]>([]);
+  const [reasonCode, setReasonCode] = useState("");
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   const status = normalizeStatus(incident.review_status);
-  const active = status !== "archived" && status !== "rejected";
+  const active =
+    status !== "archived" && status !== "disproved" && status !== "rejected";
+
+  useEffect(() => {
+    void fetchDisproveReasons()
+      .then(setReasons)
+      .catch(() => setReasons([]));
+  }, []);
 
   async function confirm(kind: Exclude<DialogKind, null>, reason: string) {
+    if (kind === "delete" && !confirmDelete) {
+      onError("Confirm deletion by checking the box.");
+      return;
+    }
+    if (kind === "disprove") {
+      const selected = reasons.find((r) => r.id === reasonCode);
+      if (!selected) {
+        onError("Select a disprove reason.");
+        return;
+      }
+      if (selected.requiresNote && reason.trim().length < 3) {
+        onError("A written explanation is required for this reason.");
+        return;
+      }
+    }
+
     setBusy(true);
     try {
       const body: Record<string, string> = {};
       if (reason) {
         body.reason = reason;
         body.note = reason;
+      }
+      if (kind === "disprove") {
+        body.reason_code = reasonCode;
       }
       if (kind === "merge_duplicate") {
         if (!duplicateOf.trim()) {
@@ -162,8 +105,13 @@ export function ReportActions({
       if (kind === "edit_category") {
         body.category = category;
       }
-      await runAdminAction(incident.id, kind as AdminAction, body);
+
+      const action: AdminAction =
+        kind === "delete" ? "delete" : (kind as AdminAction);
+      await runAdminAction(incident.id, action, body);
       setDialog(null);
+      setConfirmDelete(false);
+      setReasonCode("");
       await onDone();
     } catch (err) {
       onError(err instanceof Error ? err.message : "Action failed.");
@@ -178,8 +126,6 @@ export function ReportActions({
   const secondary = `${btn} border-civic-line bg-civic-surface text-civic-ink hover:bg-civic-mist`;
   const danger = `${btn} border-civic-critical/40 bg-civic-criticalBg text-civic-critical hover:bg-civic-critical/15`;
 
-  const meta = dialog ? DIALOG_META[dialog] : null;
-
   return (
     <>
       <div className="rounded-card border border-civic-line bg-civic-mist/40 p-3">
@@ -187,6 +133,17 @@ export function ReportActions({
           Report actions
         </p>
         <div className="flex flex-wrap gap-2">
+          {active && status !== "under_review" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("under_review")}
+            >
+              Mark under review
+            </button>
+          ) : null}
+
           {active && status !== "approved" ? (
             <button
               type="button"
@@ -194,7 +151,7 @@ export function ReportActions({
               className={primary}
               onClick={() => setDialog("approve_field")}
             >
-              Verify in field
+              Record field inspection
             </button>
           ) : null}
 
@@ -262,9 +219,12 @@ export function ReportActions({
               type="button"
               disabled={busy}
               className={danger}
-              onClick={() => setDialog("reject")}
+              onClick={() => {
+                setReasonCode("");
+                setDialog("disprove");
+              }}
             >
-              Remove report
+              Disprove report
             </button>
           ) : null}
 
@@ -273,13 +233,18 @@ export function ReportActions({
               type="button"
               disabled={busy}
               className={danger}
-              onClick={() => setDialog("archive")}
+              onClick={() => {
+                setConfirmDelete(false);
+                setDialog("delete");
+              }}
             >
-              Archive
+              Delete report
             </button>
           ) : null}
 
-          {status === "archived" || status === "rejected" ? (
+          {status === "archived" ||
+          status === "disproved" ||
+          status === "rejected" ? (
             <button
               type="button"
               disabled={busy}
@@ -303,55 +268,203 @@ export function ReportActions({
         </div>
       </div>
 
-      {meta && dialog ? (
-        <ActionDialog
-          open
-          title={meta.title}
-          description={meta.description}
-          confirmLabel={meta.confirmLabel}
-          requireReason={meta.requireReason}
-          reasonLabel={meta.reasonLabel}
-          reasonPlaceholder={meta.reasonPlaceholder}
-          destructive={meta.destructive}
-          busy={busy}
-          onClose={() => !busy && setDialog(null)}
-          onConfirm={(reason) => confirm(dialog, reason)}
-          extra={
-            dialog === "merge_duplicate" ? (
-              <label className="mt-4 block text-xs font-semibold text-civic-slate">
-                Primary report ID
-                <input
-                  value={duplicateOf}
-                  onChange={(e) => setDuplicateOf(e.target.value)}
-                  list="nearby-ids"
-                  className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 font-mono text-sm outline-none focus:border-civic-accent"
-                  placeholder="UUID of the primary report"
-                />
-                <datalist id="nearby-ids">
-                  {nearbyIds.map((id) => (
-                    <option key={id} value={id} />
-                  ))}
-                </datalist>
-              </label>
-            ) : dialog === "edit_category" ? (
-              <label className="mt-4 block text-xs font-semibold text-civic-slate">
-                Category
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 text-sm outline-none focus:border-civic-accent"
-                >
-                  {HAZARD_CATEGORIES.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null
-          }
-        />
-      ) : null}
+      <ActionDialog
+        open={dialog === "approve_field"}
+        title="Record field inspection"
+        description="Confirms an actual on-site inspection. This does not invent verification and is separate from community spatial corroboration."
+        confirmLabel="Mark field-verified"
+        requireReason={false}
+        reasonLabel="Inspection note"
+        reasonPlaceholder="What was observed on site…"
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("approve_field", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "disprove"}
+        title="Disprove report"
+        description="Marks the claim as disproved and excludes it from confirmed-hazard maps, clustering, and corroboration. Evidence is retained for audit. Lack of corroboration alone is not a reason to disprove."
+        confirmLabel="Disprove report"
+        requireReason={
+          reasons.find((r) => r.id === reasonCode)?.requiresNote ?? false
+        }
+        reasonLabel="Explanatory note"
+        reasonPlaceholder="Additional context…"
+        destructive
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("disprove", reason)}
+        extra={
+          <label className="mt-4 block text-xs font-semibold text-civic-slate">
+            Disprove reason
+            <select
+              value={reasonCode}
+              onChange={(e) => setReasonCode(e.target.value)}
+              className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 text-sm outline-none focus:border-civic-accent"
+            >
+              <option value="">Select a reason…</option>
+              {reasons.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
+
+      <ActionDialog
+        open={dialog === "delete"}
+        title="Delete report"
+        description={`Soft-deletes report ${incident.id.slice(0, 8).toUpperCase()} (“${incident.description.slice(0, 80)}${incident.description.length > 80 ? "…" : ""}”). The record is archived, removed from public views, and can be restored. This is not the same as disproving a claim.`}
+        confirmLabel="Delete (archive)"
+        requireReason
+        reasonPlaceholder="Why this record is being deleted…"
+        destructive
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("delete", reason)}
+        extra={
+          <label className="mt-4 flex items-start gap-2 text-xs text-civic-slate">
+            <input
+              type="checkbox"
+              checked={confirmDelete}
+              onChange={(e) => setConfirmDelete(e.target.checked)}
+              className="mt-0.5"
+            />
+            <span>
+              I understand this archives the report and removes it from public
+              hazard views.
+            </span>
+          </label>
+        }
+      />
+
+      <ActionDialog
+        open={dialog === "flag"}
+        title="Flag for review"
+        description="Send this submission to the moderation queue."
+        confirmLabel="Flag report"
+        requireReason
+        reasonPlaceholder="What looks suspicious…"
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("flag", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "under_review"}
+        title="Mark under review"
+        description="Marks that an administrator is actively reviewing this report."
+        confirmLabel="Mark under review"
+        requireReason={false}
+        reasonLabel="Note"
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("under_review", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "resolve"}
+        title="Mark resolved"
+        description="Record that the issue is resolved, with supporting notes."
+        confirmLabel="Mark resolved"
+        requireReason
+        reasonLabel="Resolution note"
+        reasonPlaceholder="How it was resolved…"
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("resolve", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "reopen"}
+        title="Reopen report"
+        description="Return a resolved hazard to the review queue."
+        confirmLabel="Reopen"
+        requireReason={false}
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("reopen", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "restore"}
+        title="Restore to queue"
+        description="Return this report to pending review."
+        confirmLabel="Restore"
+        requireReason={false}
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("restore", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "reset_queue"}
+        title="Reset to queue"
+        description="Clear field-verification and resolution marks. History is logged."
+        confirmLabel="Reset"
+        requireReason={false}
+        destructive
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("reset_queue", reason)}
+      />
+
+      <ActionDialog
+        open={dialog === "merge_duplicate"}
+        title="Resolve duplicate"
+        description="Link this report to a primary record. The duplicate is archived."
+        confirmLabel="Merge duplicate"
+        requireReason
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("merge_duplicate", reason)}
+        extra={
+          <label className="mt-4 block text-xs font-semibold text-civic-slate">
+            Primary report ID
+            <input
+              value={duplicateOf}
+              onChange={(e) => setDuplicateOf(e.target.value)}
+              list="nearby-ids"
+              className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 font-mono text-sm outline-none focus:border-civic-accent"
+            />
+            <datalist id="nearby-ids">
+              {nearbyIds.map((id) => (
+                <option key={id} value={id} />
+              ))}
+            </datalist>
+          </label>
+        }
+      />
+
+      <ActionDialog
+        open={dialog === "edit_category"}
+        title="Edit category"
+        description="Correct permitted category metadata. Reason is audited."
+        confirmLabel="Save category"
+        requireReason
+        busy={busy}
+        onClose={() => !busy && setDialog(null)}
+        onConfirm={(reason) => confirm("edit_category", reason)}
+        extra={
+          <label className="mt-4 block text-xs font-semibold text-civic-slate">
+            Category
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 text-sm outline-none focus:border-civic-accent"
+            >
+              {HAZARD_CATEGORIES.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
     </>
   );
 }

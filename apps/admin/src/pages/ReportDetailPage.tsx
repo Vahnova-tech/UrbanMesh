@@ -38,7 +38,7 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
 
   if (loading && !data) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-civic-muted lg:px-6">
+      <div className="h-full overflow-y-auto px-4 py-10 text-sm text-civic-muted lg:px-6">
         Loading report…
       </div>
     );
@@ -46,7 +46,7 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
 
   if (error && !data) {
     return (
-      <div className="mx-auto max-w-6xl px-4 py-10 lg:px-6">
+      <div className="h-full overflow-y-auto px-4 py-10 lg:px-6">
         <p className="rounded-card border border-civic-critical/20 bg-civic-criticalBg px-3 py-2 text-sm font-medium text-civic-critical">
           {error}
         </p>
@@ -58,157 +58,184 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
   }
 
   if (!data) return null;
-  const { incident, nearby, cluster_members, audit } = data;
+  const { incident, nearby, cluster_members, audit, rules } = data;
   const photo = photoSrc(incident.photo_url);
 
   return (
-    <div className="mx-auto h-full max-w-6xl overflow-y-auto px-4 py-6 lg:px-6">
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <Link
-          to="/queue"
-          className="text-xs font-semibold text-civic-accent hover:underline"
-        >
-          ← Review queue
-        </Link>
-        <span className="text-civic-line">·</span>
-        <Link
-          to="/map"
-          className="text-xs font-semibold text-civic-muted hover:text-civic-ink"
-        >
-          Map
-        </Link>
-      </div>
+    <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="mb-4 flex flex-wrap items-center gap-3 text-xs">
+          <Link to="/queue" className="font-semibold text-civic-accent hover:underline">
+            ← Review queue
+          </Link>
+          <span className="text-civic-line">·</span>
+          <Link to="/reports" className="font-semibold text-civic-muted hover:text-civic-ink">
+            All reports
+          </Link>
+          <span className="text-civic-line">·</span>
+          <Link to="/map" className="font-semibold text-civic-muted hover:text-civic-ink">
+            Map
+          </Link>
+        </div>
 
-      {error ? (
-        <p className="mb-4 rounded-card border border-civic-critical/20 bg-civic-criticalBg px-3 py-2 text-sm font-medium text-civic-critical">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="um-eyebrow">{incident.category_label}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight text-civic-ink">
-            {incident.description.split(/[.!?]/)[0]}
-          </h2>
-          <p className="mt-2 text-xs text-civic-muted">
-            Ref · {incident.id.slice(0, 8).toUpperCase()} ·{" "}
-            {formatWhen(incident.created_at)} EAT
+        {error ? (
+          <p className="mb-4 rounded-card border border-civic-critical/20 bg-civic-criticalBg px-3 py-2 text-sm font-medium text-civic-critical">
+            {error}
           </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <ReviewBadge status={incident.review_status} />
-          {incident.community_supported ? (
-            <span className="rounded-md bg-civic-verifiedBg px-2 py-1 text-[11px] font-semibold text-civic-verified">
-              Community-supported
-            </span>
-          ) : (
-            <span className="rounded-md bg-civic-pendingBg px-2 py-1 text-[11px] font-semibold text-civic-pending">
-              Spatial pending
-            </span>
-          )}
-          {incident.field_verified ? (
-            <span className="rounded-md bg-civic-accent/15 px-2 py-1 text-[11px] font-semibold text-civic-accent">
-              Field-verified
-              {incident.field_verified_at
-                ? ` · ${formatRelative(incident.field_verified_at)}`
-                : ""}
-            </span>
-          ) : null}
-        </div>
-      </div>
+        ) : null}
 
-      <div className="mt-4">
-        <ReportActions
-          incident={incident}
-          nearbyIds={nearby.map((n) => n.id)}
-          onDone={load}
-          onError={(msg) => {
-            setError(msg);
-            if (/sign-in/i.test(msg)) onLogout();
-          }}
-        />
-      </div>
-
-      <p className="mt-4 max-w-3xl text-sm leading-relaxed text-civic-slate">
-        {incident.description}
-      </p>
-
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
-        <section>
-          <h3 className="text-sm font-semibold text-civic-ink">Evidence & location</h3>
-          {photo ? (
-            <img
-              src={photo}
-              alt=""
-              className="mt-3 max-h-80 w-full rounded-card border border-civic-line object-cover"
-            />
-          ) : (
-            <p className="mt-3 rounded-card border border-dashed border-civic-line px-4 py-10 text-center text-sm text-civic-muted">
-              No photo attached
-            </p>
-          )}
-          <MiniMap
-            lat={incident.lat}
-            lng={incident.lng}
-            className="mt-3 h-56 w-full"
-            interactive
-          />
-          <dl className="mt-4 grid gap-2 sm:grid-cols-2">
-            <Meta label="Corridor" value={incident.corridor} />
-            <Meta label="Ward" value={incident.ward_name} />
-            <Meta
-              label="Coordinates"
-              value={`${incident.lat.toFixed(5)}, ${incident.lng.toFixed(5)}`}
-            />
-            <Meta
-              label="Nearby (15 m)"
-              value={`${incident.nearby_count} same category`}
-            />
-            {incident.resolved_at ? (
-              <Meta
-                label="Resolved"
-                value={formatWhen(incident.resolved_at)}
-              />
-            ) : null}
-            {incident.resolution_note ? (
-              <Meta label="Resolution note" value={incident.resolution_note} />
-            ) : null}
-            {incident.duplicate_of_id ? (
-              <Meta
-                label="Duplicate of"
-                value={incident.duplicate_of_id.slice(0, 8).toUpperCase()}
-              />
-            ) : null}
-          </dl>
-        </section>
-
-        <section className="space-y-6">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
+            <p className="um-eyebrow">{incident.category_label}</p>
+            <h2 className="mt-1 text-2xl font-semibold tracking-tight text-civic-ink">
+              {incident.description.split(/[.!?]/)[0]}
+            </h2>
+            <p className="mt-2 font-mono text-xs text-civic-muted">
+              {incident.id} · submitted {formatWhen(incident.created_at)} EAT
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <ReviewBadge status={incident.review_status} />
+            {incident.community_supported ? (
+              <span className="rounded-md bg-civic-verifiedBg px-2 py-1 text-[11px] font-semibold text-civic-verified">
+                Community-supported
+              </span>
+            ) : (
+              <span className="rounded-md bg-civic-pendingBg px-2 py-1 text-[11px] font-semibold text-civic-pending">
+                Spatial pending
+              </span>
+            )}
+            {incident.field_verified ? (
+              <span className="rounded-md bg-civic-accent/15 px-2 py-1 text-[11px] font-semibold text-civic-accent">
+                Field-verified
+                {incident.field_verified_at
+                  ? ` · ${formatRelative(incident.field_verified_at)}`
+                  : ""}
+              </span>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-4">
+          <ReportActions
+            incident={incident}
+            nearbyIds={nearby.map((n) => n.id)}
+            onDone={load}
+            onError={(msg) => {
+              setError(msg);
+              if (/sign-in/i.test(msg)) onLogout();
+            }}
+          />
+        </div>
+
+        <p className="mt-4 max-w-3xl text-sm leading-relaxed text-civic-slate">
+          {incident.description}
+        </p>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <section className="space-y-4">
             <h3 className="text-sm font-semibold text-civic-ink">
-              Nearby submissions
+              Evidence & location
             </h3>
-            <p className="mt-1 text-xs text-civic-muted">
-              Spatial corroboration only — does not prove a field inspection.
-            </p>
-            <RelatedList items={nearby} empty="No nearby same-category reports." />
-          </div>
+            {photo ? (
+              <img
+                src={photo}
+                alt=""
+                className="max-h-80 w-full rounded-card border border-civic-line object-cover"
+              />
+            ) : (
+              <p className="rounded-card border border-dashed border-civic-line px-4 py-10 text-center text-sm text-civic-muted">
+                No photo attached
+              </p>
+            )}
+            <MiniMap
+              lat={incident.lat}
+              lng={incident.lng}
+              className="h-56 w-full"
+              interactive
+            />
+            <dl className="grid gap-2 sm:grid-cols-2">
+              <Meta label="Corridor" value={incident.corridor} />
+              <Meta label="Ward" value={incident.ward_name} />
+              <Meta
+                label="Coordinates"
+                value={`${incident.lat.toFixed(5)}, ${incident.lng.toFixed(5)}`}
+              />
+              <Meta
+                label="Eligible nearby"
+                value={`${incident.nearby_count} within ${rules.cluster_radius_meters} m (threshold ${rules.cluster_threshold})`}
+              />
+              {incident.review_note ? (
+                <Meta label="Admin note / reason" value={incident.review_note} />
+              ) : null}
+              {incident.resolution_note ? (
+                <Meta label="Resolution note" value={incident.resolution_note} />
+              ) : null}
+              {incident.duplicate_of_id ? (
+                <Meta
+                  label="Duplicate of"
+                  value={incident.duplicate_of_id.slice(0, 8).toUpperCase()}
+                />
+              ) : null}
+            </dl>
+          </section>
 
-          {cluster_members.length > 0 ? (
+          <section className="space-y-6">
             <div>
-              <h3 className="text-sm font-semibold text-civic-ink">Cluster members</h3>
-              <RelatedList items={cluster_members} empty="" />
+              <h3 className="text-sm font-semibold text-civic-ink">
+                Verification
+              </h3>
+              <p className="mt-1 text-xs text-civic-muted">
+                Community-supported reflects spatial corroboration only — not a
+                field inspection.
+              </p>
+              <dl className="mt-3 grid gap-2 sm:grid-cols-2">
+                <Meta
+                  label="Community-supported"
+                  value={incident.community_supported ? "Yes" : "No"}
+                />
+                <Meta
+                  label="Field-verified"
+                  value={
+                    incident.field_verified
+                      ? `Yes${incident.field_verified_at ? ` · ${formatWhen(incident.field_verified_at)}` : ""}`
+                      : "No"
+                  }
+                />
+                <Meta
+                  label="Cluster"
+                  value={incident.cluster_id?.slice(0, 8).toUpperCase() ?? "None"}
+                />
+              </dl>
             </div>
-          ) : null}
 
-          <div id="history">
-            <h3 className="text-sm font-semibold text-civic-ink">Audit history</h3>
-            <p className="mt-1 text-xs text-civic-muted">
-              Who changed what, when, and why.
-            </p>
-            <AuditList entries={audit} />
-          </div>
-        </section>
+            <div>
+              <h3 className="text-sm font-semibold text-civic-ink">
+                Nearby submissions
+              </h3>
+              <RelatedList items={nearby} empty="No eligible nearby same-category reports." />
+            </div>
+
+            {cluster_members.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-semibold text-civic-ink">
+                  Cluster members
+                </h3>
+                <RelatedList items={cluster_members} empty="" />
+              </div>
+            ) : null}
+
+            <div id="history">
+              <h3 className="text-sm font-semibold text-civic-ink">
+                Audit history
+              </h3>
+              <p className="mt-1 text-xs text-civic-muted">
+                Who changed what, when, and why.
+              </p>
+              <AuditList entries={audit} />
+            </div>
+          </section>
+        </div>
       </div>
     </div>
   );
@@ -235,7 +262,7 @@ function RelatedList({
             className="block rounded-card border border-civic-line bg-civic-mist/30 px-3 py-2 hover:bg-civic-mist"
           >
             <div className="flex items-center justify-between gap-2">
-              <p className="text-sm font-semibold text-civic-ink line-clamp-1">
+              <p className="line-clamp-1 text-sm font-semibold text-civic-ink">
                 {row.description}
               </p>
               <ReviewBadge status={row.review_status} />

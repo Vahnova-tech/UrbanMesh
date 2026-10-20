@@ -18,8 +18,8 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
     setError(null);
     try {
       saveAdminToken(value);
-      const ok = await verifySession();
-      if (!ok) {
+      const session = await verifySession();
+      if (!session.ok) {
         setError("That token was rejected. Check ADMIN_API_TOKEN on the API.");
         return;
       }
@@ -39,11 +39,11 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
       >
         <p className="um-eyebrow">UrbanMesh · Kilimani</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-civic-ink">
-          Operations admin
+          Admin dashboard
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Review, verify, moderate, and resolve hazard reports. Field verification is
-          separate from community spatial corroboration (≥3 within 15 m).
+          Review evidence, disprove invalid claims, delete inappropriate records, and
+          track resolution. Field inspection is separate from community corroboration.
         </p>
 
         <label className="mt-6 block text-xs font-semibold text-civic-slate">

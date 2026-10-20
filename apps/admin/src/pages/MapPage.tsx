@@ -18,9 +18,11 @@ const STATUS_COLOR: Record<ReviewStatus, string> = {
   pending: "#a67c2a",
   approved: "#2f6b5a",
   rejected: "#a63d2f",
+  disproved: "#a63d2f",
   flagged: "#b45309",
   resolved: "#475569",
   archived: "#94a3b8",
+  under_review: "#0369a1",
 };
 
 type Filter = ReviewStatus | "all" | "queue";
@@ -130,8 +132,9 @@ export function MapPage({ onLogout }: { onLogout: () => void }) {
             <option value="flagged">Flagged</option>
             <option value="approved">Field-verified</option>
             <option value="resolved">Resolved</option>
-            <option value="rejected">Rejected</option>
-            <option value="archived">Archived</option>
+            <option value="disproved">Disproved</option>
+            <option value="under_review">Under review</option>
+            <option value="archived">Deleted / archived</option>
           </select>
           <select
             value={category}
