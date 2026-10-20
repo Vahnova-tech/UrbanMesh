@@ -579,6 +579,337 @@ export async function getDashboardStats(): Promise<DashboardStats> {
   };
 }
 
+function hoursBetween(startIso: string, endIso: string): number {
+  return Math.max(
+    0,
+    (new Date(endIso).getTime() - new Date(startIso).getTime()) / 3_600_000,
+  );
+}
+
+function median(values: number[]): number | null {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1]! + sorted[mid]!) / 2
+    : sorted[mid]!;
+}
+
+function mean(values: number[]): number | null {
+  if (values.length === 0) return null;
+  return values.reduce((a, b) => a + b, 0) / values.length;
+}
+
+function isClosedStatus(status: ReviewStatus): boolean {
+  return (
+    status === "disproved" ||
+    status === "archived" ||
+    status === "rejected" ||
+    status === "resolved"
+  );
+}
+
+export interface AdminAnalytics {
+  generated_at: string;
+  rules: {
+    cluster_threshold: number;
+    cluster_radius_meters: number;
+  };
+  overview: {
+    total: number;
+    open: number;
+    pending_review: number;
+    under_review: number;
+    flagged: number;
+    community_supported: number;
+    field_verified: number;
+    awaiting_field_inspection: number;
+    resolved: number;
+    disproved: number;
+    archived: number;
+    with_photo: number;
+    without_photo: number;
+    photo_coverage_pct: number;
+    community_rate_pct: number;
+    field_rate_pct: number;
+  };
+  age_buckets: {
+    under_24h: number;
+    days_1_7: number;
+    days_7_30: number;
+    over_30d: number;
+  };
+  resolution: {
+    resolved_count: number;
+    avg_hours_to_resolve: number | null;
+    median_hours_to_resolve: number | null;
+    avg_hours_to_field_verify: number | null;
+    median_hours_to_field_verify: number | null;
+  };
+  by_category: Array<{
+    category: string;
+    label: string;
+    count: number;
+    community_supported: number;
+    field_verified: number;
+    resolved: number;
+    disproved: number;
+    open: number;
+  }>;
+  hotspots_corridor: Array<{
+    corridor: string;
+    count: number;
+    community_supported: number;
+    open: number;
+  }>;
+  hotspots_ward: Array<{
+    ward_id: string;
+    ward_name: string;
+    count: number;
+    community_supported: number;
+    open: number;
+  }>;
+  trend_14d: Array<{
+    date: string;
+    submitted: number;
+    resolved: number;
+    disproved: number;
+    field_verified: number;
+  }>;
+  admin_actions_30d: Array<{ action: string; count: number }>;
+  severity: { critical: number; standard: number };
+}
+
+export async function getAdminAnalytics(): Promise<AdminAnalytics> {
+  const { summary, incidents } = await listAdminReports({
+    review: "all",
+    limit: 5000,
+  });
+  const now = Date.now();
+  const dayMs = 86_400_000;
+
+  const open = incidents.filter((i) => !isClosedStatus(i.review_status));
+  const with_photo = incidents.filter((i) => Boolean(i.photo_url)).length;
+  const without_photo = incidents.length - with_photo;
+
+  const age_buckets = { under_24h: 0, days_1_7: 0, days_7_30: 0, over_30d: 0 };
+  for (const row of open) {
+    const ageMs = now - new Date(row.created_at).getTime();
+    if (ageMs < dayMs) age_buckets.under_24h += 1;
+    else if (ageMs < 7 * dayMs) age_buckets.days_1_7 += 1;
+    else if (ageMs < 30 * dayMs) age_buckets.days_7_30 += 1;
+    else age_buckets.over_30d += 1;
+  }
+
+  const resolveHours = incidents
+    .filter((i) => i.review_status === "resolved" && i.resolved_at)
+    .map((i) => hoursBetween(i.created_at, i.resolved_at!));
+  const fieldHours = incidents
+    .filter((i) => i.field_verified && i.field_verified_at)
+    .map((i) => hoursBetween(i.created_at, i.field_verified_at!));
+
+  const byCat = new Map<
+    string,
+    {
+      count: number;
+      community_supported: number;
+      field_verified: number;
+      resolved: number;
+      disproved: number;
+      open: number;
+    }
+  >();
+  const byCorridor = new Map<
+    string,
+    { count: number; community_supported: number; open: number }
+  >();
+  const byWard = new Map<
+    string,
+    {
+      ward_name: string;
+      count: number;
+      community_supported: number;
+      open: number;
+    }
+  >();
+
+  let critical = 0;
+  let standard = 0;
+
+  for (const row of incidents) {
+    if (row.severity === "critical") critical += 1;
+    else standard += 1;
+
+    const cat = byCat.get(row.category) ?? {
+      count: 0,
+      community_supported: 0,
+      field_verified: 0,
+      resolved: 0,
+      disproved: 0,
+      open: 0,
+    };
+    cat.count += 1;
+    if (row.community_supported) cat.community_supported += 1;
+    if (row.field_verified) cat.field_verified += 1;
+    if (row.review_status === "resolved") cat.resolved += 1;
+    if (
+      row.review_status === "disproved" ||
+      row.review_status === "rejected"
+    ) {
+      cat.disproved += 1;
+    }
+    if (!isClosedStatus(row.review_status)) cat.open += 1;
+    byCat.set(row.category, cat);
+
+    const cor = byCorridor.get(row.corridor) ?? {
+      count: 0,
+      community_supported: 0,
+      open: 0,
+    };
+    cor.count += 1;
+    if (row.community_supported) cor.community_supported += 1;
+    if (!isClosedStatus(row.review_status)) cor.open += 1;
+    byCorridor.set(row.corridor, cor);
+
+    const ward = byWard.get(row.ward_id) ?? {
+      ward_name: row.ward_name,
+      count: 0,
+      community_supported: 0,
+      open: 0,
+    };
+    ward.count += 1;
+    if (row.community_supported) ward.community_supported += 1;
+    if (!isClosedStatus(row.review_status)) ward.open += 1;
+    byWard.set(row.ward_id, ward);
+  }
+
+  const trendMap = new Map<
+    string,
+    {
+      submitted: number;
+      resolved: number;
+      disproved: number;
+      field_verified: number;
+    }
+  >();
+  for (let i = 13; i >= 0; i -= 1) {
+    const d = new Date(now - i * dayMs).toISOString().slice(0, 10);
+    trendMap.set(d, {
+      submitted: 0,
+      resolved: 0,
+      disproved: 0,
+      field_verified: 0,
+    });
+  }
+  for (const row of incidents) {
+    const created = row.created_at.slice(0, 10);
+    const bucket = trendMap.get(created);
+    if (bucket) bucket.submitted += 1;
+    if (row.resolved_at) {
+      const day = row.resolved_at.slice(0, 10);
+      const b = trendMap.get(day);
+      if (b) b.resolved += 1;
+    }
+    if (
+      (row.review_status === "disproved" || row.review_status === "rejected") &&
+      row.reviewed_at
+    ) {
+      const day = row.reviewed_at.slice(0, 10);
+      const b = trendMap.get(day);
+      if (b) b.disproved += 1;
+    }
+    if (row.field_verified_at) {
+      const day = row.field_verified_at.slice(0, 10);
+      const b = trendMap.get(day);
+      if (b) b.field_verified += 1;
+    }
+  }
+
+  const since30d = new Date(now - 30 * dayMs).toISOString();
+  const actionRows = await prisma.$queryRaw<{ action: string; count: number }[]>`
+    SELECT action, COUNT(*)::int AS count
+    FROM admin_audit_logs
+    WHERE created_at >= ${since30d}::timestamptz
+    GROUP BY action
+    ORDER BY COUNT(*) DESC
+  `;
+
+  const awaiting_field_inspection = incidents.filter(
+    (i) =>
+      !i.field_verified &&
+      !isClosedStatus(i.review_status),
+  ).length;
+
+  const total = incidents.length || 1;
+
+  return {
+    generated_at: new Date().toISOString(),
+    rules: {
+      cluster_threshold: env.clusterThreshold,
+      cluster_radius_meters: env.clusterRadiusMeters,
+    },
+    overview: {
+      total: incidents.length,
+      open: open.length,
+      pending_review:
+        summary.pending + summary.flagged + summary.under_review,
+      under_review: summary.under_review,
+      flagged: summary.flagged,
+      community_supported: summary.community_supported,
+      field_verified: summary.field_verified,
+      awaiting_field_inspection,
+      resolved: summary.resolved,
+      disproved: summary.disproved + summary.rejected,
+      archived: summary.archived,
+      with_photo,
+      without_photo,
+      photo_coverage_pct: Math.round((with_photo / total) * 1000) / 10,
+      community_rate_pct:
+        Math.round((summary.community_supported / total) * 1000) / 10,
+      field_rate_pct:
+        Math.round((summary.field_verified / total) * 1000) / 10,
+    },
+    age_buckets,
+    resolution: {
+      resolved_count: resolveHours.length,
+      avg_hours_to_resolve: mean(resolveHours),
+      median_hours_to_resolve: median(resolveHours),
+      avg_hours_to_field_verify: mean(fieldHours),
+      median_hours_to_field_verify: median(fieldHours),
+    },
+    by_category: [...byCat.entries()]
+      .map(([category, stats]) => ({
+        category,
+        label: labelForCategory(category),
+        ...stats,
+      }))
+      .sort((a, b) => b.count - a.count),
+    hotspots_corridor: [...byCorridor.entries()]
+      .map(([corridor, stats]) => ({ corridor, ...stats }))
+      .sort((a, b) => b.count - a.count || b.open - a.open)
+      .slice(0, 8),
+    hotspots_ward: [...byWard.entries()]
+      .map(([ward_id, stats]) => ({
+        ward_id,
+        ward_name: stats.ward_name,
+        count: stats.count,
+        community_supported: stats.community_supported,
+        open: stats.open,
+      }))
+      .sort((a, b) => b.count - a.count || b.open - a.open)
+      .slice(0, 8),
+    trend_14d: [...trendMap.entries()].map(([date, stats]) => ({
+      date,
+      ...stats,
+    })),
+    admin_actions_30d: actionRows.map((row) => ({
+      action: row.action,
+      count: Number(row.count),
+    })),
+    severity: { critical, standard },
+  };
+}
+
 export async function applyAdminAction(
   id: string,
   action: AdminAction,

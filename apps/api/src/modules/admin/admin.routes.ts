@@ -5,6 +5,7 @@ import { adminRateLimit, requireAdmin } from "./adminAuth.js";
 import { DISPROVE_REASONS } from "./disproveReasons.js";
 import {
   applyAdminAction,
+  getAdminAnalytics,
   getAdminReportDetail,
   getDashboardStats,
   listAdminReports,
@@ -39,6 +40,13 @@ adminRouter.get(
   "/dashboard",
   asyncHandler(async (_req, res) => {
     res.json(await getDashboardStats());
+  }),
+);
+
+adminRouter.get(
+  "/analytics",
+  asyncHandler(async (_req, res) => {
+    res.json(await getAdminAnalytics());
   }),
 );
 

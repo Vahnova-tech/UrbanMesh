@@ -181,6 +181,81 @@ export async function fetchDashboard(): Promise<DashboardStats> {
   return requestJson<DashboardStats>("/api/v1/admin/dashboard");
 }
 
+export interface AdminAnalytics {
+  generated_at: string;
+  rules: {
+    cluster_threshold: number;
+    cluster_radius_meters: number;
+  };
+  overview: {
+    total: number;
+    open: number;
+    pending_review: number;
+    under_review: number;
+    flagged: number;
+    community_supported: number;
+    field_verified: number;
+    awaiting_field_inspection: number;
+    resolved: number;
+    disproved: number;
+    archived: number;
+    with_photo: number;
+    without_photo: number;
+    photo_coverage_pct: number;
+    community_rate_pct: number;
+    field_rate_pct: number;
+  };
+  age_buckets: {
+    under_24h: number;
+    days_1_7: number;
+    days_7_30: number;
+    over_30d: number;
+  };
+  resolution: {
+    resolved_count: number;
+    avg_hours_to_resolve: number | null;
+    median_hours_to_resolve: number | null;
+    avg_hours_to_field_verify: number | null;
+    median_hours_to_field_verify: number | null;
+  };
+  by_category: Array<{
+    category: string;
+    label: string;
+    count: number;
+    community_supported: number;
+    field_verified: number;
+    resolved: number;
+    disproved: number;
+    open: number;
+  }>;
+  hotspots_corridor: Array<{
+    corridor: string;
+    count: number;
+    community_supported: number;
+    open: number;
+  }>;
+  hotspots_ward: Array<{
+    ward_id: string;
+    ward_name: string;
+    count: number;
+    community_supported: number;
+    open: number;
+  }>;
+  trend_14d: Array<{
+    date: string;
+    submitted: number;
+    resolved: number;
+    disproved: number;
+    field_verified: number;
+  }>;
+  admin_actions_30d: Array<{ action: string; count: number }>;
+  severity: { critical: number; standard: number };
+}
+
+export async function fetchAdminAnalytics(): Promise<AdminAnalytics> {
+  return requestJson<AdminAnalytics>("/api/v1/admin/analytics");
+}
+
 export async function fetchAdminReports(params: {
   review?: ReviewStatus | "all" | "queue";
   category?: string;
