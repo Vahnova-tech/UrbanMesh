@@ -2,8 +2,10 @@ import { useId, useState, type FormEvent } from "react";
 import { BrandMark } from "../components/BrandMark";
 import { saveAdminToken } from "../lib/auth";
 import { verifySession } from "../lib/api";
+import { ThemeToggle, useTheme } from "../lib/theme";
 
 export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
+  const { dark } = useTheme();
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -38,22 +40,33 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
   return (
     <div className="relative flex min-h-full flex-col bg-civic-paper">
       <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[42%] bg-civic-mist/70"
+        className={`pointer-events-none absolute inset-x-0 top-0 h-[44%] ${
+          dark ? "bg-civic-mist/40" : "bg-civic-mist/70"
+        }`}
         aria-hidden
       />
       <div
-        className="pointer-events-none absolute inset-x-0 top-[42%] h-px bg-civic-line"
+        className="pointer-events-none absolute inset-x-0 top-[44%] h-px bg-civic-line"
         aria-hidden
       />
 
-      <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-4 py-12 sm:px-6">
-        <div className="mb-8 flex flex-col items-center text-center">
+      <header className="relative z-[1] flex items-center justify-between gap-3 px-4 py-4 sm:px-6">
+        <p className="um-eyebrow">Authentication portal</p>
+        <ThemeToggle />
+      </header>
+
+      <div className="relative z-[1] flex flex-1 flex-col items-center justify-center px-4 pb-12 pt-2 sm:px-6">
+        <div className="mb-8 flex max-w-lg flex-col items-center text-center">
           <BrandMark size={56} />
           <p className="mt-4 text-[1.75rem] font-semibold tracking-tight text-civic-ink sm:text-[2rem]">
             UrbanMesh
           </p>
           <p className="mt-1 text-sm font-medium text-civic-muted">
-            Kilimani · Field operations
+            Admin &amp; authentication · Kilimani pilot
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-civic-slate">
+            For municipal planners, local leaders, and spatial data operators
+            reviewing Kilimani hazard evidence.
           </p>
         </div>
 
@@ -62,15 +75,28 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
           className="w-full max-w-[26rem] rounded-card border border-civic-line bg-civic-surface p-6 shadow-card sm:p-7"
           noValidate
         >
-          <h1 className="text-lg font-semibold tracking-tight text-civic-ink">
-            Sign in to admin
-          </h1>
-          <p className="mt-1.5 text-sm leading-relaxed text-civic-slate">
-            Authorized operators only. Review evidence, disprove invalid claims,
-            and track resolution — separate from community corroboration.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h1 className="text-lg font-semibold tracking-tight text-civic-ink">
+                Sign in
+              </h1>
+              <p className="mt-1.5 text-sm leading-relaxed text-civic-slate">
+                Authorized operators only. Field inspection stays separate from
+                community corroboration.
+              </p>
+            </div>
+            <span className="shrink-0 rounded-md border border-civic-line bg-civic-mist/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.04em] text-civic-muted">
+              {dark ? "Ops" : "Day"}
+            </span>
+          </div>
 
-          <div className="mt-6">
+          <ul className="mt-4 space-y-1.5 border-y border-civic-line py-3 text-xs text-civic-muted">
+            <li>Review and moderate resident hazard reports</li>
+            <li>Disprove unsupported claims · archive invalid records</li>
+            <li>Track resolution across the Kilimani pilot zone</li>
+          </ul>
+
+          <div className="mt-5">
             <label
               htmlFor={tokenId}
               className="block text-xs font-semibold text-civic-slate"
@@ -92,7 +118,7 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
                 }}
                 disabled={busy}
                 aria-invalid={Boolean(error)}
-                aria-describedby={error ? errorId : undefined}
+                aria-describedby={error ? errorId : "token-hint"}
                 className="min-h-11 w-full rounded-card border border-civic-line bg-civic-paper py-2 pl-3 pr-20 font-mono text-sm text-civic-ink outline-none transition-colors placeholder:font-sans placeholder:text-civic-muted focus:border-civic-accent disabled:opacity-60"
                 placeholder="Paste ADMIN_API_TOKEN"
               />
@@ -105,6 +131,9 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
                 {showToken ? "Hide" : "Show"}
               </button>
             </div>
+            <p id="token-hint" className="mt-1.5 text-[11px] text-civic-muted">
+              Shared server credential — not a personal password.
+            </p>
           </div>
 
           {error ? (
@@ -122,18 +151,20 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
             disabled={busy || !token.trim()}
             className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-card bg-civic-accent text-sm font-semibold text-white transition-colors hover:bg-civic-accentDark disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {busy ? "Verifying…" : "Sign in"}
+            {busy ? "Verifying…" : "Enter admin portal"}
           </button>
-
-          <p className="mt-4 text-center text-[11px] leading-relaxed text-civic-muted">
-            Access uses a shared server token. Do not enter personal passwords or
-            reporter accounts.
-          </p>
         </form>
+
+        <p className="mt-6 max-w-sm text-center text-[11px] leading-relaxed text-civic-muted">
+          {dark
+            ? "Dark ops styling — lower glare for monitoring rooms."
+            : "Daylight canvas styling — bright review for daytime desks."}{" "}
+          Toggle anytime from the header.
+        </p>
       </div>
 
       <footer className="relative z-[1] px-4 pb-6 text-center text-[11px] text-civic-muted">
-        UrbanMesh admin · Restricted access · No public indexing
+        UrbanMesh admin · Restricted access · Kilimani pilot zone · No public indexing
       </footer>
     </div>
   );

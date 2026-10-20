@@ -23,6 +23,26 @@
   --radius-md: 12px;
 }
 
+html.dark {
+  color-scheme: dark;
+  --civic-ink: #eee9e1;
+  --civic-slate: #b8beb6;
+  --civic-muted: #8f968e;
+  --civic-paper: #121512;
+  --civic-surface: #1c201c;
+  --civic-mist: #252a25;
+  --civic-line: #2e342f;
+  --civic-accent: #5a9a86;
+  --civic-accent-dark: #4a8573;
+  --civic-pending: #d4a24a;
+  --civic-pending-bg: #3a3424;
+  --civic-verified: #5a9a86;
+  --civic-verified-bg: #24352e;
+  --civic-critical: #d47868;
+  --civic-critical-bg: #3a2824;
+  --civic-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
 html,
 body,
 #root {
@@ -34,6 +54,7 @@ body {
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   background: var(--civic-paper);
   color: var(--civic-ink);
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 :focus-visible {

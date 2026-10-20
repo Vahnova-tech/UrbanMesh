@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
+import { ThemeToggle } from "../lib/theme";
 
 const NAV: { to: string; label: string; end?: boolean; section?: string }[] = [
   { to: "/", label: "Overview", end: true, section: "Operate" },
@@ -101,7 +102,11 @@ export function AdminShell({
         <div className="min-h-0 flex-1 overflow-y-auto">
           <NavItems />
         </div>
-        <div className="border-t border-civic-line p-2">
+        <div className="space-y-2 border-t border-civic-line p-2">
+          <ThemeToggle
+            compact={collapsed}
+            className="w-full justify-center"
+          />
           <button
             type="button"
             onClick={onLogout}
@@ -146,13 +151,16 @@ export function AdminShell({
             <p className="um-eyebrow">UrbanMesh</p>
             <p className="text-sm font-semibold">Admin</p>
           </div>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="ml-auto min-h-10 rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-muted"
-          >
-            Sign out
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <ThemeToggle compact />
+            <button
+              type="button"
+              onClick={onLogout}
+              className="min-h-10 rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-muted"
+            >
+              Sign out
+            </button>
+          </div>
         </header>
         <main className="min-h-0 flex-1 overflow-hidden">
           <Outlet />
