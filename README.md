@@ -230,8 +230,17 @@ Punchy path (aim ≤ 2–3 minutes on camera):
 
 ## Deploy (Vercel — citizen PWA)
 
-- **Root Directory:** `apps/web` (or use root [`vercel.json`](./vercel.json))  
+Do **not** set Root Directory to `apps/admin` (that is a separate local/dev panel).
+
+**Option A — repo root (uses root [`vercel.json`](./vercel.json))**  
+- **Root Directory:** leave empty / `.`  
+- Install/build/output already point at `apps/web`  
+
+**Option B — app folder (uses [`apps/web/vercel.json`](./apps/web/vercel.json))**  
+- **Root Directory:** `apps/web`  
+- Enable “Include source files outside of the Root Directory in the Build Step” so `packages/shared` resolves  
 - **Output:** `dist`  
+
 - **Env:** `VITE_API_BASE` = public API URL  
 
 ---
