@@ -71,7 +71,7 @@ async function loadIncidentRows(): Promise<IncidentMetricRow[]> {
       ST_X(location::geometry) AS lng,
       created_at
     FROM incidents
-    WHERE COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
+    WHERE COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED')
     ORDER BY created_at ASC
   `;
 

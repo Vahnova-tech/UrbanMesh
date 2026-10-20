@@ -2,7 +2,25 @@ import { clearAdminToken, loadAdminToken } from "./auth";
 
 const API_BASE = (import.meta.env.VITE_API_BASE ?? "").replace(/\/$/, "");
 
-export type ReviewStatus = "pending" | "approved" | "rejected";
+export type ReviewStatus =
+  | "pending"
+  | "approved"
+  | "rejected"
+  | "flagged"
+  | "resolved"
+  | "archived";
+
+export type AdminAction =
+  | "approve_field"
+  | "reject"
+  | "flag"
+  | "resolve"
+  | "reopen"
+  | "archive"
+  | "restore"
+  | "merge_duplicate"
+  | "reset_queue"
+  | "edit_category";
 
 export interface AdminIncident {
   id: string;
@@ -13,10 +31,16 @@ export interface AdminIncident {
   lng: number;
   cluster_id: string | null;
   is_verified: boolean;
+  community_supported: boolean;
   status: "verified" | "pending";
   review_status: ReviewStatus;
   reviewed_at: string | null;
   review_note: string | null;
+  field_verified: boolean;
+  field_verified_at: string | null;
+  resolved_at: string | null;
+  resolution_note: string | null;
+  duplicate_of_id: string | null;
   severity: "critical" | "standard";
   photo_url: string | null;
   created_at: string;
@@ -25,10 +49,42 @@ export interface AdminIncident {
   nearby_count: number;
 }
 
+export interface AdminAuditEntry {
+  id: string;
+  incident_id: string | null;
+  action: string;
+  actor: string;
+  reason: string | null;
+  created_at: string;
+}
+
 export interface AdminListResponse {
   count: number;
-  summary: Record<ReviewStatus, number>;
+  summary: Record<ReviewStatus, number> & {
+    community_supported: number;
+    field_verified: number;
+  };
   incidents: AdminIncident[];
+}
+
+export interface AdminDetailResponse {
+  incident: AdminIncident;
+  nearby: AdminIncident[];
+  cluster_members: AdminIncident[];
+  audit: AdminAuditEntry[];
+}
+
+export interface DashboardStats {
+  total: number;
+  pending_review: number;
+  community_supported: number;
+  field_verified: number;
+  resolved: number;
+  flagged: number;
+  rejected: number;
+  archived: number;
+  by_category: { category: string; label: string; count: number }[];
+  recent_actions: AdminAuditEntry[];
 }
 
 async function requestJson<T>(
@@ -66,38 +122,37 @@ export async function verifySession(): Promise<boolean> {
   }
 }
 
-export async function fetchAdminReports(
-  review: ReviewStatus | "all" = "pending",
-): Promise<AdminListResponse> {
-  return requestJson<AdminListResponse>(
-    `/api/v1/admin/reports?review=${encodeURIComponent(review)}&limit=300`,
-  );
+export async function fetchDashboard(): Promise<DashboardStats> {
+  return requestJson<DashboardStats>("/api/v1/admin/dashboard");
 }
 
-export async function approveReport(id: string, note?: string) {
-  return requestJson<{ ok: boolean; incident: AdminIncident }>(
-    `/api/v1/admin/reports/${id}/approve`,
-    {
-      method: "POST",
-      body: JSON.stringify({ note: note ?? "" }),
-    },
-  );
+export async function fetchAdminReports(params: {
+  review?: ReviewStatus | "all" | "queue";
+  category?: string;
+  q?: string;
+}): Promise<AdminListResponse> {
+  const qs = new URLSearchParams();
+  qs.set("review", params.review ?? "queue");
+  qs.set("limit", "400");
+  if (params.category && params.category !== "all") {
+    qs.set("category", params.category);
+  }
+  if (params.q?.trim()) qs.set("q", params.q.trim());
+  return requestJson<AdminListResponse>(`/api/v1/admin/reports?${qs}`);
 }
 
-export async function rejectReport(id: string, note?: string) {
-  return requestJson<{ ok: boolean; incident: AdminIncident }>(
-    `/api/v1/admin/reports/${id}/reject`,
-    {
-      method: "POST",
-      body: JSON.stringify({ note: note ?? "" }),
-    },
-  );
+export async function fetchAdminDetail(id: string): Promise<AdminDetailResponse> {
+  return requestJson<AdminDetailResponse>(`/api/v1/admin/reports/${id}`);
 }
 
-export async function resetReport(id: string) {
+export async function runAdminAction(
+  id: string,
+  action: AdminAction,
+  body: Record<string, string> = {},
+) {
   return requestJson<{ ok: boolean; incident: AdminIncident }>(
-    `/api/v1/admin/reports/${id}/reset`,
-    { method: "POST", body: "{}" },
+    `/api/v1/admin/reports/${id}/actions/${action}`,
+    { method: "POST", body: JSON.stringify(body) },
   );
 }
 

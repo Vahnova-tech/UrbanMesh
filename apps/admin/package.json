@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@urbanmesh/shared": "file:../../packages/shared",
+    "maplibre-gl": "^5.24.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.18.4"

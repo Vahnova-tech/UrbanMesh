@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { AdminShell } from "./components/AdminShell";
 import { clearAdminToken, loadAdminToken, saveAdminToken } from "./lib/auth";
 import { verifySession } from "./lib/api";
+import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
+import { MapPage } from "./pages/MapPage";
 import { QueuePage } from "./pages/QueuePage";
+import { ReportDetailPage } from "./pages/ReportDetailPage";
 
 const basename =
   import.meta.env.BASE_URL === "/"
@@ -69,15 +73,22 @@ export default function App() {
           }
         />
         <Route
-          path="/"
           element={
             authed ? (
-              <QueuePage onLogout={onLogout} />
+              <AdminShell onLogout={onLogout} />
             ) : (
               <Navigate to="/login" replace />
             )
           }
-        />
+        >
+          <Route path="/" element={<DashboardPage onLogout={onLogout} />} />
+          <Route path="/queue" element={<QueuePage onLogout={onLogout} />} />
+          <Route path="/map" element={<MapPage onLogout={onLogout} />} />
+          <Route
+            path="/reports/:id"
+            element={<ReportDetailPage onLogout={onLogout} />}
+          />
+        </Route>
         <Route path="*" element={<Navigate to={authed ? "/" : "/login"} replace />} />
       </Routes>
     </BrowserRouter>

@@ -24,11 +24,14 @@ enum HazardCategory {
   ILLEGAL_WASTE_DUMP
 }
 
-/// Admin field-review outcome (separate from spatial community corroboration).
+/// Admin workflow status — separate from spatial community corroboration (is_verified).
 enum ReviewStatus {
   PENDING
   APPROVED
   REJECTED
+  FLAGGED
+  RESOLVED
+  ARCHIVED
 }
 
 model Incident {
@@ -39,19 +42,43 @@ model Incident {
   location    Unsupported("geometry(Point, 4326)")
   /// Uber H3 cell index for hexagonal spatial aggregation and heatmap clustering
   h3Index     String         @map("h3_index")
-  /// Crowdsource verification flag (schema field; API may expose as is_verified)
+  /// Crowdsource spatial corroboration (≥3 same-category within 15 m) — not field inspection
   verified    Boolean        @default(false) @map("is_verified")
   /// Shared cluster anchor for grouping verified incidents; null until clustered
   clusterId   String?        @map("cluster_id") @db.Uuid
   /// Reserved for future PWA photo upload (URL or object key)
   photoUrl    String?        @map("photo_url")
-  /// Field moderation: pending review, approved, or rejected (hidden from public feed)
+  /// Admin workflow status
   reviewStatus ReviewStatus  @default(PENDING) @map("review_status")
   reviewedAt  DateTime?      @map("reviewed_at")
   reviewNote  String?        @map("review_note")
+  /// True only after an admin records an on-site inspection (not auto from community support)
+  fieldVerified Boolean      @default(false) @map("field_verified")
+  fieldVerifiedAt DateTime?  @map("field_verified_at")
+  resolvedAt  DateTime?      @map("resolved_at")
+  resolutionNote String?     @map("resolution_note")
+  /// If set, this report is treated as a duplicate of another incident
+  duplicateOfId String?      @map("duplicate_of_id") @db.Uuid
   createdAt   DateTime       @default(now()) @map("created_at")
 
   @@index([h3Index])
   @@index([reviewStatus])
+  @@index([duplicateOfId])
   @@map("incidents")
+}
+
+/// Append-only admin action log — never silently rewrite verification history.
+model AdminAuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  incidentId String?  @map("incident_id") @db.Uuid
+  action     String
+  actor      String   @default("admin")
+  reason     String?
+  beforeJson String?  @map("before_json")
+  afterJson  String?  @map("after_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@index([incidentId])
+  @@index([createdAt])
+  @@map("admin_audit_logs")
 }

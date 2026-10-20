@@ -39,11 +39,11 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
       >
         <p className="um-eyebrow">UrbanMesh · Kilimani</p>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight text-civic-ink">
-          Field review admin
+          Operations admin
         </h1>
         <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Approve or reject resident hazard reports. This is separate from community
-          spatial corroboration (≥3 within 15 m).
+          Review, verify, moderate, and resolve hazard reports. Field verification is
+          separate from community spatial corroboration (≥3 within 15 m).
         </p>
 
         <label className="mt-6 block text-xs font-semibold text-civic-slate">

@@ -64,7 +64,7 @@ export async function ingestHazardReport(
     SELECT id::text AS id
     FROM incidents
     WHERE category = ${input.category}::"HazardCategory"
-      AND COALESCE(review_status::text, 'PENDING') <> 'REJECTED'
+      AND COALESCE(review_status::text, 'PENDING') NOT IN ('REJECTED', 'ARCHIVED')
       AND ST_DWithin(
         location::geography,
         ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography,
