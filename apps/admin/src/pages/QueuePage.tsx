@@ -227,6 +227,43 @@ function QueueDetail({
         </div>
       </div>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Link
+          to={`/reports/${incident.id}`}
+          className="inline-flex min-h-10 items-center rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-ink hover:bg-civic-mist"
+        >
+          View details
+        </Link>
+        <Link
+          to={`/reports/${incident.id}#history`}
+          className="inline-flex min-h-10 items-center rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-ink hover:bg-civic-mist"
+        >
+          View history
+        </Link>
+      </div>
+
+      <div className="mt-4">
+        <ReportActions
+          incident={incident}
+          onDone={async () => {
+            try {
+              await onDone();
+            } catch (err) {
+              if (err instanceof Error && /sign-in/i.test(err.message)) onAuthFail();
+            }
+          }}
+          onError={(msg) => {
+            onError(msg);
+            if (/sign-in/i.test(msg)) onAuthFail();
+          }}
+        />
+      </div>
+
+      <p className="mt-3 text-xs leading-relaxed text-civic-muted">
+        Remove / archive take the report off the public map. Field verification does not
+        replace the ≥3 / 15 m community corroboration rule.
+      </p>
+
       <p className="mt-4 text-sm leading-relaxed text-civic-slate">
         {incident.description}
       </p>
@@ -255,41 +292,6 @@ function QueueDetail({
           No photo attached
         </p>
       )}
-
-      <div className="mt-5 flex flex-wrap gap-2">
-        <Link
-          to={`/reports/${incident.id}`}
-          className="inline-flex min-h-10 items-center rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-ink hover:bg-civic-mist"
-        >
-          View details
-        </Link>
-        <Link
-          to={`/reports/${incident.id}#history`}
-          className="inline-flex min-h-10 items-center rounded-card border border-civic-line px-3 text-xs font-semibold text-civic-ink hover:bg-civic-mist"
-        >
-          View history
-        </Link>
-      </div>
-
-      <ReportActions
-        incident={incident}
-        onDone={async () => {
-          try {
-            await onDone();
-          } catch (err) {
-            if (err instanceof Error && /sign-in/i.test(err.message)) onAuthFail();
-          }
-        }}
-        onError={(msg) => {
-          onError(msg);
-          if (/sign-in/i.test(msg)) onAuthFail();
-        }}
-      />
-
-      <p className="mt-4 text-xs leading-relaxed text-civic-muted">
-        Rejected and archived reports leave the public map. Field verification does not
-        replace the ≥3 / 15 m community corroboration rule.
-      </p>
     </div>
   );
 }

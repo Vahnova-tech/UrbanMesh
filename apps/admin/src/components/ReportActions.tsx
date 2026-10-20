@@ -39,17 +39,17 @@ const DIALOG_META: Record<
       "Record that an actual inspection confirmed this hazard. This is separate from community spatial corroboration.",
     confirmLabel: "Mark field-verified",
     requireReason: false,
-    reasonLabel: "Inspection note (optional)",
+    reasonLabel: "Inspection note",
     reasonPlaceholder: "What was observed on site…",
   },
   reject: {
-    title: "Reject report",
+    title: "Remove report",
     description:
-      "Unsupported or invalid reports are removed from the public map. A reason is required and logged.",
-    confirmLabel: "Reject report",
+      "Marks the report invalid and removes it from the public map and listings. A reason is required and logged.",
+    confirmLabel: "Remove report",
     requireReason: true,
     destructive: true,
-    reasonPlaceholder: "Why this report is unsupported…",
+    reasonPlaceholder: "Why this report is invalid…",
   },
   flag: {
     title: "Flag for review",
@@ -61,7 +61,7 @@ const DIALOG_META: Record<
   resolve: {
     title: "Mark resolved",
     description:
-      "Record that the issue is resolved, with supporting notes. Attach follow-up evidence in the note when available.",
+      "Record that the issue is resolved, with supporting notes. Mention follow-up evidence in the note when available.",
     confirmLabel: "Mark resolved",
     requireReason: true,
     reasonLabel: "Resolution note",
@@ -83,7 +83,7 @@ const DIALOG_META: Record<
   },
   restore: {
     title: "Restore to queue",
-    description: "Return an archived or rejected report to pending review.",
+    description: "Return an archived or removed report to pending review.",
     confirmLabel: "Restore",
     requireReason: false,
   },
@@ -98,7 +98,7 @@ const DIALOG_META: Record<
   reset_queue: {
     title: "Reset to queue",
     description:
-      "Clear field-verification and resolution marks and return this report to pending. Use only to correct mistakes — history is logged.",
+      "Clear field-verification and resolution marks and return this report to pending. History is logged.",
     confirmLabel: "Reset",
     requireReason: false,
     destructive: true,
@@ -112,25 +112,37 @@ const DIALOG_META: Record<
   },
 };
 
+function normalizeStatus(raw: string | undefined | null): ReviewStatus {
+  const value = String(raw ?? "pending").toLowerCase() as ReviewStatus;
+  const allowed: ReviewStatus[] = [
+    "pending",
+    "approved",
+    "rejected",
+    "flagged",
+    "resolved",
+    "archived",
+  ];
+  return allowed.includes(value) ? value : "pending";
+}
+
 export function ReportActions({
   incident,
   nearbyIds = [],
   onDone,
   onError,
-  compact = false,
 }: {
   incident: AdminIncident;
   nearbyIds?: string[];
   onDone: () => void | Promise<void>;
   onError: (message: string) => void;
-  compact?: boolean;
 }) {
   const [dialog, setDialog] = useState<DialogKind>(null);
   const [busy, setBusy] = useState(false);
   const [duplicateOf, setDuplicateOf] = useState(nearbyIds[0] ?? "");
   const [category, setCategory] = useState(incident.category);
 
-  const status = incident.review_status;
+  const status = normalizeStatus(incident.review_status);
+  const active = status !== "archived" && status !== "rejected";
 
   async function confirm(kind: Exclude<DialogKind, null>, reason: string) {
     setBusy(true);
@@ -163,85 +175,132 @@ export function ReportActions({
   const btn =
     "inline-flex min-h-10 items-center justify-center rounded-card border px-3 text-xs font-semibold disabled:opacity-60";
   const primary = `${btn} border-transparent bg-civic-accent text-white hover:bg-civic-accentDark`;
-  const secondary = `${btn} border-civic-line text-civic-ink hover:bg-civic-mist`;
-  const danger = `${btn} border-civic-critical/30 bg-civic-criticalBg text-civic-critical hover:bg-civic-critical/10`;
+  const secondary = `${btn} border-civic-line bg-civic-surface text-civic-ink hover:bg-civic-mist`;
+  const danger = `${btn} border-civic-critical/40 bg-civic-criticalBg text-civic-critical hover:bg-civic-critical/15`;
 
   const meta = dialog ? DIALOG_META[dialog] : null;
 
   return (
     <>
-      <div className={`flex flex-wrap gap-2 ${compact ? "" : "mt-4"}`}>
-        {status !== "approved" && status !== "archived" ? (
-          <button type="button" className={primary} onClick={() => setDialog("approve_field")}>
-            Verify in field
-          </button>
-        ) : null}
+      <div className="rounded-card border border-civic-line bg-civic-mist/40 p-3">
+        <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
+          Report actions
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {active && status !== "approved" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={primary}
+              onClick={() => setDialog("approve_field")}
+            >
+              Verify in field
+            </button>
+          ) : null}
 
-        {status === "pending" || status === "approved" ? (
-          <button type="button" className={secondary} onClick={() => setDialog("flag")}>
-            Flag report
-          </button>
-        ) : null}
+          {active ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("flag")}
+            >
+              Flag report
+            </button>
+          ) : null}
 
-        {status !== "resolved" && status !== "archived" && status !== "rejected" ? (
-          <button type="button" className={secondary} onClick={() => setDialog("resolve")}>
-            Mark resolved
-          </button>
-        ) : null}
+          {active && status !== "resolved" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("resolve")}
+            >
+              Mark resolved
+            </button>
+          ) : null}
 
-        {status === "resolved" ? (
-          <button type="button" className={secondary} onClick={() => setDialog("reopen")}>
-            Reopen
-          </button>
-        ) : null}
+          {status === "resolved" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("reopen")}
+            >
+              Reopen
+            </button>
+          ) : null}
 
-        {status !== "archived" && nearbyIds.length > 0 ? (
+          {active ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => {
+                setDuplicateOf(nearbyIds[0] ?? "");
+                setDialog("merge_duplicate");
+              }}
+            >
+              Resolve duplicate
+            </button>
+          ) : null}
+
           <button
             type="button"
+            disabled={busy}
             className={secondary}
             onClick={() => {
-              setDuplicateOf(nearbyIds[0] ?? "");
-              setDialog("merge_duplicate");
+              setCategory(incident.category);
+              setDialog("edit_category");
             }}
           >
-            Resolve duplicate
+            Edit category
           </button>
-        ) : null}
 
-        <button
-          type="button"
-          className={secondary}
-          onClick={() => {
-            setCategory(incident.category);
-            setDialog("edit_category");
-          }}
-        >
-          Edit category
-        </button>
+          {active ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={danger}
+              onClick={() => setDialog("reject")}
+            >
+              Remove report
+            </button>
+          ) : null}
 
-        {status !== "rejected" && status !== "archived" ? (
-          <button type="button" className={danger} onClick={() => setDialog("reject")}>
-            Reject
-          </button>
-        ) : null}
+          {status !== "archived" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={danger}
+              onClick={() => setDialog("archive")}
+            >
+              Archive
+            </button>
+          ) : null}
 
-        {status !== "archived" ? (
-          <button type="button" className={danger} onClick={() => setDialog("archive")}>
-            Archive
-          </button>
-        ) : null}
+          {status === "archived" || status === "rejected" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("restore")}
+            >
+              Restore
+            </button>
+          ) : null}
 
-        {status === "archived" || status === "rejected" ? (
-          <button type="button" className={secondary} onClick={() => setDialog("restore")}>
-            Restore
-          </button>
-        ) : null}
-
-        {canReset(status) ? (
-          <button type="button" className={secondary} onClick={() => setDialog("reset_queue")}>
-            Reset to queue
-          </button>
-        ) : null}
+          {status !== "pending" ? (
+            <button
+              type="button"
+              disabled={busy}
+              className={secondary}
+              onClick={() => setDialog("reset_queue")}
+            >
+              Reset to queue
+            </button>
+          ) : null}
+        </div>
       </div>
 
       {meta && dialog ? (
@@ -295,8 +354,4 @@ export function ReportActions({
       ) : null}
     </>
   );
-}
-
-function canReset(status: ReviewStatus): boolean {
-  return status !== "pending";
 }

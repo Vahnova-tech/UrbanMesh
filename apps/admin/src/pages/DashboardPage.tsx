@@ -35,7 +35,8 @@ export function DashboardPage({ onLogout }: { onLogout: () => void }) {
             Operations dashboard
           </h2>
           <p className="mt-1 text-sm text-civic-slate">
-            Community-supported is spatial corroboration — not a field inspection.
+            Use Review queue to verify, flag, resolve, or remove reports. Community-supported
+            is spatial corroboration — not a field inspection.
           </p>
         </div>
         <div className="flex gap-2">

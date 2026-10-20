@@ -118,19 +118,21 @@ export function ReportDetailPage({ onLogout }: { onLogout: () => void }) {
         </div>
       </div>
 
+      <div className="mt-4">
+        <ReportActions
+          incident={incident}
+          nearbyIds={nearby.map((n) => n.id)}
+          onDone={load}
+          onError={(msg) => {
+            setError(msg);
+            if (/sign-in/i.test(msg)) onLogout();
+          }}
+        />
+      </div>
+
       <p className="mt-4 max-w-3xl text-sm leading-relaxed text-civic-slate">
         {incident.description}
       </p>
-
-      <ReportActions
-        incident={incident}
-        nearbyIds={nearby.map((n) => n.id)}
-        onDone={load}
-        onError={(msg) => {
-          setError(msg);
-          if (/sign-in/i.test(msg)) onLogout();
-        }}
-      />
 
       <div className="mt-8 grid gap-6 lg:grid-cols-2">
         <section>
