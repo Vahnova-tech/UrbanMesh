@@ -19,6 +19,9 @@ ENV NODE_ENV=production \
 
 WORKDIR /app
 
+# Shared package must exist before npm ci (file:../../packages/shared).
+COPY packages/shared packages/shared
+
 COPY apps/api/package.json apps/api/package-lock.json apps/api/
 COPY apps/web/package.json apps/web/package-lock.json apps/web/
 COPY apps/dashboard/package.json apps/dashboard/package-lock.json apps/dashboard/
@@ -30,6 +33,7 @@ RUN npm ci --prefix apps/api \
 COPY apps/api apps/api
 COPY apps/web apps/web
 COPY apps/dashboard apps/dashboard
+COPY packages/shared packages/shared
 
 RUN mkdir -p /var/data/photos /var/data/lpdp \
   && npx --prefix apps/api prisma generate --schema apps/api/prisma/schema.prisma \
