@@ -2,8 +2,6 @@
 
 **Crowdsourced walkability & safety intelligence for Kilimani — feeding Nairobi County’s Local Physical Development Plan (LPDP).**
 
-Built primarily by **[Junior Maina](https://github.com/Juniormaina)** — product direction, architecture, integration, and shipping. AI coding tools (especially **Cursor**) accelerated implementation; they did not replace ownership of the problem, the spatial trust model, or the Kilimani-specific design choices.
-
 Residents report mobility and infrastructure hazards in real time. When enough nearby reports agree, the platform **self-verifies** a spatial cluster, paints a live Walkability & Safety Heatmap, and compiles an LPDP policy brief for county planners.
 
 Grounded in Kilimani’s scale: **~50,457 residents across 16.1 km²** (2019 census context), with pilot corridors on **Argwings Kodhek Road** and the **Kirichwa Kubwa** river corridor.
@@ -35,44 +33,6 @@ That triangulation of **community reports + spatial clustering + planner-facing 
 | **Privacy / security** | No public citizen profiles; reports on-device for “My Reports”; taxonomy excludes sensitive social/crime domains |
 | **Trust** | Auto-verify is a **priority signal**, not unreviewed publish — community moderation stays in the pilot plan |
 | **Planner utility** | One-click A4 LPDP policy brief from live verified clusters |
-
----
-
-## How I built this (and how I used AI)
-
-I, **Junior Maina**, did **most of the work** on UrbanMesh end to end: framing the Kilimani / LPDP problem, choosing the three-app architecture, defining the self-verifying spatial rule, wiring PostGIS + H3, shipping the citizen PWA and county dashboard, seeding corridor data, and keeping docs honest about what is live vs stubbed.
-
-I used **AI coding tools as a force multiplier**, not as the author of the product:
-
-| What I owned | How AI tools helped |
-| --- | --- |
-| Problem framing & scope (point hazards only; privacy boundaries) | Stress-tested wording and edge cases in conversation |
-| Architecture (PWA + Express/Prisma/PostGIS + planner console) | Scaffolded folder layout and boilerplate faster |
-| Self-verify rule (15 m / ≥3, same category) | Drafted Prisma `$queryRaw` / `ST_DWithin` ingest + clustering loops I then reviewed and hardened |
-| Citizen map & report UX | Accelerated React/Leaflet/Tailwind UI and multi-step report flow |
-| LPDP PDF pipeline | Generated HTML print templates + Puppeteer render script I edited for A4 / county tone |
-| Honest empty start (no authored demo incidents) | Helped strip seed pins so the map only shows resident reports |
-| README / STATUS / roadmap | Kept documentation aligned with the actual codebase |
-
-### Tools & workflow
-
-- **Cursor** (agent + chat): primary environment — multi-file edits, repo-aware refactors, deliverable-sized prompts  
-- **LLMs via Cursor**: TypeScript, SQL/PostGIS, React, Puppeteer, Tailwind  
-- **My loop:** specify the civic constraint → ask for a thin vertical slice → run it → fix types/spatial edge cases → commit  
-
-I deliberately worked **one deliverable at a time** (schema → ingest/cluster → PWA → dashboard/PDF → seed) so the agent stayed on rails and I stayed accountable for every merge.
-
-### Example prompt I used
-
-```text
-Using the Incident schema, build POST /api/v1/reports that inserts a
-PostGIS Point via $queryRaw, runs ST_DWithin(geography, 15m) for the
-same HazardCategory, and if count ≥ 3 flips is_verified and sets
-cluster_id to the new incident id. Return “Verified Cluster Created”
-vs “Incident Logged - Pending Verification”.
-```
-
-That class of prompt — precise, geospatial, acceptance-testable — is how the self-verifying filter and LPDP path were scaffolded. **I reviewed, corrected, and integrated the output** into the monorepo.
 
 ---
 
@@ -257,9 +217,7 @@ Path from working MVP to a supervised street pilot (KCF hosting, reporter cohort
 
 ---
 
-## Roles covered
-
-These are the product surfaces I built and maintain:
+## Product surfaces
 
 | Focus | Surface |
 | --- | --- |
@@ -270,8 +228,6 @@ These are the product surfaces I built and maintain:
 ---
 
 ## Licence & attribution
-
-**Author:** Junior Maina ([@Juniormaina](https://github.com/Juniormaina))
 
 Built for community evidence and Nairobi County planning workflows — an operational input to the Kilimani LPDP, **not** a statutory plan amendment by itself.
 

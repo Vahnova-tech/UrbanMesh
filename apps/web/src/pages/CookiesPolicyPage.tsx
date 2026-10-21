@@ -182,17 +182,9 @@ export function CookiesPolicyPage() {
       <section className="mt-10 border-t border-civic-line pt-8">
         <h2 className="um-about-section-title">Contact</h2>
         <p className="mt-4 text-sm leading-relaxed text-civic-slate">
-          Questions about this policy for the UrbanMesh Kilimani pilot can be raised via{" "}
-          <a
-            href="https://github.com/Juniormaina"
-            target="_blank"
-            rel="noreferrer"
-            className="font-semibold text-civic-accent hover:underline"
-          >
-            the project maintainer on GitHub
-          </a>
-          . This page is product documentation for the pilot — not legal advice, and not a
-          county privacy notice.
+          Questions about this policy for the UrbanMesh Kilimani pilot should go through your
+          pilot programme contact or county partner channel. This page is product
+          documentation for the pilot — not legal advice, and not a county privacy notice.
         </p>
       </section>
 

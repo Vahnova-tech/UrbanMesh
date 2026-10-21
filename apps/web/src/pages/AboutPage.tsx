@@ -336,42 +336,17 @@ export function AboutPage() {
           </ul>
         </Reveal>
 
-        {/* Credibility / people — only verified */}
         <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
             <div>
-              <p className="um-eyebrow">People & product</p>
-              <h2 className="um-about-section-title mt-3">Who builds UrbanMesh</h2>
+              <p className="um-eyebrow">On this phone</p>
+              <h2 className="um-about-section-title mt-3">Install for quick access</h2>
             </div>
             <div>
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
-                <div
-                  className="flex h-20 w-20 shrink-0 items-center justify-center border border-civic-line bg-civic-mist text-sm font-semibold text-civic-slate"
-                  aria-hidden
-                >
-                  JM
-                </div>
-                <div>
-                  <p className="text-lg font-semibold tracking-tight text-civic-ink">
-                    Junior Maina
-                  </p>
-                  <p className="mt-1 text-sm text-civic-slate">
-                    Product direction, architecture, and shipping for the Kilimani pilot.
-                  </p>
-                  <a
-                    href="https://github.com/Juniormaina"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="mt-3 inline-flex text-sm font-semibold text-civic-accent hover:underline"
-                  >
-                    GitHub ↗
-                  </a>
-                </div>
-              </div>
-              <p className="mt-8 max-w-xl text-sm leading-relaxed text-civic-slate">
-                Install UrbanMesh on this phone via the header install control (Chrome / Edge)
-                or Share → Add to Home Screen on iPhone. Cached map and reports stay available
-                offline; new submissions still need a connection.
+              <p className="max-w-xl text-sm leading-relaxed text-civic-slate">
+                Install UrbanMesh via the header install control (Chrome / Edge) or Share →
+                Add to Home Screen on iPhone. Cached map and reports stay available offline;
+                new submissions still need a connection.
               </p>
             </div>
           </div>
