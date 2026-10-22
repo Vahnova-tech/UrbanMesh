@@ -17,15 +17,8 @@ import { ButtonLink } from "../ui/Button";
 const NAV = [
   { to: "/", label: "Map", end: true },
   { to: "/neighbourhoods", label: "Neighbourhoods" },
-  { to: "/kileleshwa", label: "Kileleshwa Data Pack" },
   { to: "/reports", label: "Reports" },
   { to: "/about", label: "About" },
-] as const;
-
-/** Secondary — reachable but not primary IA. */
-const SECONDARY_NAV = [
-  { to: "/search", label: "Search" },
-  { to: "/me", label: "My Reports" },
 ] as const;
 
 /** Top clearance for the floating pill over page content (non–full-bleed). */
@@ -87,7 +80,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 }
 
 function navClass(isActive: boolean) {
-  return `rounded-full px-3.5 py-1.5 text-sm font-semibold transition-colors ${
+  return `shrink-0 whitespace-nowrap rounded-full px-2 py-1.5 text-sm font-semibold transition-colors ${
     isActive
       ? "bg-civic-mist text-civic-ink"
       : "text-civic-slate hover:bg-civic-mist/70 hover:text-civic-ink"
@@ -101,7 +94,7 @@ function tabClass(isActive: boolean) {
 }
 
 const toolBtn =
-  "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-transparent px-2.5 text-xs font-semibold text-civic-slate transition-colors hover:border-civic-line hover:bg-civic-mist/80";
+  "inline-flex min-h-9 shrink-0 items-center justify-center gap-1.5 rounded-full border border-transparent px-2 text-xs font-semibold text-civic-slate transition-colors hover:border-civic-line hover:bg-civic-mist/80";
 
 function TopBar({
   unreadCount,
@@ -122,14 +115,22 @@ function TopBar({
 
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-[2000] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 lg:px-6">
-      <div className="um-nav-pill pointer-events-auto mx-auto flex w-full max-w-5xl items-center gap-1.5 px-2 py-1.5 sm:gap-2 sm:px-2.5 lg:max-w-6xl">
-        <Link to="/" aria-label="UrbanMesh home" className="shrink-0 rounded-full px-1.5 py-1">
+      <div className="um-nav-pill pointer-events-auto mx-auto flex w-full max-w-6xl items-center gap-1 px-1.5 py-1.5 sm:gap-2 sm:px-2.5">
+        <Link to="/" aria-label="UrbanMesh home" className="shrink-0 rounded-full px-1 py-1">
           <UrbanMeshLogo compact />
         </Link>
 
-        <NeighbourhoodSwitcher className="shrink-0" />
+        <div
+          className="um-neighbourhood-slot shrink-0"
+          style={{ width: "7.5rem", maxWidth: "7.5rem", minWidth: 0, overflow: "hidden" }}
+        >
+          <NeighbourhoodSwitcher className="block w-full min-w-0" />
+        </div>
 
-        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-0.5 lg:flex">
+        <nav
+          aria-label="Primary"
+          className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -140,67 +141,50 @@ function TopBar({
               {item.label}
             </NavLink>
           ))}
-          {SECONDARY_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `${navClass(isActive)} opacity-80 text-xs`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
         </nav>
 
-        <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-1.5">
-          <div className="hidden items-center gap-1 xl:flex">
-            <InstallButton className={toolBtn} />
-            <NoticeBell
-              unreadCount={unreadCount}
-              open={updatesOpen}
-              onToggle={onToggleUpdates}
-              className={toolBtn}
-            />
-            <NavLink
-              to="/about"
-              aria-label="About UrbanMesh"
-              title="About"
-              className={({ isActive }) =>
-                `${toolBtn} ${isActive ? "border-civic-line bg-civic-mist text-civic-ink" : ""}`
-              }
-            >
-              <AboutIcon />
-              <span className="hidden xl:inline">About</span>
-            </NavLink>
-            <button
-              type="button"
-              onClick={requestLocation}
-              aria-label={coords ? "Refresh location" : "Use current location"}
-              className={toolBtn}
-            >
-              <LocateIcon />
-              <span className="hidden xl:inline">
-                {locating ? "Locating…" : coords ? "Located" : "Location"}
-              </span>
-            </button>
-            <ThemeToggle className={toolBtn} />
-          </div>
-
-          <div className="flex items-center gap-1 lg:hidden">
-            <NoticeBell
-              unreadCount={unreadCount}
-              open={updatesOpen}
-              onToggle={onToggleUpdates}
-              className={toolBtn}
-              compact
-            />
-            <ThemeToggle className={toolBtn} compact />
-          </div>
-
+        <div className="ml-auto flex shrink-0 items-center gap-0.5 sm:gap-1">
+          <NavLink
+            to="/search"
+            aria-label="Search"
+            title="Search"
+            className={({ isActive }) =>
+              `${toolBtn} hidden sm:inline-flex ${isActive ? "border-civic-line bg-civic-mist text-civic-ink" : ""}`
+            }
+          >
+            <SearchIcon />
+          </NavLink>
+          <NavLink
+            to="/me"
+            aria-label="My Reports"
+            title="My Reports"
+            className={({ isActive }) =>
+              `${toolBtn} hidden sm:inline-flex ${isActive ? "border-civic-line bg-civic-mist text-civic-ink" : ""}`
+            }
+          >
+            <UserIcon className="h-4 w-4" />
+          </NavLink>
+          <InstallButton className={toolBtn} compact />
+          <NoticeBell
+            unreadCount={unreadCount}
+            open={updatesOpen}
+            onToggle={onToggleUpdates}
+            className={toolBtn}
+            compact
+          />
+          <button
+            type="button"
+            onClick={requestLocation}
+            aria-label={coords ? "Refresh location" : "Use current location"}
+            title={locating ? "Locating…" : coords ? "Location on" : "Use location"}
+            className={`${toolBtn} hidden md:inline-flex`}
+          >
+            <LocateIcon />
+          </button>
+          <ThemeToggle className={toolBtn} compact />
           <ButtonLink
             to={reportPath}
-            className="hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm md:inline-flex"
+            className="ml-1 hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs sm:px-4 sm:text-sm md:inline-flex"
           >
             {reportLabel}
           </ButtonLink>
@@ -317,9 +301,15 @@ function ListIcon({ filled = false }: { filled?: boolean }) {
   );
 }
 
-function UserIcon({ filled = false }: { filled?: boolean }) {
+function UserIcon({
+  filled = false,
+  className = "h-5 w-5",
+}: {
+  filled?: boolean;
+  className?: string;
+}) {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden>
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
       <circle
         cx="12"
         cy="8"
@@ -376,16 +366,11 @@ function PlusIcon() {
   );
 }
 
-function AboutIcon() {
+function SearchIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" aria-hidden>
-      <circle cx="12" cy="12" r="8.25" stroke="currentColor" strokeWidth="1.7" />
-      <path
-        d="M12 11.2V16.5M12 8.2v.2"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-      />
+      <circle cx="11" cy="11" r="6.25" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M16 16.5 20 20.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }

@@ -143,7 +143,8 @@ export function NeighbourhoodSwitcher({
           setNeighbourhood(e.target.value as NeighbourhoodId)
         }
         aria-label="Select neighbourhood"
-        className="min-h-9 max-w-[9.5rem] rounded-full border border-civic-line bg-civic-surface px-2.5 text-xs font-semibold text-civic-ink outline-none focus:border-civic-accent"
+        className="min-h-9 w-full max-w-full rounded-full border border-civic-line bg-civic-surface px-2.5 text-xs font-semibold text-civic-ink outline-none focus:border-civic-accent"
+        style={{ width: "100%", maxWidth: "100%", minWidth: 0 }}
       >
         {neighbourhoods.map((n) => (
           <option key={n.id} value={n.id}>

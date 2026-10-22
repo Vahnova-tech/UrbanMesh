@@ -355,8 +355,8 @@ export function MapHomePage() {
         </BottomSheet>
       </div>
 
-      <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface lg:flex">
-        <div className="border-b border-civic-line px-5 py-5">
+      <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface pt-[4.25rem] lg:flex">
+        <div className="border-b border-civic-line px-5 pb-5 pt-3">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center rounded-full border border-civic-line bg-civic-mist px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
               Kilimani · Nairobi

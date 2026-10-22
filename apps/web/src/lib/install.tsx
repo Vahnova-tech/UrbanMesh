@@ -50,8 +50,10 @@ export function useInstallPrompt() {
 
 export function InstallButton({
   className = "inline-flex min-h-11 items-center gap-1.5 rounded-xl border border-civic-line px-2.5 text-xs font-semibold text-civic-slate",
+  compact = false,
 }: {
   className?: string;
+  compact?: boolean;
 }) {
   const { canInstall, install } = useInstallPrompt();
   if (!canInstall) return null;
@@ -79,7 +81,7 @@ export function InstallButton({
           strokeLinecap="round"
         />
       </svg>
-      <span className="hidden sm:inline">Install</span>
+      {compact ? null : <span className="hidden sm:inline">Install</span>}
     </button>
   );
 }
