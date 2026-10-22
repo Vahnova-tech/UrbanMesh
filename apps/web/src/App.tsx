@@ -15,7 +15,6 @@ import { ConcernDetailPage } from "./pages/ConcernDetailPage";
 import { AboutPage } from "./pages/AboutPage";
 import { CookiesPolicyPage } from "./pages/CookiesPolicyPage";
 import { DataPackPage } from "./pages/DataPackPage";
-import { NeighbourhoodsPage } from "./pages/NeighbourhoodsPage";
 import { SearchPage } from "./pages/SearchPage";
 
 function HazardRedirect() {
@@ -31,7 +30,6 @@ function pageLabel(pathname: string): string | null {
   if (pathname === "/reports") return "Reports";
   if (pathname === "/concerns/new") return "Submit a concern";
   if (pathname.startsWith("/concerns/")) return "Concern";
-  if (pathname === "/neighbourhoods") return "Neighbourhoods";
   if (pathname === "/search") return "Search";
   if (pathname === "/me") return "My Reports";
   if (pathname === "/about") return "About";
@@ -111,14 +109,7 @@ export default function App() {
                 }
               />
               <Route path="/hazards/:id" element={<HazardRedirect />} />
-              <Route
-                path="/neighbourhoods"
-                element={
-                  <AppShell>
-                    <NeighbourhoodsPage />
-                  </AppShell>
-                }
-              />
+              <Route path="/neighbourhoods" element={<Navigate to="/" replace />} />
               <Route
                 path="/kileleshwa"
                 element={

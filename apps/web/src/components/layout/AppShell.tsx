@@ -16,7 +16,6 @@ import { ButtonLink } from "../ui/Button";
 
 const NAV = [
   { to: "/", label: "Map", end: true },
-  { to: "/neighbourhoods", label: "Neighbourhoods" },
   { to: "/reports", label: "Reports" },
   { to: "/about", label: "About" },
 ] as const;
@@ -244,16 +243,6 @@ function BottomNav() {
             {planning ? "Concern" : "Report"}
           </span>
         </div>
-
-        <NavLink to="/neighbourhoods" className={({ isActive }) => tabClass(isActive)}>
-          {({ isActive }) => (
-            <>
-              <UserIcon filled={isActive} />
-              <span>Areas</span>
-              {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
-            </>
-          )}
-        </NavLink>
 
         <NavLink to="/about" className={({ isActive }) => tabClass(isActive)}>
           {({ isActive }) => (
