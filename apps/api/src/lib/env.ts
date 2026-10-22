@@ -37,6 +37,9 @@ export const env = {
 
   photoStoragePath: process.env.PHOTO_STORAGE_PATH ?? "./storage/photos",
   photoPublicBaseUrl: process.env.PHOTO_PUBLIC_BASE_URL ?? "",
+  datasetStoragePath:
+    process.env.DATASET_STORAGE_PATH ?? "./uploads/datasets",
+  layerStoragePath: process.env.LAYER_STORAGE_PATH ?? "./uploads/layers",
 
   rateLimitWindowMs: intEnv("RATE_LIMIT_WINDOW_MS", 60_000),
   rateLimitMaxReports: intEnv("RATE_LIMIT_MAX_REPORTS", 10),

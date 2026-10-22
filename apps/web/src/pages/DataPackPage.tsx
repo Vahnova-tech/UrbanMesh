@@ -1,35 +1,66 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { ButtonLink } from "../components/ui/Button";
 import { NAV_PILL_OFFSET } from "../components/layout/AppShell";
 import { useNeighbourhood } from "../lib/neighbourhood";
 import {
   fetchDataPack,
+  fetchPlanningProposals,
+  fetchPlanningTimeline,
+  fetchPublicConcerns,
+  submitPlanningProposal,
+  type ConcernPublic,
   type DataPackResponse,
   type GlanceIndicator,
+  type PlanningProposal,
+  type PlanningTimelineItem,
 } from "../lib/api";
+import { formatWhen } from "../lib/format";
 
 export function DataPackPage() {
   const { id, neighbourhood, setNeighbourhood } = useNeighbourhood();
   const [pack, setPack] = useState<DataPackResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [timeline, setTimeline] = useState<PlanningTimelineItem[]>([]);
+  const [timelineNote, setTimelineNote] = useState<string | null>(null);
+  const [proposals, setProposals] = useState<PlanningProposal[]>([]);
+  const [concerns, setConcerns] = useState<ConcernPublic[]>([]);
+  const [proposalTitle, setProposalTitle] = useState("");
+  const [proposalProblem, setProposalProblem] = useState("");
+  const [proposalBusy, setProposalBusy] = useState(false);
+  const [proposalMsg, setProposalMsg] = useState<string | null>(null);
+  const [proposalError, setProposalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (id !== "kileleshwa") setNeighbourhood("kileleshwa");
   }, [id, setNeighbourhood]);
 
+  const loadPlanning = useCallback(async () => {
+    const [tl, props, pub] = await Promise.all([
+      fetchPlanningTimeline("kileleshwa"),
+      fetchPlanningProposals("kileleshwa"),
+      fetchPublicConcerns({ neighbourhood: "kileleshwa", limit: 50 }),
+    ]);
+    setTimeline(tl.items);
+    setTimelineNote(tl.note);
+    setProposals(props.proposals);
+    setConcerns(pub.concerns);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     setError(null);
-    void fetchDataPack("kileleshwa")
-      .then((data) => {
+    void Promise.all([fetchDataPack("kileleshwa"), loadPlanning()])
+      .then(([data]) => {
         if (!cancelled) setPack(data);
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Couldn't load data pack.");
+          setError(
+            err instanceof Error ? err.message : "Couldn't load data pack.",
+          );
         }
       })
       .finally(() => {
@@ -38,7 +69,34 @@ export function DataPackPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadPlanning]);
+
+  async function onSubmitProposal(ev: FormEvent) {
+    ev.preventDefault();
+    setProposalBusy(true);
+    setProposalError(null);
+    setProposalMsg(null);
+    try {
+      await submitPlanningProposal({
+        neighbourhood_id: "kileleshwa",
+        title: proposalTitle.trim(),
+        problem_statement: proposalProblem.trim(),
+        interpretation: "participant_interpretation",
+      });
+      setProposalTitle("");
+      setProposalProblem("");
+      setProposalMsg(
+        "Submitted. Labelled as participant interpretation — not official.",
+      );
+      await loadPlanning();
+    } catch (err) {
+      setProposalError(
+        err instanceof Error ? err.message : "Couldn't submit proposal.",
+      );
+    } finally {
+      setProposalBusy(false);
+    }
+  }
 
   return (
     <div className={`um-scroll h-full ${NAV_PILL_OFFSET}`}>
@@ -90,7 +148,9 @@ export function DataPackPage() {
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
                       Step {i + 1}
                     </p>
-                    <p className="mt-1 text-sm font-semibold text-civic-ink">{step}</p>
+                    <p className="mt-1 text-sm font-semibold text-civic-ink">
+                      {step}
+                    </p>
                   </li>
                 ))}
               </ol>
@@ -101,8 +161,8 @@ export function DataPackPage() {
                 Kileleshwa at a glance
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-civic-slate">
-                Indicators appear only with sourced values. TBD means the figure is not
-                yet established — not zero.
+                Indicators appear only with sourced values. TBD means the figure
+                is not yet established — not zero.
               </p>
               <p className="mt-2 text-xs text-civic-muted">
                 {neighbourhood.boundary_note}
@@ -119,8 +179,9 @@ export function DataPackPage() {
                 Map framing (provisional)
               </h2>
               <p className="mt-2 text-sm text-civic-slate">
-                Interactive ward layers appear when authoritative geometry is ingested.
-                Until then, UrbanMesh uses a provisional framing box for orientation only.
+                Interactive ward layers appear when authoritative geometry is
+                ingested. Until then, UrbanMesh uses a provisional framing box
+                for orientation only.
               </p>
               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Meta
@@ -151,8 +212,12 @@ export function DataPackPage() {
                     key={c.code}
                     className="rounded-card border border-civic-line bg-civic-surface px-3 py-3"
                   >
-                    <p className="text-sm font-semibold text-civic-ink">{c.label}</p>
-                    <p className="mt-1 text-xs text-civic-muted">{c.description}</p>
+                    <p className="text-sm font-semibold text-civic-ink">
+                      {c.label}
+                    </p>
+                    <p className="mt-1 text-xs text-civic-muted">
+                      {c.description}
+                    </p>
                   </li>
                 ))}
               </ul>
@@ -163,14 +228,54 @@ export function DataPackPage() {
                 Development and land-use change
               </h2>
               <p className="mt-2 text-sm text-civic-slate">
-                Time-series imagery, footprint change, and planning references will
-                appear here when comparable, licensed sources are available. Observable
-                change is shown separately from impact judgements.
+                Observable change is shown separately from impact judgements.
+                Before/after imagery appears only when two licensed image refs
+                exist.
               </p>
-              <p className="mt-4 rounded-card border border-civic-line bg-civic-mist/40 px-4 py-3 text-sm text-civic-muted">
-                Timeline, before/after viewer, and change layers: not yet available —
-                no sourced historical series ingested.
-              </p>
+              {timelineNote ? (
+                <p className="mt-2 text-xs text-civic-muted">{timelineNote}</p>
+              ) : null}
+              {timeline.length === 0 ? (
+                <p className="mt-4 rounded-card border border-civic-line bg-civic-mist/40 px-4 py-3 text-sm text-civic-muted">
+                  No published timeline observations yet.
+                </p>
+              ) : (
+                <ul className="mt-6 space-y-3">
+                  {timeline.map((item) => (
+                    <li
+                      key={item.id}
+                      className="rounded-card border border-civic-line bg-civic-surface px-4 py-3"
+                    >
+                      <p className="text-sm font-semibold text-civic-ink">
+                        {item.title}
+                      </p>
+                      <p className="mt-1 text-xs text-civic-muted">
+                        {item.observed_at
+                          ? formatWhen(item.observed_at)
+                          : "Date TBD"}
+                        {item.before_after_available
+                          ? " · Before/after available"
+                          : ""}
+                      </p>
+                      {item.notes ? (
+                        <p className="mt-2 text-sm text-civic-slate">
+                          {item.notes}
+                        </p>
+                      ) : null}
+                      {item.source_url ? (
+                        <a
+                          href={item.source_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-2 inline-block text-xs font-semibold text-civic-accent"
+                        >
+                          Source
+                        </a>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <section className="mt-12 border-t border-civic-line pt-10">
@@ -178,13 +283,35 @@ export function DataPackPage() {
                 Community-reported concerns
               </h2>
               <p className="mt-2 text-sm text-civic-slate">
-                Evidence records will list here once published through review. Listing
-                the taxonomy does not imply KIWANA field confirmation or that reports
-                already exist.
+                Published evidence only. Listing the taxonomy does not imply field
+                confirmation.
               </p>
-              <p className="mt-4 rounded-card border border-civic-line bg-civic-mist/40 px-4 py-3 text-sm text-civic-muted">
-                No published concern records yet.
-              </p>
+              {concerns.length === 0 ? (
+                <p className="mt-4 rounded-card border border-civic-line bg-civic-mist/40 px-4 py-3 text-sm text-civic-muted">
+                  No published concern records yet.
+                </p>
+              ) : (
+                <ul className="mt-6 space-y-3">
+                  {concerns.map((c) => (
+                    <li key={c.id}>
+                      <Link
+                        to={`/concerns/${c.id}`}
+                        className="block rounded-card border border-civic-line bg-civic-surface px-4 py-3 hover:bg-civic-mist/40"
+                      >
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-civic-muted">
+                          {c.concern_type_label}
+                        </p>
+                        <p className="mt-1 text-sm font-semibold text-civic-ink">
+                          {c.title}
+                        </p>
+                        <p className="mt-1 line-clamp-2 text-xs text-civic-slate">
+                          {c.description}
+                        </p>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <section className="mt-12 border-t border-civic-line pt-10">
@@ -192,8 +319,8 @@ export function DataPackPage() {
                 Data catalogue
               </h2>
               <p className="mt-2 text-sm text-civic-slate">
-                Open-tier metadata only. Restricted downloads are never exposed on this
-                page.
+                Open-tier metadata only. Restricted downloads are never exposed on
+                this page.
               </p>
               {pack.datasets.length === 0 ? (
                 <p className="mt-4 text-sm text-civic-muted">
@@ -208,8 +335,12 @@ export function DataPackPage() {
                     >
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold text-civic-ink">{d.title}</p>
-                          <p className="mt-1 text-xs text-civic-slate">{d.description}</p>
+                          <p className="text-sm font-semibold text-civic-ink">
+                            {d.title}
+                          </p>
+                          <p className="mt-1 text-xs text-civic-slate">
+                            {d.description}
+                          </p>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           <TierBadge tier={d.access_tier} />
@@ -223,7 +354,9 @@ export function DataPackPage() {
                         {d.license ? ` · Licence: ${d.license}` : ""}
                         {d.download_available ? "" : " · Download not available"}
                       </p>
-                      <p className="mt-1 text-[11px] text-civic-muted">{d.quality_notes}</p>
+                      <p className="mt-1 text-[11px] text-civic-muted">
+                        {d.quality_notes}
+                      </p>
                     </li>
                   ))}
                 </ul>
@@ -232,7 +365,9 @@ export function DataPackPage() {
 
             <section className="mt-12 grid gap-8 border-t border-civic-line pt-10 lg:grid-cols-2">
               <div>
-                <h2 className="text-lg font-semibold text-civic-ink">Limitations</h2>
+                <h2 className="text-lg font-semibold text-civic-ink">
+                  Limitations
+                </h2>
                 <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-civic-slate">
                   {pack.limitations.map((item) => (
                     <li key={item}>{item}</li>
@@ -261,19 +396,86 @@ export function DataPackPage() {
                 Participant problem definition
               </h2>
               <p className="mt-2 max-w-2xl text-sm text-civic-slate">
-                Interpretations submitted by participants are not established findings.
-                Use this structure when proposing interventions.
+                Interpretations submitted by participants are not established
+                findings. Submissions are labelled as participant interpretation —
+                not official.
               </p>
-              <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-civic-slate">
-                <li>Problem statement</li>
-                <li>Geographic area (generalized)</li>
-                <li>Supporting evidence (with sources)</li>
-                <li>Affected groups (no personal identities)</li>
-                <li>Assumptions and uncertainties</li>
-                <li>Proposed intervention</li>
-                <li>Implementation, operation, and maintenance</li>
-                <li>Evaluation criteria</li>
-              </ol>
+
+              <form
+                onSubmit={(e) => void onSubmitProposal(e)}
+                className="mt-6 max-w-xl space-y-3 rounded-card border border-civic-line bg-civic-surface p-4"
+              >
+                <label className="block text-xs font-semibold text-civic-slate">
+                  Title
+                  <input
+                    required
+                    minLength={3}
+                    value={proposalTitle}
+                    onChange={(e) => setProposalTitle(e.target.value)}
+                    className="mt-1.5 min-h-10 w-full rounded-card border border-civic-line bg-civic-paper px-3 text-sm font-normal text-civic-ink outline-none focus:border-civic-accent"
+                  />
+                </label>
+                <label className="block text-xs font-semibold text-civic-slate">
+                  Problem statement
+                  <textarea
+                    required
+                    minLength={10}
+                    rows={4}
+                    value={proposalProblem}
+                    onChange={(e) => setProposalProblem(e.target.value)}
+                    className="mt-1.5 w-full rounded-card border border-civic-line bg-civic-paper px-3 py-2 text-sm font-normal text-civic-ink outline-none focus:border-civic-accent"
+                    placeholder="Describe the problem, area, and uncertainties without personal identifiers."
+                  />
+                </label>
+                {proposalError ? (
+                  <p className="text-xs font-medium text-civic-critical">
+                    {proposalError}
+                  </p>
+                ) : null}
+                {proposalMsg ? (
+                  <p className="text-xs font-medium text-civic-verified">
+                    {proposalMsg}
+                  </p>
+                ) : null}
+                <button
+                  type="submit"
+                  disabled={proposalBusy}
+                  className="min-h-10 rounded-card bg-civic-accent px-4 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {proposalBusy ? "Submitting…" : "Submit interpretation"}
+                </button>
+              </form>
+
+              <h3 className="mt-8 text-sm font-semibold text-civic-ink">
+                Published proposals
+              </h3>
+              {proposals.length === 0 ? (
+                <p className="mt-3 text-sm text-civic-muted">
+                  No participant proposals yet.
+                </p>
+              ) : (
+                <ul className="mt-3 space-y-3">
+                  {proposals.map((p) => (
+                    <li
+                      key={p.id}
+                      className="rounded-card border border-civic-line bg-civic-mist/30 px-4 py-3"
+                    >
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-civic-muted">
+                        {p.label}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold text-civic-ink">
+                        {p.title}
+                      </p>
+                      <p className="mt-1 text-sm text-civic-slate">
+                        {p.problem_statement}
+                      </p>
+                      <p className="mt-2 text-xs text-civic-muted">
+                        {formatWhen(p.created_at)}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </section>
           </>
         ) : null}

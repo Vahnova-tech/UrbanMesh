@@ -16,7 +16,7 @@ export interface NeighbourhoodInfo {
   short_label: string;
   center: [number, number];
   bbox: [number, number, number, number];
-  boundary_status: string;
+  boundary_status: "provisional_mvp" | "provisional_osm" | "authoritative" | string;
   boundary_source: string;
   boundary_note: string;
   reporting_mode: "infrastructure_hazards" | "community_planning";

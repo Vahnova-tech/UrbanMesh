@@ -13,6 +13,8 @@ import { clustersRouter } from "./modules/clusters/clusters.routes.js";
 import { uploadsRouter } from "./modules/uploads/uploads.routes.js";
 import { metaRouter } from "./modules/meta/meta.routes.js";
 import { catalogueRouter } from "./modules/catalogue/catalogue.routes.js";
+import { planningRouter } from "./modules/catalogue/planning.routes.js";
+import { concernsRouter } from "./modules/concerns/concerns.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
 import { mountFrontends } from "./lib/serveFrontends.js";
 
@@ -29,7 +31,10 @@ export function createApp() {
     if (origin && allowed.includes(origin)) {
       res.setHeader("Access-Control-Allow-Origin", origin);
       res.setHeader("Vary", "Origin");
-      res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+      res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET,POST,PATCH,PUT,DELETE,OPTIONS",
+      );
       res.setHeader(
         "Access-Control-Allow-Headers",
         "Content-Type, Authorization",
@@ -60,6 +65,8 @@ export function createApp() {
 
   app.use("/api/v1/meta", metaRouter);
   app.use("/api/v1/catalogue", catalogueRouter);
+  app.use("/api/v1/planning", planningRouter);
+  app.use("/api/v1/concerns", concernsRouter);
   app.use("/api/v1/reports", reportsRouter);
   app.use("/api/v1/clusters", clustersRouter);
   app.use("/api/v1/dashboard", dashboardRouter);

@@ -91,6 +91,22 @@ enum DatasetDataKind {
   reference
 }
 
+enum ConcernEvidenceType {
+  community
+  field
+  public_doc
+  derived
+  official
+  synthetic
+}
+
+enum ConcernReviewStatus {
+  under_review
+  accepted
+  rejected
+  archived
+}
+
 model Neighbourhood {
   id              NeighbourhoodId @id
   displayName     String          @map("display_name")
@@ -101,12 +117,20 @@ model Neighbourhood {
   boundaryStatus  String          @map("boundary_status")
   boundarySource  String          @map("boundary_source")
   boundaryNote    String          @map("boundary_note")
+  /// Optional PostGIS multipolygon (SRID 4326). Not managed by Prisma migrations — set via SQL.
+  boundaryGeom    Unsupported("geometry(MultiPolygon,4326)")? @map("boundary_geom")
+  boundaryVersion String?         @map("boundary_version")
   reportingMode   String          @map("reporting_mode")
   description     String
   active          Boolean         @default(true)
   datasets        Dataset[]
   dataPacks       DataPack[]
   concernTypes    ConcernType[]
+  mapLayers       MapLayer[]
+  concerns        Concern[]
+  planningDocs    PlanningDocument[]
+  changeObservations ChangeObservation[]
+  proposals       ParticipantProposal[]
 
   @@map("neighbourhoods")
 }
@@ -134,7 +158,13 @@ model Dataset {
   downloadAvailable     Boolean           @default(false) @map("download_available")
   dataKind              DatasetDataKind   @map("data_kind")
   published             Boolean           @default(false)
+  storagePath           String?           @map("storage_path")
+  originalFilename      String?           @map("original_filename")
+  validationJson        String?           @map("validation_json")
+  relatedLayersJson     String?           @map("related_layers_json")
+  replaceOfId           String?           @map("replace_of_id") @db.Uuid
   neighbourhood         Neighbourhood     @relation(fields: [neighbourhoodId], references: [id])
+  accessLogs            DataAccessLog[]
 
   @@unique([neighbourhoodId, slug])
   @@index([neighbourhoodId, accessTier])
@@ -150,6 +180,8 @@ model DataPack {
   publishedAt     DateTime?       @map("published_at")
   summary         String?
   methodology     String?
+  /// JSON: selected dataset ids, layer keys, narrative overrides
+  contentJson     String?         @map("content_json")
   neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
 
   @@unique([neighbourhoodId, version])
@@ -164,9 +196,117 @@ model ConcernType {
   description     String
   sortOrder       Int             @default(0) @map("sort_order")
   neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+  concerns        Concern[]
 
   @@unique([neighbourhoodId, code])
   @@map("concern_types")
+}
+
+model MapLayer {
+  id                String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId   NeighbourhoodId @map("neighbourhood_id")
+  layerKey          String          @map("layer_key")
+  title             String
+  category          String
+  source            String
+  attribution       String
+  observationPeriod String?         @map("observation_period")
+  accessTier        DatasetAccessTier @default(open) @map("access_tier")
+  published         Boolean         @default(false)
+  featureCount      Int             @default(0) @map("feature_count")
+  storagePath       String?         @map("storage_path")
+  refreshedAt       DateTime?       @map("refreshed_at")
+  neighbourhood     Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@unique([neighbourhoodId, layerKey])
+  @@index([neighbourhoodId, published])
+  @@map("map_layers")
+}
+
+model Concern {
+  id               String              @id @default(uuid()) @db.Uuid
+  neighbourhoodId  NeighbourhoodId     @map("neighbourhood_id")
+  concernTypeCode  String              @map("concern_type_code")
+  title            String
+  description      String
+  evidenceType     ConcernEvidenceType @map("evidence_type")
+  reviewStatus     ConcernReviewStatus @default(under_review) @map("review_status")
+  reviewNote       String?             @map("review_note")
+  reviewedAt       DateTime?           @map("reviewed_at")
+  /// Generalized public point (SRID 4326); may be null for sensitive types
+  location         Unsupported("geometry(Point, 4326)")?
+  areaLabel        String?             @map("area_label")
+  observedAt       DateTime?           @map("observed_at")
+  sourceRef        String?             @map("source_ref")
+  limitations      String?
+  researchQuestions String?            @map("research_questions")
+  synthetic        Boolean             @default(false)
+  createdAt        DateTime            @default(now()) @map("created_at")
+  neighbourhood    Neighbourhood       @relation(fields: [neighbourhoodId], references: [id])
+  concernType      ConcernType         @relation(fields: [neighbourhoodId, concernTypeCode], references: [neighbourhoodId, code])
+
+  @@index([neighbourhoodId, reviewStatus])
+  @@index([neighbourhoodId, concernTypeCode])
+  @@map("concerns")
+}
+
+model DataAccessLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  datasetId String   @map("dataset_id") @db.Uuid
+  actor     String
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+  dataset   Dataset  @relation(fields: [datasetId], references: [id])
+
+  @@index([datasetId])
+  @@index([createdAt])
+  @@map("data_access_logs")
+}
+
+model PlanningDocument {
+  id              String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId NeighbourhoodId @map("neighbourhood_id")
+  title           String
+  sourceUrl       String?         @map("source_url")
+  documentDate    DateTime?       @map("document_date")
+  summary         String?
+  published       Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@index([neighbourhoodId])
+  @@map("planning_documents")
+}
+
+model ChangeObservation {
+  id              String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId NeighbourhoodId @map("neighbourhood_id")
+  title           String
+  observedAt      DateTime?       @map("observed_at")
+  sourceUrl       String?         @map("source_url")
+  notes           String?
+  beforeImageRef  String?         @map("before_image_ref")
+  afterImageRef   String?         @map("after_image_ref")
+  published       Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@index([neighbourhoodId])
+  @@map("change_observations")
+}
+
+model ParticipantProposal {
+  id              String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId NeighbourhoodId @map("neighbourhood_id")
+  title           String
+  problemStatement String         @map("problem_statement")
+  interpretation  String
+  published       Boolean         @default(false)
+  createdAt       DateTime        @default(now()) @map("created_at")
+  neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@index([neighbourhoodId])
+  @@map("participant_proposals")
 }
 
 /// Append-only admin action log — never silently rewrite verification history.

@@ -1,7 +1,12 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { IncidentPublic } from "../../lib/api";
+import {
+  fetchLayerGeoJson,
+  fetchLayers,
+  type CatalogueLayerMeta,
+  type IncidentPublic,
+} from "../../lib/api";
 import { labelForCategory } from "../../lib/categories";
 import { splitMapFeatures } from "../../lib/clusterMap";
 import { useTheme } from "../../lib/theme";
@@ -15,6 +20,108 @@ import {
   styleUrlFor,
 } from "../../lib/mapStyle";
 import { useNeighbourhood } from "../../lib/neighbourhood";
+
+const LAYER_COLORS = [
+  "#0D7377",
+  "#C45C26",
+  "#2F6FED",
+  "#7B5EA7",
+  "#B45309",
+  "#0F766E",
+  "#BE123C",
+  "#365314",
+];
+
+function colorForLayer(index: number): string {
+  return LAYER_COLORS[index % LAYER_COLORS.length] ?? "#0D7377";
+}
+
+function sourceId(layerKey: string): string {
+  return `um-cat-${layerKey}`;
+}
+
+function ensureCatalogueLayer(
+  map: MapLibreMap,
+  layerKey: string,
+  color: string,
+  collection: GeoJSON.FeatureCollection,
+) {
+  const sid = sourceId(layerKey);
+  const existing = map.getSource(sid) as GeoJSONSource | undefined;
+  if (existing) {
+    existing.setData(collection);
+  } else {
+    map.addSource(sid, { type: "geojson", data: collection });
+  }
+
+  const fillId = `${sid}-fill`;
+  const lineId = `${sid}-line`;
+  const circleId = `${sid}-circle`;
+
+  if (!map.getLayer(fillId)) {
+    map.addLayer({
+      id: fillId,
+      type: "fill",
+      source: sid,
+      filter: [
+        "any",
+        ["==", ["geometry-type"], "Polygon"],
+        ["==", ["geometry-type"], "MultiPolygon"],
+      ],
+      paint: {
+        "fill-color": color,
+        "fill-opacity": 0.22,
+      },
+    });
+  }
+  if (!map.getLayer(lineId)) {
+    map.addLayer({
+      id: lineId,
+      type: "line",
+      source: sid,
+      filter: [
+        "any",
+        ["==", ["geometry-type"], "LineString"],
+        ["==", ["geometry-type"], "MultiLineString"],
+        ["==", ["geometry-type"], "Polygon"],
+        ["==", ["geometry-type"], "MultiPolygon"],
+      ],
+      paint: {
+        "line-color": color,
+        "line-width": 1.75,
+        "line-opacity": 0.85,
+      },
+    });
+  }
+  if (!map.getLayer(circleId)) {
+    map.addLayer({
+      id: circleId,
+      type: "circle",
+      source: sid,
+      filter: [
+        "any",
+        ["==", ["geometry-type"], "Point"],
+        ["==", ["geometry-type"], "MultiPoint"],
+      ],
+      paint: {
+        "circle-radius": 5,
+        "circle-color": color,
+        "circle-stroke-width": 1.5,
+        "circle-stroke-color": "#ffffff",
+        "circle-opacity": 0.9,
+      },
+    });
+  }
+}
+
+function removeCatalogueLayer(map: MapLibreMap, layerKey: string) {
+  const sid = sourceId(layerKey);
+  for (const suffix of ["-fill", "-line", "-circle"]) {
+    const id = `${sid}${suffix}`;
+    if (map.getLayer(id)) map.removeLayer(id);
+  }
+  if (map.getSource(sid)) map.removeSource(sid);
+}
 
 /** @deprecated Prefer useNeighbourhood().neighbourhood.center */
 export const KILIMANI_CENTER: [number, number] = [-1.2921, 36.785];
@@ -265,6 +372,7 @@ export function LiveMap({
 }) {
   const { dark } = useTheme();
   const { neighbourhood } = useNeighbourhood();
+  const showHazards = neighbourhood.id !== "kileleshwa";
   const wrapRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const onSelectRef = useRef(onSelect);
@@ -274,17 +382,55 @@ export function LiveMap({
   const lastNeighbourhoodRef = useRef(neighbourhood.id);
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
+  const loadedKeysRef = useRef<Set<string>>(new Set());
 
-  const features = useMemo(() => splitMapFeatures(incidents), [incidents]);
+  const [catalogueLayers, setCatalogueLayers] = useState<CatalogueLayerMeta[]>(
+    [],
+  );
+  const [enabledLayers, setEnabledLayers] = useState<Set<string>>(new Set());
+  const [layerAttribution, setLayerAttribution] = useState(
+    "© OpenStreetMap contributors",
+  );
+  const [layersError, setLayersError] = useState<string | null>(null);
+
+  const hazardIncidents = showHazards ? incidents : [];
+  const features = useMemo(
+    () => splitMapFeatures(hazardIncidents),
+    [hazardIncidents],
+  );
   const byId = useMemo(
-    () => new Map(incidents.map((row) => [row.id, row])),
-    [incidents],
+    () => new Map(hazardIncidents.map((row) => [row.id, row])),
+    [hazardIncidents],
   );
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   const [centerLat, centerLng] = neighbourhood.center;
 
   onSelectRef.current = onSelect;
   byIdRef.current = byId;
+
+  useEffect(() => {
+    let cancelled = false;
+    setLayersError(null);
+    void fetchLayers(neighbourhood.id)
+      .then((data) => {
+        if (cancelled) return;
+        const withFeatures = data.layers.filter((l) => l.feature_count > 0);
+        setCatalogueLayers(withFeatures);
+        setLayerAttribution(data.attribution || "© OpenStreetMap contributors");
+        setEnabledLayers(new Set(withFeatures.map((l) => l.layer_key)));
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCatalogueLayers([]);
+        setEnabledLayers(new Set());
+        setLayersError(
+          err instanceof Error ? err.message : "Couldn't load map layers.",
+        );
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [neighbourhood.id]);
 
   useEffect(() => {
     const el = wrapRef.current;
@@ -360,6 +506,8 @@ export function LiveMap({
     const onStyle = () => {
       applyUrbanMeshBasemap(map, dark);
       ensureIncidentLayers(map, dark);
+      // Style swap drops custom sources; catalogue effect reloads them.
+      loadedKeysRef.current.clear();
     };
     map.setStyle(styleUrlFor(dark), { diff: false });
     map.once("style.load", onStyle);
@@ -371,6 +519,10 @@ export function LiveMap({
     if (lastNeighbourhoodRef.current === neighbourhood.id) return;
     lastNeighbourhoodRef.current = neighbourhood.id;
     fittedRef.current = false;
+    for (const key of loadedKeysRef.current) {
+      removeCatalogueLayer(map, key);
+    }
+    loadedKeysRef.current.clear();
     const reduced = prefersReducedMotion();
     map.easeTo({
       center: [centerLng, centerLat],
@@ -383,9 +535,63 @@ export function LiveMap({
     const map = mapRef.current;
     if (!map) return;
 
+    let cancelled = false;
+    const wanted = new Set(enabledLayers);
+
+    async function sync() {
+      // Remove disabled
+      for (const key of [...loadedKeysRef.current]) {
+        if (!wanted.has(key)) {
+          removeCatalogueLayer(map!, key);
+          loadedKeysRef.current.delete(key);
+        }
+      }
+      // Load enabled (re-add if style swap dropped the source)
+      for (const [index, meta] of catalogueLayers.entries()) {
+        if (!wanted.has(meta.layer_key)) continue;
+        if (
+          loadedKeysRef.current.has(meta.layer_key) &&
+          map!.getSource(sourceId(meta.layer_key))
+        ) {
+          continue;
+        }
+        try {
+          const data = await fetchLayerGeoJson(
+            neighbourhood.id,
+            meta.layer_key,
+          );
+          if (cancelled || !mapRef.current) return;
+          if (!data.collection.features?.length) continue;
+          const apply = () => {
+            ensureCatalogueLayer(
+              mapRef.current!,
+              meta.layer_key,
+              colorForLayer(index),
+              data.collection,
+            );
+            loadedKeysRef.current.add(meta.layer_key);
+          };
+          if (mapRef.current.isStyleLoaded()) apply();
+          else mapRef.current.once("style.load", apply);
+        } catch {
+          /* skip failed layer */
+        }
+      }
+    }
+
+    void sync();
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogueLayers, enabledLayers, neighbourhood.id, dark]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
     const markerFeatures: GeoJSON.Feature[] = [];
 
-    if (showVerified) {
+    if (showHazards && showVerified) {
       for (const cluster of features.clusters) {
         const id = cluster.representativeId;
         markerFeatures.push({
@@ -425,7 +631,7 @@ export function LiveMap({
       }
     }
 
-    if (showPending) {
+    if (showHazards && showPending) {
       for (const inc of features.pending) {
         markerFeatures.push({
           type: "Feature",
@@ -476,15 +682,16 @@ export function LiveMap({
       });
     }
 
-    const heatFeatures: GeoJSON.Feature[] = showVerified
-      ? incidents
-          .filter((p) => p.is_verified)
-          .map((p) => ({
-            type: "Feature" as const,
-            geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
-            properties: { weight: p.severity === "critical" ? 0.85 : 0.55 },
-          }))
-      : [];
+    const heatFeatures: GeoJSON.Feature[] =
+      showHazards && showVerified
+        ? hazardIncidents
+            .filter((p) => p.is_verified)
+            .map((p) => ({
+              type: "Feature" as const,
+              geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
+              properties: { weight: p.severity === "critical" ? 0.85 : 0.55 },
+            }))
+        : [];
 
     const apply = () => {
       const markers = map.getSource("um-markers") as GeoJSONSource | undefined;
@@ -504,22 +711,23 @@ export function LiveMap({
       apply();
     });
   }, [
-    incidents,
+    hazardIncidents,
     features,
     user,
     focus,
     showVerified,
     showPending,
+    showHazards,
     selectedId,
     dark,
   ]);
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || fittedRef.current || incidents.length === 0) return;
+    if (!map || fittedRef.current || hazardIncidents.length === 0) return;
     fittedRef.current = true;
     const bounds = new maplibregl.LngLatBounds();
-    for (const row of incidents) bounds.extend([row.lng, row.lat]);
+    for (const row of hazardIncidents) bounds.extend([row.lng, row.lat]);
     map.fitBounds(bounds, {
       padding: 72,
       maxZoom: 16,
@@ -527,7 +735,7 @@ export function LiveMap({
       pitch: MAP_CAMERA.pitch,
       bearing: MAP_CAMERA.bearing,
     });
-  }, [incidents]);
+  }, [hazardIncidents]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -587,12 +795,58 @@ export function LiveMap({
     }
   }, [selected, dark, focus]);
 
+  function toggleLayer(layerKey: string) {
+    setEnabledLayers((prev) => {
+      const next = new Set(prev);
+      if (next.has(layerKey)) next.delete(layerKey);
+      else next.add(layerKey);
+      return next;
+    });
+  }
+
   return (
     <div className={`absolute inset-0 ${className}`}>
       <div ref={wrapRef} className="um-vector-map h-full w-full" />
-      <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[220px] lg:block">
-        <MapKey />
+      <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[240px] lg:block">
+        <MapKey
+          showHazards={showHazards}
+          catalogueLayers={catalogueLayers}
+          enabledLayers={enabledLayers}
+          attribution={layerAttribution}
+        />
       </div>
+      {catalogueLayers.length > 0 ? (
+        <div className="pointer-events-auto absolute left-3 top-[max(5.5rem,calc(4.5rem+env(safe-area-inset-top)))] z-[1100] max-h-[40vh] w-[min(14rem,calc(100vw-1.5rem))] overflow-y-auto rounded-card border border-civic-line bg-civic-surface/95 p-2.5 shadow-card backdrop-blur-md lg:left-auto lg:right-6 lg:top-24">
+          <p className="um-eyebrow text-[10px]">Layers</p>
+          {layersError ? (
+            <p className="mt-1 text-[10px] text-civic-critical">{layersError}</p>
+          ) : null}
+          <ul className="mt-1.5 space-y-1">
+            {catalogueLayers.map((layer, index) => (
+              <li key={layer.layer_key}>
+                <label className="flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-[11px] hover:bg-civic-mist/60">
+                  <input
+                    type="checkbox"
+                    checked={enabledLayers.has(layer.layer_key)}
+                    onChange={() => toggleLayer(layer.layer_key)}
+                  />
+                  <span
+                    className="h-2 w-2 shrink-0 rounded-full"
+                    style={{ background: colorForLayer(index) }}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 truncate font-semibold text-civic-ink">
+                    {layer.title}
+                  </span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[9px] leading-snug text-civic-muted">
+            {layerAttribution}
+          </p>
+        </div>
+      ) : null}
       <div className="absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-full border border-civic-line bg-civic-surface/90 shadow-card backdrop-blur-md lg:bottom-28 lg:right-6 lg:top-auto">
         <button
           type="button"
@@ -618,17 +872,51 @@ export function LiveMap({
   );
 }
 
-export function MapKey({ bare = false }: { bare?: boolean }) {
+export function MapKey({
+  bare = false,
+  showHazards = true,
+  catalogueLayers = [],
+  enabledLayers,
+  attribution = "© OpenStreetMap contributors",
+}: {
+  bare?: boolean;
+  showHazards?: boolean;
+  catalogueLayers?: CatalogueLayerMeta[];
+  enabledLayers?: Set<string>;
+  attribution?: string;
+}) {
   const body = (
     <>
       <p className="um-eyebrow text-[10px]">Map key</p>
       <ul className="mt-1.5 space-y-1">
-        <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
-        <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
-        <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
-        <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Location pin" />
-        <LegendItem color="#3DDCFF" label="3D streets" hint="Neon routes · extruded blocks" />
+        {showHazards ? (
+          <>
+            <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
+            <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
+            <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
+            <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Location pin" />
+            <LegendItem color="#3DDCFF" label="3D streets" hint="Neon routes · extruded blocks" />
+          </>
+        ) : (
+          <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
+        )}
+        {catalogueLayers.map((layer, index) => {
+          if (enabledLayers && !enabledLayers.has(layer.layer_key)) return null;
+          return (
+            <LegendItem
+              key={layer.layer_key}
+              color={colorForLayer(index)}
+              label={layer.title}
+              hint={`${layer.feature_count} features`}
+            />
+          );
+        })}
       </ul>
+      {catalogueLayers.length > 0 ? (
+        <p className="mt-2 text-[9px] leading-snug text-civic-muted">
+          {attribution}
+        </p>
+      ) : null}
     </>
   );
   if (bare) return <div>{body}</div>;

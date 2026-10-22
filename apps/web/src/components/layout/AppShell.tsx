@@ -2,7 +2,10 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { UrbanMeshLogo } from "../ui/UrbanMeshLogo";
 import { useLocationState } from "../../lib/location";
-import { NeighbourhoodSwitcher } from "../../lib/neighbourhood";
+import {
+  NeighbourhoodSwitcher,
+  useNeighbourhood,
+} from "../../lib/neighbourhood";
 import { ThemeToggle } from "../../lib/theme";
 import { InstallButton } from "../../lib/install";
 import { useOnline } from "../../lib/online";
@@ -13,9 +16,15 @@ import { ButtonLink } from "../ui/Button";
 
 const NAV = [
   { to: "/", label: "Map", end: true },
-  { to: "/neighbourhoods", label: "Areas" },
-  { to: "/kileleshwa", label: "Kileleshwa" },
+  { to: "/neighbourhoods", label: "Neighbourhoods" },
+  { to: "/kileleshwa", label: "Kileleshwa Data Pack" },
   { to: "/reports", label: "Reports" },
+  { to: "/about", label: "About" },
+] as const;
+
+/** Secondary — reachable but not primary IA. */
+const SECONDARY_NAV = [
+  { to: "/search", label: "Search" },
   { to: "/me", label: "My Reports" },
 ] as const;
 
@@ -104,6 +113,12 @@ function TopBar({
   onToggleUpdates: () => void;
 }) {
   const { requestLocation, locating, coords, error } = useLocationState();
+  const { id, neighbourhood } = useNeighbourhood();
+  const planning =
+    id === "kileleshwa" ||
+    neighbourhood.reporting_mode === "community_planning";
+  const reportPath = planning ? "/concerns/new" : "/reports/new";
+  const reportLabel = planning ? "Submit a concern" : "Report an issue";
 
   return (
     <header className="pointer-events-none absolute inset-x-0 top-0 z-[2000] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 lg:px-6">
@@ -121,6 +136,17 @@ function TopBar({
               to={item.to}
               end={"end" in item ? item.end : false}
               className={({ isActive }) => navClass(isActive)}
+            >
+              {item.label}
+            </NavLink>
+          ))}
+          {SECONDARY_NAV.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `${navClass(isActive)} opacity-80 text-xs`
+              }
             >
               {item.label}
             </NavLink>
@@ -173,10 +199,10 @@ function TopBar({
           </div>
 
           <ButtonLink
-            to="/reports/new"
+            to={reportPath}
             className="hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs shadow-none sm:px-4 sm:text-sm md:inline-flex"
           >
-            Report an issue
+            {reportLabel}
           </ButtonLink>
         </div>
       </div>
@@ -190,6 +216,12 @@ function TopBar({
 }
 
 function BottomNav() {
+  const { id, neighbourhood } = useNeighbourhood();
+  const planning =
+    id === "kileleshwa" ||
+    neighbourhood.reporting_mode === "community_planning";
+  const reportPath = planning ? "/concerns/new" : "/reports/new";
+
   return (
     <nav
       aria-label="Primary"
@@ -200,7 +232,7 @@ function BottomNav() {
           {({ isActive }) => (
             <>
               <MapIcon filled={isActive} />
-              <span>Map</span>
+              <span>Explore</span>
               {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
             </>
           )}
@@ -218,22 +250,22 @@ function BottomNav() {
 
         <div className="relative flex w-[4.5rem] shrink-0 flex-col items-center justify-end">
           <Link
-            to="/reports/new"
-            aria-label="Report an issue"
+            to={reportPath}
+            aria-label={planning ? "Submit a concern" : "Report an issue"}
             className="um-tab-fab absolute -top-7 inline-flex h-14 w-14 items-center justify-center rounded-full bg-civic-accent text-white shadow-card transition-transform active:scale-95"
           >
             <PlusIcon />
           </Link>
           <span className="mt-[1.85rem] text-[10px] font-semibold text-civic-accent">
-            Report
+            {planning ? "Concern" : "Report"}
           </span>
         </div>
 
-        <NavLink to="/me" className={({ isActive }) => tabClass(isActive)}>
+        <NavLink to="/neighbourhoods" className={({ isActive }) => tabClass(isActive)}>
           {({ isActive }) => (
             <>
               <UserIcon filled={isActive} />
-              <span>My</span>
+              <span>Areas</span>
               {isActive ? <span className="um-tab-dot" aria-hidden /> : null}
             </>
           )}

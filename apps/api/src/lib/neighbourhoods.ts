@@ -17,7 +17,7 @@ export interface NeighbourhoodConfig {
   center: [number, number];
   /** Approximate framing bbox [minLat, maxLat, minLng, maxLng] — provisional */
   bbox: [number, number, number, number];
-  boundary_status: "provisional_mvp" | "authoritative";
+  boundary_status: "provisional_mvp" | "provisional_osm" | "authoritative";
   boundary_source: string;
   boundary_note: string;
   reporting_mode: "infrastructure_hazards" | "community_planning";

@@ -279,3 +279,248 @@ export async function fetchDataPack(
     "load",
   );
 }
+
+export type ConcernEvidenceType =
+  | "community"
+  | "field"
+  | "public_doc"
+  | "derived"
+  | "official"
+  | "synthetic";
+
+export interface ConcernPublic {
+  id: string;
+  neighbourhood_id: string;
+  concern_type_code: string;
+  concern_type_label: string;
+  title: string;
+  description: string;
+  evidence_type: ConcernEvidenceType | string;
+  review_status: string;
+  lat: number | null;
+  lng: number | null;
+  area_label: string | null;
+  observed_at: string | null;
+  source_ref: string | null;
+  limitations: string | null;
+  research_questions: string | null;
+  synthetic: boolean;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export interface ConcernSubmitPayload {
+  neighbourhood_id: "kilimani" | "kileleshwa";
+  concern_type_code: string;
+  title: string;
+  description: string;
+  evidence_type?: ConcernEvidenceType;
+  lat?: number | null;
+  lng?: number | null;
+  area_label?: string | null;
+}
+
+export interface ConcernSubmitResponse {
+  concern_id: string;
+  review_status: string;
+  message?: string;
+}
+
+export async function submitConcern(
+  payload: ConcernSubmitPayload,
+): Promise<ConcernSubmitResponse> {
+  return requestJson<ConcernSubmitResponse>(
+    `${API_BASE}/api/v1/concerns`,
+    "submit",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export async function fetchConcern(id: string): Promise<ConcernPublic> {
+  const data = await requestJson<{ concern: ConcernPublic }>(
+    `${API_BASE}/api/v1/concerns/${id}`,
+    "load",
+  );
+  return data.concern;
+}
+
+export async function fetchPublicConcerns(params: {
+  neighbourhood?: "kilimani" | "kileleshwa";
+  includeSynthetic?: boolean;
+  limit?: number;
+} = {}): Promise<{
+  count: number;
+  non_synthetic_count: number;
+  concerns: ConcernPublic[];
+}> {
+  const query = new URLSearchParams();
+  if (params.neighbourhood) query.set("neighbourhood", params.neighbourhood);
+  if (params.includeSynthetic) query.set("include_synthetic", "1");
+  if (params.limit) query.set("limit", String(params.limit));
+  return requestJson(
+    `${API_BASE}/api/v1/concerns?${query.toString()}`,
+    "load",
+  );
+}
+
+export async function fetchBoundary(
+  neighbourhood: "kilimani" | "kileleshwa",
+) {
+  return requestJson<{
+    neighbourhood_id: string;
+    status: string;
+    source: string;
+    version: string | null;
+    area_km2: number | null;
+    feature: {
+      type: "Feature";
+      properties?: Record<string, unknown> | null;
+      geometry: { type: string; coordinates: unknown };
+    };
+  }>(
+    `${API_BASE}/api/v1/catalogue/neighbourhoods/${neighbourhood}/boundary`,
+    "load",
+  );
+}
+
+export interface CatalogueLayerMeta {
+  id: string;
+  neighbourhood_id: string;
+  layer_key: string;
+  title: string;
+  category: string;
+  source: string;
+  attribution: string;
+  observation_period: string | null;
+  access_tier: string;
+  published: boolean;
+  feature_count: number;
+  refreshed_at: string | null;
+}
+
+export interface LayerGeoJsonResponse {
+  layer_key: string;
+  title: string;
+  attribution: string;
+  feature_count: number;
+  collection: GeoJSON.FeatureCollection;
+}
+
+export async function fetchLayers(
+  neighbourhood: "kilimani" | "kileleshwa",
+): Promise<{
+  neighbourhood_id: string;
+  count: number;
+  layers: CatalogueLayerMeta[];
+  attribution: string;
+}> {
+  return requestJson(
+    `${API_BASE}/api/v1/catalogue/layers?neighbourhood=${neighbourhood}`,
+    "load",
+  );
+}
+
+export async function fetchLayerGeoJson(
+  neighbourhood: "kilimani" | "kileleshwa",
+  layerKey: string,
+): Promise<LayerGeoJsonResponse> {
+  return requestJson(
+    `${API_BASE}/api/v1/catalogue/layers/${neighbourhood}/${encodeURIComponent(layerKey)}`,
+    "load",
+  );
+}
+
+export interface CatalogueSearchHit {
+  kind: "dataset" | "concern" | "layer" | "planning_doc" | "proposal" | "hazard";
+  id: string;
+  neighbourhood_id: string;
+  title: string;
+  subtitle: string | null;
+  category: string | null;
+  href: string;
+}
+
+export async function searchCatalogue(params: {
+  q: string;
+  neighbourhood?: "kilimani" | "kileleshwa";
+  category?: string;
+  tier?: string;
+}): Promise<{ count: number; results: CatalogueSearchHit[] }> {
+  const query = new URLSearchParams();
+  query.set("q", params.q);
+  if (params.neighbourhood) query.set("neighbourhood", params.neighbourhood);
+  if (params.category) query.set("category", params.category);
+  if (params.tier) query.set("tier", params.tier);
+  return requestJson(
+    `${API_BASE}/api/v1/catalogue/search?${query.toString()}`,
+    "load",
+  );
+}
+
+export interface PlanningTimelineItem {
+  id: string;
+  title: string;
+  observed_at: string | null;
+  source_url: string | null;
+  notes: string | null;
+  before_after_available: boolean;
+  before_image_ref: string | null;
+  after_image_ref: string | null;
+}
+
+export interface PlanningProposal {
+  id: string;
+  title: string;
+  problem_statement: string;
+  interpretation: string;
+  created_at: string;
+  label: string;
+}
+
+export async function fetchPlanningTimeline(
+  neighbourhood: "kilimani" | "kileleshwa",
+): Promise<{
+  neighbourhood_id: string;
+  count: number;
+  items: PlanningTimelineItem[];
+  note: string;
+}> {
+  return requestJson(
+    `${API_BASE}/api/v1/planning/timeline?neighbourhood=${neighbourhood}`,
+    "load",
+  );
+}
+
+export async function fetchPlanningProposals(
+  neighbourhood: "kilimani" | "kileleshwa",
+): Promise<{
+  neighbourhood_id: string;
+  count: number;
+  proposals: PlanningProposal[];
+}> {
+  return requestJson(
+    `${API_BASE}/api/v1/planning/proposals?neighbourhood=${neighbourhood}`,
+    "load",
+  );
+}
+
+export async function submitPlanningProposal(payload: {
+  neighbourhood_id: "kilimani" | "kileleshwa";
+  title: string;
+  problem_statement: string;
+  interpretation?: string;
+}): Promise<{ id: string; title: string; label: string }> {
+  return requestJson(`${API_BASE}/api/v1/planning/proposals`, "submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export const fetchCatalogueLayers = fetchLayers;
+export const fetchProposals = fetchPlanningProposals;
+export const submitProposal = submitPlanningProposal;

@@ -143,7 +143,11 @@ async function requestJson<T>(
   const token = loadAdminToken();
   const headers = new Headers(init.headers);
   if (token) headers.set("Authorization", `Bearer ${token}`);
-  if (init.body && !headers.has("Content-Type")) {
+  if (
+    init.body &&
+    !(init.body instanceof FormData) &&
+    !headers.has("Content-Type")
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -334,6 +338,80 @@ export interface CatalogueDataset {
   download_available: boolean;
   data_kind: string;
   related_layers: string[];
+  file_format?: string | null;
+}
+
+export interface AdminDataset extends CatalogueDataset {
+  published: boolean;
+  archived: boolean;
+  original_filename: string | null;
+  has_file: boolean;
+  replace_of_id: string | null;
+  validation: {
+    ok: boolean;
+    format: string | null;
+    checks: string[];
+    errors: string[];
+    archived?: boolean;
+  } | null;
+}
+
+export interface DataQualityCounts {
+  generated_at: string;
+  datasets: {
+    total: number;
+    by_category: { category: string; count: number }[];
+    by_tier: { tier: string; count: number }[];
+    missing_metadata: number;
+    unpublished: number;
+    archived: number;
+    with_file: number;
+    synthetic: number;
+  };
+  concerns: {
+    awaiting_review: number;
+    accepted: number;
+    rejected: number;
+    archived: number;
+    synthetic: number;
+  };
+  packs: {
+    total: number;
+    by_status: { status: string; count: number }[];
+    versions: { neighbourhood_id: string; version: string; status: string }[];
+  };
+  layers: {
+    total: number;
+    published: number;
+    stale_or_never_refreshed: number;
+    by_neighbourhood: {
+      neighbourhood_id: string;
+      count: number;
+      refreshed_at_latest: string | null;
+    }[];
+  };
+}
+
+async function requestForm<T>(path: string, form: FormData): Promise<T> {
+  const token = loadAdminToken();
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: form,
+  });
+  const data = (await res.json().catch(() => ({}))) as {
+    error?: string;
+  } & T;
+  if (res.status === 401) {
+    clearAdminToken();
+    throw new Error(data.error ?? "Admin sign-in required.");
+  }
+  if (!res.ok) {
+    throw new Error(data.error ?? "Request failed.");
+  }
+  return data;
 }
 
 export async function fetchNeighbourhoods() {
@@ -352,6 +430,122 @@ export async function fetchCatalogue(
   }>(`/api/v1/catalogue/catalogue?neighbourhood=${neighbourhood}&tier=all`);
 }
 
+export async function fetchAdminDatasets(
+  neighbourhood?: "kilimani" | "kileleshwa",
+) {
+  const qs = neighbourhood ? `?neighbourhood=${neighbourhood}` : "";
+  return requestJson<{ count: number; datasets: AdminDataset[] }>(
+    `/api/v1/admin/datasets${qs}`,
+  );
+}
+
+export async function uploadAdminDataset(form: FormData) {
+  return requestForm<{ ok: boolean; dataset: AdminDataset }>(
+    "/api/v1/admin/datasets",
+    form,
+  );
+}
+
+export async function patchAdminDataset(
+  id: string,
+  body: Record<string, unknown>,
+) {
+  return requestJson<{ ok: boolean; dataset: AdminDataset }>(
+    `/api/v1/admin/datasets/${id}`,
+    { method: "PATCH", body: JSON.stringify(body) },
+  );
+}
+
+export async function publishAdminDataset(id: string) {
+  return requestJson<{ ok: boolean; dataset: AdminDataset }>(
+    `/api/v1/admin/datasets/${id}/publish`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function unpublishAdminDataset(id: string) {
+  return requestJson<{ ok: boolean; dataset: AdminDataset }>(
+    `/api/v1/admin/datasets/${id}/unpublish`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function archiveAdminDataset(id: string) {
+  return requestJson<{ ok: boolean; dataset: AdminDataset }>(
+    `/api/v1/admin/datasets/${id}/archive`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+export async function restoreAdminDataset(id: string) {
+  return requestJson<{ ok: boolean; dataset: AdminDataset }>(
+    `/api/v1/admin/datasets/${id}/restore`,
+    { method: "POST", body: JSON.stringify({}) },
+  );
+}
+
+/** Authenticated download — never use a public /uploads/datasets URL. */
+export async function downloadAdminDataset(id: string, fallbackName: string) {
+  const token = loadAdminToken();
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_BASE}/api/v1/admin/datasets/${id}/download`, {
+    headers,
+  });
+  if (res.status === 401) {
+    clearAdminToken();
+    throw new Error("Admin sign-in required.");
+  }
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "Download failed.");
+  }
+  const blob = await res.blob();
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename="([^"]+)"/i.exec(disposition);
+  const filename = match?.[1] || fallbackName || "dataset";
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function uploadNeighbourhoodBoundary(
+  id: "kilimani" | "kileleshwa",
+  form: FormData,
+) {
+  return requestForm<{
+    ok: boolean;
+    neighbourhood_id: string;
+    status: string;
+    source: string;
+    version: string;
+  }>(`/api/v1/admin/neighbourhoods/${id}/boundary`, form);
+}
+
+export async function refreshNeighbourhoodLayers(
+  id: "kilimani" | "kileleshwa",
+) {
+  return requestJson<{
+    ok: boolean;
+    neighbourhood_id: string;
+    refreshed: string[];
+    skipped: string[];
+    layers?: unknown[];
+  }>(`/api/v1/admin/neighbourhoods/${id}/layers/refresh`, {
+    method: "POST",
+    body: JSON.stringify({}),
+  });
+}
+
+export async function fetchDataQuality() {
+  return requestJson<DataQualityCounts>("/api/v1/admin/data-quality");
+}
+
 export async function runAdminAction(
   id: string,
   action: AdminAction,
@@ -362,6 +556,167 @@ export async function runAdminAction(
     { method: "POST", body: JSON.stringify(body) },
   );
 }
+
+export type ConcernReviewStatus =
+  | "under_review"
+  | "accepted"
+  | "rejected"
+  | "archived";
+
+export type ConcernAdminAction =
+  | "accept_for_publication"
+  | "reject"
+  | "archive"
+  | "under_review";
+
+export interface AdminConcern {
+  id: string;
+  neighbourhood_id: string;
+  concern_type_code: string;
+  concern_type_label: string;
+  title: string;
+  description: string;
+  evidence_type: string;
+  review_status: ConcernReviewStatus | string;
+  review_note: string | null;
+  lat: number | null;
+  lng: number | null;
+  area_label: string | null;
+  observed_at: string | null;
+  source_ref: string | null;
+  limitations: string | null;
+  research_questions: string | null;
+  synthetic: boolean;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export interface AdminConcernListResponse {
+  count: number;
+  total_matching: number;
+  offset: number;
+  limit: number;
+  summary: Record<ConcernReviewStatus, number> & { synthetic: number };
+  concerns: AdminConcern[];
+}
+
+export async function fetchAdminConcerns(params: {
+  status?: ConcernReviewStatus | "all" | "queue";
+  neighbourhood?: "kilimani" | "kileleshwa" | "all";
+  q?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<AdminConcernListResponse> {
+  const qs = new URLSearchParams();
+  qs.set("status", params.status ?? "under_review");
+  qs.set("limit", String(params.limit ?? 100));
+  qs.set("offset", String(params.offset ?? 0));
+  if (params.neighbourhood && params.neighbourhood !== "all") {
+    qs.set("neighbourhood", params.neighbourhood);
+  }
+  if (params.q?.trim()) qs.set("q", params.q.trim());
+  return requestJson<AdminConcernListResponse>(
+    `/api/v1/admin/concerns?${qs}`,
+  );
+}
+
+export async function runConcernAction(
+  id: string,
+  action: ConcernAdminAction,
+  reason?: string,
+) {
+  return requestJson<{ ok: boolean; action: string; concern: AdminConcern }>(
+    `/api/v1/admin/concerns/${id}/action`,
+    {
+      method: "POST",
+      body: JSON.stringify({ action, reason }),
+    },
+  );
+}
+
+export async function downloadDatasetBlob(id: string): Promise<{
+  blob: Blob;
+  filename: string;
+}> {
+  const token = loadAdminToken();
+  const headers = new Headers();
+  if (token) headers.set("Authorization", `Bearer ${token}`);
+  const res = await fetch(`${API_BASE}/api/v1/admin/datasets/${id}/download`, {
+    headers,
+  });
+  if (res.status === 401) {
+    clearAdminToken();
+    throw new Error("Admin sign-in required.");
+  }
+  if (!res.ok) {
+    const data = (await res.json().catch(() => ({}))) as { error?: string };
+    throw new Error(data.error ?? "Download failed.");
+  }
+  const disposition = res.headers.get("Content-Disposition") ?? "";
+  const match = /filename="?([^";]+)"?/i.exec(disposition);
+  const filename = match?.[1] ?? `dataset-${id.slice(0, 8)}`;
+  return { blob: await res.blob(), filename };
+}
+
+export interface CatalogueLayerMeta {
+  id: string;
+  neighbourhood_id: string;
+  layer_key: string;
+  title: string;
+  category: string;
+  source: string;
+  attribution: string;
+  observation_period: string | null;
+  access_tier: string;
+  published: boolean;
+  feature_count: number;
+  refreshed_at: string | null;
+}
+
+export async function fetchCatalogueLayers(
+  neighbourhood: "kilimani" | "kileleshwa",
+) {
+  return requestJson<{
+    neighbourhood_id: string;
+    count: number;
+    layers: CatalogueLayerMeta[];
+    attribution: string;
+  }>(`/api/v1/catalogue/layers?neighbourhood=${neighbourhood}`);
+}
+
+export async function publishDataPack(body: {
+  neighbourhood_id: "kilimani" | "kileleshwa";
+  version: string;
+  title: string;
+  dataset_ids: string[];
+  layer_keys: string[];
+  methodology?: string;
+  summary?: string;
+}) {
+  return requestJson<{
+    ok: boolean;
+    pack: {
+      id: string;
+      neighbourhood_id: string;
+      version: string;
+      title: string;
+      status: string;
+      published_at: string | null;
+    };
+  }>("/api/v1/admin/data-packs", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+/** Aliases for pages that use shorter names */
+export const uploadDataset = uploadAdminDataset;
+export const patchDataset = patchAdminDataset;
+export const publishDataset = publishAdminDataset;
+export const unpublishDataset = unpublishAdminDataset;
+export const archiveDataset = archiveAdminDataset;
+export const uploadBoundary = uploadNeighbourhoodBoundary;
+export const refreshOsmLayers = refreshNeighbourhoodLayers;
 
 const PHOTO_PATH =
   /^\/uploads\/photos\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(jpg|jpeg|png|webp)$/i;

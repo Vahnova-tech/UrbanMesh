@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { cellForLatLng } from "../lib/geo";
 import { submitHazardReport, uploadPhoto } from "../lib/api";
 import {
@@ -19,7 +19,7 @@ import { ThemeToggle } from "../lib/theme";
 
 export function ReportFlowPage() {
   const navigate = useNavigate();
-  const { neighbourhood } = useNeighbourhood();
+  const { id, neighbourhood } = useNeighbourhood();
   const { coords, requestLocation, locating, error: locationError } = useLocationState();
   const [step, setStep] = useState(1);
   const [center, setCenter] = useState(() =>
@@ -36,6 +36,9 @@ export function ReportFlowPage() {
 
   const selected = HAZARD_OPTIONS.find((o) => o.value === category);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const useConcernFlow =
+    neighbourhood.reporting_mode === "community_planning" ||
+    id === "kileleshwa";
 
   useEffect(() => {
     if (coords) setCenter(coords);
@@ -44,6 +47,10 @@ export function ReportFlowPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: 0 });
   }, [step]);
+
+  if (useConcernFlow) {
+    return <Navigate to="/concerns/new" replace />;
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();

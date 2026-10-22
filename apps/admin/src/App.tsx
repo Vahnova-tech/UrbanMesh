@@ -16,6 +16,9 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { UsersPage } from "./pages/UsersPage";
 import { NeighbourhoodsPage } from "./pages/NeighbourhoodsPage";
 import { CataloguePage } from "./pages/CataloguePage";
+import { EvidenceQueuePage } from "./pages/EvidenceQueuePage";
+import { DataQualityPage } from "./pages/DataQualityPage";
+import { PackBuilderPage } from "./pages/PackBuilderPage";
 
 const basename =
   import.meta.env.BASE_URL === "/"
@@ -160,6 +163,12 @@ export default function App() {
           <Route path="/pdf" element={<PdfReportsPage />} />
           <Route path="/neighbourhoods" element={<NeighbourhoodsPage />} />
           <Route path="/catalogue" element={<CataloguePage />} />
+          <Route
+            path="/evidence"
+            element={<EvidenceQueuePage onLogout={onLogout} />}
+          />
+          <Route path="/data-quality" element={<DataQualityPage />} />
+          <Route path="/pack-builder" element={<PackBuilderPage />} />
           <Route
             path="/audit"
             element={<AuditLogsPage onLogout={onLogout} />}
