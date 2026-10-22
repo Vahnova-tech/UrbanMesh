@@ -153,8 +153,14 @@ function markerFill(incident: IncidentPublic): string {
 }
 
 function selectedPinHtml(fill: string, ring: string, dark: boolean): string {
-  const glow = dark ? "0 0 0 3px rgba(255,255,255,.22), 0 0 14px rgba(0,0,0,.55)" : "0 2px 8px rgba(0,0,0,.32)";
-  return `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring};filter:drop-shadow(${glow})" aria-hidden="true">
+  if (dark) {
+    return `<span class="um-crystal-pin" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true">
+      <span class="um-crystal-pin__gem"></span>
+      <span class="um-crystal-pin__beam"></span>
+      <span class="um-crystal-pin__ring"></span>
+    </span>`;
+  }
+  return `<span class="um-selected-pin__mark" style="--um-pin:${fill};--um-ring:${ring}" aria-hidden="true">
     <svg class="um-selected-pin__svg" viewBox="0 0 40 52" width="40" height="52" focusable="false">
       <path d="M20 50c6-8 16-18 16-30A16 16 0 0 0 4 20c0 12 10 22 16 30z" fill="rgba(0,0,0,.28)"/>
       <path d="M20 2c-9.4 0-17 7.6-17 17 0 12.4 14.2 28.2 16.2 30.4a1.1 1.1 0 0 0 1.6 0C22.8 47.2 37 31.4 37 19 37 9.6 29.4 2 20 2z" fill="${fill}" stroke="${ring}" stroke-width="3"/>
@@ -271,6 +277,26 @@ function ensureIncidentLayers(map: MapLibreMap, dark: boolean) {
     });
 
     map.addLayer({
+      id: "um-marker-ground",
+      type: "circle",
+      source: "um-markers",
+      filter: [
+        "in",
+        ["get", "kind"],
+        ["literal", ["cluster", "verified", "pending"]],
+      ],
+      layout: { visibility: dark ? "visible" : "none" },
+      paint: {
+        "circle-radius": ["+", ["get", "radius"], 8],
+        "circle-color": "transparent",
+        "circle-stroke-width": 1.25,
+        "circle-stroke-color": ["get", "color"],
+        "circle-stroke-opacity": 0.75,
+        "circle-pitch-alignment": "map",
+      },
+    });
+
+    map.addLayer({
       id: "um-marker-circle",
       type: "circle",
       source: "um-markers",
@@ -343,6 +369,9 @@ function ensureIncidentLayers(map: MapLibreMap, dark: boolean) {
           dark ? "#F5F0E8" : "#FFFFFF",
         );
       }
+      if (map.getLayer("um-marker-ground")) {
+        map.setLayoutProperty("um-marker-ground", "visibility", dark ? "visible" : "none");
+      }
     } catch {
       /* layers may be mid-swap */
     }
@@ -381,6 +410,7 @@ export function LiveMap({
   const lastFlyRef = useRef<string | null>(null);
   const lastNeighbourhoodRef = useRef(neighbourhood.id);
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const focusRef = useRef<{ lng: number; lat: number } | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
   const loadedKeysRef = useRef<Set<string>>(new Set());
 
@@ -407,6 +437,7 @@ export function LiveMap({
 
   onSelectRef.current = onSelect;
   byIdRef.current = byId;
+  focusRef.current = selected ? { lng: selected.lng, lat: selected.lat } : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -450,12 +481,12 @@ export function LiveMap({
     mapRef.current = map;
 
     const onReady = () => {
-      applyUrbanMeshBasemap(map, dark);
+      applyUrbanMeshBasemap(map, dark, focusRef.current);
       ensureIncidentLayers(map, dark);
     };
     map.on("load", onReady);
     map.on("style.load", () => {
-      applyUrbanMeshBasemap(map, dark);
+      applyUrbanMeshBasemap(map, dark, focusRef.current);
       ensureIncidentLayers(map, dark);
     });
 
@@ -504,7 +535,7 @@ export function LiveMap({
     const map = mapRef.current;
     if (!map) return;
     const onStyle = () => {
-      applyUrbanMeshBasemap(map, dark);
+      applyUrbanMeshBasemap(map, dark, focusRef.current);
       ensureIncidentLayers(map, dark);
       // Style swap drops custom sources; catalogue effect reloads them.
       loadedKeysRef.current.clear();
@@ -795,6 +826,16 @@ export function LiveMap({
     }
   }, [selected, dark, focus]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !map.isStyleLoaded()) return;
+    applyUrbanMeshBasemap(
+      map,
+      dark,
+      selected ? { lng: selected.lng, lat: selected.lat } : null,
+    );
+  }, [selected, dark]);
+
   function toggleLayer(layerKey: string) {
     setEnabledLayers((prev) => {
       const next = new Set(prev);
@@ -807,13 +848,8 @@ export function LiveMap({
   return (
     <div className={`absolute inset-0 ${className}`}>
       <div ref={wrapRef} className="um-vector-map h-full w-full" />
-      <div className="pointer-events-none absolute bottom-6 left-6 z-[1100] hidden max-w-[240px] lg:block">
-        <MapKey
-          showHazards={showHazards}
-          catalogueLayers={catalogueLayers}
-          enabledLayers={enabledLayers}
-          attribution={layerAttribution}
-        />
+      <div className="pointer-events-none absolute bottom-36 left-6 z-[1100] hidden lg:block">
+        <MapKey showHazards={showHazards} />
       </div>
       {catalogueLayers.length > 0 ? (
         <div className="pointer-events-auto absolute left-3 top-[max(5.5rem,calc(4.5rem+env(safe-area-inset-top)))] z-[1100] max-h-[40vh] w-[min(14rem,calc(100vw-1.5rem))] overflow-y-auto rounded-card border border-civic-line bg-civic-surface/95 p-2.5 shadow-card backdrop-blur-md lg:left-auto lg:right-6 lg:top-24">
@@ -847,7 +883,7 @@ export function LiveMap({
           </p>
         </div>
       ) : null}
-      <div className="absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-full border border-civic-line bg-civic-surface/90 shadow-card backdrop-blur-md lg:bottom-28 lg:right-6 lg:top-auto">
+      <div className="um-map-zoom absolute right-3 top-[42%] z-[1100] flex flex-col overflow-hidden rounded-full border border-civic-line bg-civic-surface/90 shadow-card backdrop-blur-md lg:bottom-28 lg:right-6 lg:top-auto">
         <button
           type="button"
           aria-label="Zoom in"
@@ -875,95 +911,35 @@ export function LiveMap({
 export function MapKey({
   bare = false,
   showHazards = true,
-  catalogueLayers = [],
-  enabledLayers,
-  attribution = "© OpenStreetMap contributors",
 }: {
   bare?: boolean;
   showHazards?: boolean;
-  catalogueLayers?: CatalogueLayerMeta[];
-  enabledLayers?: Set<string>;
-  attribution?: string;
 }) {
+  const items = showHazards
+    ? [
+        { color: MARKER.verified, label: "Supported" },
+        { color: MARKER.pending, label: "Pending" },
+        { color: MARKER.you, label: "You" },
+      ]
+    : [{ color: MARKER.you, label: "You" }];
   const body = (
-    <>
-      <p className="um-eyebrow text-[10px]">Map key</p>
-      <ul className="mt-1.5 space-y-1">
-        {showHazards ? (
-          <>
-            <LegendItem color={MARKER.verified} label="Community-supported" hint="Solid pin · 15 m" />
-            <LegendItem color={MARKER.pending} dashed label="Pending report" hint="Dashed pin" />
-            <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
-            <LegendItem color={MARKER.verified} crosshair label="Selected report" hint="Location pin" />
-            <LegendItem color="#3DDCFF" label="3D streets" hint="Neon routes · extruded blocks" />
-          </>
-        ) : (
-          <LegendItem color={MARKER.you} label="Your location" hint="After Locate" />
-        )}
-        {catalogueLayers.map((layer, index) => {
-          if (enabledLayers && !enabledLayers.has(layer.layer_key)) return null;
-          return (
-            <LegendItem
-              key={layer.layer_key}
-              color={colorForLayer(index)}
-              label={layer.title}
-              hint={`${layer.feature_count} features`}
-            />
-          );
-        })}
-      </ul>
-      {catalogueLayers.length > 0 ? (
-        <p className="mt-2 text-[9px] leading-snug text-civic-muted">
-          {attribution}
-        </p>
-      ) : null}
-    </>
+    <ul className="flex flex-wrap items-center gap-x-3 gap-y-1">
+      {items.map((item) => (
+        <li key={item.label} className="flex items-center gap-1.5 text-[11px] font-semibold text-civic-slate">
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            style={{ background: item.color }}
+            aria-hidden
+          />
+          {item.label}
+        </li>
+      ))}
+    </ul>
   );
-  if (bare) return <div>{body}</div>;
+  if (bare) return body;
   return (
-    <div className="rounded-card border border-civic-line bg-civic-surface px-2.5 py-2 shadow-card">
+    <div className="rounded-full border border-civic-line bg-civic-surface/80 px-3 py-1.5 shadow-card backdrop-blur-md">
       {body}
     </div>
-  );
-}
-
-function LegendItem({
-  color,
-  label,
-  hint,
-  dashed = false,
-  crosshair = false,
-}: {
-  color: string;
-  label: string;
-  hint: string;
-  dashed?: boolean;
-  crosshair?: boolean;
-}) {
-  return (
-    <li className="flex items-center gap-2">
-      <span className="relative h-2.5 w-2.5 shrink-0">
-        <span
-          className="absolute inset-0 rounded-full border border-white"
-          style={{
-            background: color,
-            outline: dashed ? `1px dashed ${color}` : undefined,
-            outlineOffset: dashed ? "1px" : undefined,
-          }}
-        />
-        {crosshair ? (
-          <span
-            className="absolute inset-[-3px] rounded-full border border-dashed"
-            style={{ borderColor: color }}
-          />
-        ) : null}
-      </span>
-      <span className="min-w-0">
-        <span className="block text-[11px] font-semibold leading-tight text-civic-ink">
-          {label}
-        </span>
-        <span className="block text-[10px] leading-tight text-civic-muted">{hint}</span>
-      </span>
-    </li>
   );
 }
