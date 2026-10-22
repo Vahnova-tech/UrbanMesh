@@ -199,9 +199,6 @@ export function AnalyticsPage() {
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="um-display">Analytics</h1>
-          <p className="um-body mt-2 max-w-xl">
-            How Kilimani reports concentrate, become community-supported, and emerge along pilot corridors.
-          </p>
           <p className="um-meta mt-2">
             {formatDataAsOf(metrics.generated_at)}
           </p>

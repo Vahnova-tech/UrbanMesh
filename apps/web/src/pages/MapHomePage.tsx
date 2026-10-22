@@ -243,22 +243,10 @@ export function MapHomePage() {
 
         <div className="pointer-events-none absolute inset-x-0 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] px-3 lg:hidden">
           <div className="pointer-events-auto space-y-2">
-            <div className="um-map-card rounded-card px-3.5 py-3.5 shadow-card">
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="inline-flex items-center rounded-full border border-civic-line/80 bg-civic-mist/80 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
-                  Kilimani · Nairobi
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-civic-verified/25 bg-civic-verifiedBg px-2 py-0.5 text-[10px] font-semibold text-civic-verified">
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-civic-verified" />
-                  Live area
-                </span>
-              </div>
-              <h1 className="mt-2.5 text-[1.15rem] font-semibold leading-snug tracking-tight text-civic-ink">
-                Report a hazard. Build local evidence.
+            <div className="um-map-card rounded-card px-3.5 py-3 shadow-card">
+              <h1 className="text-lg font-semibold tracking-tight text-civic-ink">
+                Street hazards
               </h1>
-              <p className="mt-1 text-sm font-medium leading-snug text-civic-slate">
-                Discover street hazards reported by your community.
-              </p>
               <div className="mt-3.5 flex items-center gap-2">
                 <ButtonLink to="/reports/new" className="min-h-10 shrink-0 rounded-full px-3.5 text-xs">
                   + Report a hazard
@@ -357,21 +345,9 @@ export function MapHomePage() {
 
       <aside className="hidden w-[400px] shrink-0 flex-col border-l border-civic-line bg-civic-surface pt-[4.25rem] lg:flex">
         <div className="border-b border-civic-line px-5 pb-5 pt-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center rounded-full border border-civic-line bg-civic-mist px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.06em] text-civic-slate">
-              Kilimani · Nairobi
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-civic-verified/25 bg-civic-verifiedBg px-2 py-0.5 text-[10px] font-semibold text-civic-verified">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-civic-verified" />
-              Live reporting area
-            </span>
-          </div>
-          <h1 className="mt-3 text-[1.35rem] font-semibold leading-snug tracking-tight text-civic-ink">
-            Report a hazard. Build local evidence.
+          <h1 className="text-xl font-semibold tracking-tight text-civic-ink">
+            Street hazards
           </h1>
-          <p className="mt-1.5 text-sm leading-snug text-civic-slate">
-            Discover street hazards reported by your community in Kilimani.
-          </p>
           <div className="mt-4 flex items-center gap-2">
             <ButtonLink to="/reports/new" className="min-h-11 flex-1 rounded-full text-sm">
               + Report a hazard
@@ -399,11 +375,10 @@ export function MapHomePage() {
         <div className="min-h-0 flex-1 overflow-y-auto px-5 py-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <div>
-              <p className="um-eyebrow">Community evidence</p>
-              <p className="mt-1 text-sm font-semibold text-civic-ink">
+              <p className="text-sm font-semibold text-civic-ink">
                 {loading && incidents.length === 0
                   ? "Loading…"
-                  : `${visible.length} hazard${visible.length === 1 ? "" : "s"} · duplicates merged`}
+                  : `${visible.length} hazard${visible.length === 1 ? "" : "s"}`}
               </p>
               {!loading || incidents.length > 0 ? (
                 <p className="um-meta mt-0.5">
@@ -709,7 +684,7 @@ function MapFilters({
           ))}
         </div>
         <p className="um-meta mt-1.5">
-          Supported means ≥3 same-category reports within 15 m — not a county inspection.
+          3 reports within 15 m.
         </p>
         <label className="mt-2.5 flex items-center gap-2 text-xs font-semibold text-civic-slate">
           <input

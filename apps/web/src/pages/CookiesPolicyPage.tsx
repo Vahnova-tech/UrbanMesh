@@ -40,14 +40,11 @@ const STORAGE_ROWS = [
 export function CookiesPolicyPage() {
   return (
     <article className="um-enter mx-auto w-full max-w-[720px] px-4 py-8 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-12 lg:px-6 lg:py-12">
-      <p className="um-eyebrow">Legal · Kilimani pilot</p>
-      <h1 className="um-about-hero-title mt-3 max-w-[16ch] text-balance">
-        Cookies & local storage
+      <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
+        Cookies
       </h1>
-      <p className="mt-4 text-base leading-relaxed text-civic-slate">
-        This page explains how the UrbanMesh citizen app uses cookies and similar
-        technologies on your device. It covers the Kilimani pilot Progressive Web App
-        only — not Nairobi City County systems.
+      <p className="mt-2 text-sm text-civic-slate">
+        How this app stores data on your device.
       </p>
       <p className="um-meta mt-3">Last updated · {UPDATED}</p>
 
@@ -75,7 +72,7 @@ export function CookiesPolicyPage() {
       </section>
 
       <section className="mt-10 border-t border-civic-line pt-8">
-        <h2 className="um-about-section-title">What we mean by “cookies”</h2>
+        <h2 className="um-about-section-title">What this covers</h2>
         <p className="mt-4 text-sm leading-relaxed text-civic-slate">
           Laws and browsers often treat cookies, local storage, session storage, and
           similar device storage together. UrbanMesh’s citizen app primarily uses{" "}
@@ -86,7 +83,7 @@ export function CookiesPolicyPage() {
       </section>
 
       <section className="mt-10 border-t border-civic-line pt-8">
-        <h2 className="um-about-section-title">Storage we use on this device</h2>
+        <h2 className="um-about-section-title">On this device</h2>
         <p className="mt-4 text-sm leading-relaxed text-civic-slate">
           These keys are written by UrbanMesh in your browser. Clearing site data for
           this origin removes them.
@@ -116,7 +113,7 @@ export function CookiesPolicyPage() {
       </section>
 
       <section className="mt-10 border-t border-civic-line pt-8">
-        <h2 className="um-about-section-title">Service worker & offline cache</h2>
+        <h2 className="um-about-section-title">Offline</h2>
         <p className="mt-4 text-sm leading-relaxed text-civic-slate">
           Where supported, UrbanMesh registers a service worker so the app shell and
           recently loaded map or report data can remain available if the network drops.
@@ -138,7 +135,7 @@ export function CookiesPolicyPage() {
       </section>
 
       <section className="mt-10 border-t border-civic-line pt-8">
-        <h2 className="um-about-section-title">Third-party services</h2>
+        <h2 className="um-about-section-title">Third parties</h2>
         <ul className="mt-4 space-y-3 text-sm leading-relaxed text-civic-slate">
           <li>
             <span className="font-semibold text-civic-ink">Map tiles</span> — vector

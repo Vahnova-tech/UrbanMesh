@@ -81,7 +81,6 @@ export function ReportsListPage({
       <div className="shrink-0 border-b border-civic-line bg-civic-surface px-4 py-4 lg:px-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="um-eyebrow">Reports</p>
             <h2 className="text-xl font-semibold tracking-tight text-civic-ink">
               {title}
             </h2>

@@ -115,9 +115,8 @@ export function MapPage({ onLogout }: { onLogout: () => void }) {
     <div className="mx-auto flex h-full min-h-0 max-w-6xl flex-col gap-3 px-4 py-4 lg:px-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="um-eyebrow">Geography</p>
           <h2 className="text-xl font-semibold tracking-tight text-civic-ink">
-            Report map
+            Map
           </h2>
         </div>
         <div className="flex flex-wrap gap-2">

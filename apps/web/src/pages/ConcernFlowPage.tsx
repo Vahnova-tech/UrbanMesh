@@ -149,14 +149,10 @@ export function ConcernFlowPage() {
 
       <form className="um-scroll min-h-0 flex-1" onSubmit={onSubmit}>
         <div className="mx-auto w-full max-w-3xl px-4 py-5 pb-[max(6rem,calc(4rem+env(safe-area-inset-bottom)))] lg:px-6 lg:py-8">
-          <p className="um-eyebrow">Kileleshwa · Community planning</p>
-          <h1 className="um-title mt-1">Share a planning concern</h1>
-          <p className="mt-2 rounded-card border border-civic-line bg-civic-mist/60 px-3 py-2.5 text-sm text-civic-slate">
-            This is <strong className="font-semibold text-civic-ink">not</strong>{" "}
-            Kilimani hazard reporting. Submissions go to evidence review and are
-            only published if accepted. Do not include names, phone numbers, or
-            ID numbers. Location is generalized to about 100&nbsp;m if you add a
-            pin.
+          <h1 className="um-title">New concern</h1>
+          <p className="mt-2 text-sm text-civic-slate">
+            Reviewed before it is published. No names, phone numbers, or ID numbers.
+            Pins are generalized to about 100&nbsp;m.
           </p>
 
           {loadError ? (
@@ -169,9 +165,7 @@ export function ConcernFlowPage() {
             <legend className="text-sm font-semibold text-civic-ink">
               Concern type
             </legend>
-            <p className="um-meta mt-1">
-              Required. From the Kileleshwa taxonomy.
-            </p>
+            <p className="um-meta mt-1">Required.</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2">
               {taxonomy.map((item) => (
                 <button

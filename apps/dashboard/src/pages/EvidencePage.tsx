@@ -8,7 +8,7 @@ import {
   type SpatialCluster,
 } from "../lib/api";
 import { loadEvidenceSelection, saveEvidenceSelection } from "../lib/evidenceStore";
-import { formatCoords, MONTH_LABEL } from "../lib/format";
+import { formatCoords } from "../lib/format";
 import { EmptyState, ErrorNotice, EvidencePhoto, StatCard, StatusBadge } from "../components/ui/Primitives";
 
 export function EvidencePage() {
@@ -87,11 +87,7 @@ export function EvidencePage() {
     <div className="p-5 lg:p-8">
       <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="um-display">Kilimani LPDP Evidence</h1>
-          <p className="um-body mt-2 max-w-xl">
-            {MONTH_LABEL}. The policy brief is compiled only from community-supported
-            15 m clusters — not from pending individual reports, and not from field inspection.
-          </p>
+          <h1 className="um-display">Evidence</h1>
         </div>
         <button
           type="button"

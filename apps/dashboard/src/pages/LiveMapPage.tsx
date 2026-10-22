@@ -124,13 +124,13 @@ export function LiveMapPage() {
           <p className="um-eyebrow">Map layers</p>
           {(
             [
-              ["verified", "Community-supported clusters"],
-              ["pending", "Pending reports"],
-              ["wards", "Ward boundaries"],
+              ["verified", "Supported"],
+              ["pending", "Pending"],
+              ["wards", "Wards"],
               ["roads", "Roads"],
               ["drainage", "Drainage"],
-              ["pedestrian", "Pedestrian corridors"],
-              ["h3", "H3 cells"],
+              ["pedestrian", "Walkways"],
+              ["h3", "H3"],
             ] as Array<[keyof MapLayers, string]>
           ).map(([key, label]) => (
             <label key={key} className="mt-2 flex items-center gap-2 text-sm">

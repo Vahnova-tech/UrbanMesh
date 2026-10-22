@@ -89,13 +89,7 @@ export function PackBuilderPage() {
   return (
     <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
       <div className="mx-auto max-w-3xl">
-        <p className="um-eyebrow">Data package</p>
         <h2 className="text-xl font-semibold text-civic-ink">Pack builder</h2>
-        <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Select published datasets and map layers, set a version, and publish a
-          data pack snapshot. Prior published packs for the neighbourhood are
-          archived.
-        </p>
 
         <label className="mt-4 inline-flex items-center gap-2 text-sm">
           <span className="text-civic-muted">Neighbourhood</span>

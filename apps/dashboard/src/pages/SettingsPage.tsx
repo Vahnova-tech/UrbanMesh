@@ -22,9 +22,6 @@ export function SettingsPage() {
   return (
     <div className="p-5 lg:p-8">
       <h1 className="um-display">Settings</h1>
-      <p className="um-body mt-2">
-        Read-only operating parameters for the Kilimani street pilot.
-      </p>
       <dl className="mt-6 max-w-xl divide-y divide-civic-line rounded-card border border-civic-line bg-civic-surface">
         <Row label="Planning area" value={meta.planning_area} />
         <Row label="City" value={meta.city} />

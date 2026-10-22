@@ -52,13 +52,7 @@ export function AnalyticsPage({ onLogout }: { onLogout: () => void }) {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="um-eyebrow">Insights</p>
             <h2 className="text-xl font-semibold text-civic-ink">Analytics</h2>
-            <p className="mt-1 max-w-2xl text-sm text-civic-slate">
-              Live moderation and hazard stats from the admin API. Community-supported
-              is spatial corroboration (≥{data?.rules.cluster_threshold ?? 3} within{" "}
-              {data?.rules.cluster_radius_meters ?? 15} m) — not field inspection.
-            </p>
           </div>
           <button
             type="button"

@@ -21,7 +21,7 @@ import {
   type PlatformMeta,
   type SpatialCluster,
 } from "../lib/api";
-import { formatDataAsOf, MONTH_LABEL } from "../lib/format";
+import { formatDataAsOf } from "../lib/format";
 import { ErrorNotice, Panel, PipelineStrip, Skeleton, StatCard, StatusBadge } from "../components/ui/Primitives";
 import { DEFAULT_LAYERS, PlannerMap } from "../components/map/PlannerMap";
 import { useChartColors } from "../lib/theme";
@@ -86,16 +86,7 @@ export function OverviewPage() {
   return (
     <div className="p-5 lg:p-8">
       <header className="mb-8">
-        <p className="um-eyebrow">Nairobi City County · {MONTH_LABEL}</p>
-        <h1 className="um-display mt-2">
-          Kilimani walkability intelligence
-        </h1>
-        <p className="um-body mt-3 max-w-2xl text-base">
-          Residents report what they see. UrbanMesh groups nearby same-category
-          reports into community-supported clusters. Planners receive that spatial
-          corroboration as Kilimani planning input — not as a field inspection or a
-          statutory LPDP.
-        </p>
+        <h1 className="um-display">Walkability</h1>
         <p className="um-meta mt-2">
           {formatDataAsOf(metrics.generated_at)}
         </p>

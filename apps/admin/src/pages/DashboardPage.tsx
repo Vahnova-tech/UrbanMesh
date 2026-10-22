@@ -34,16 +34,9 @@ export function DashboardPage({ onLogout }: { onLogout: () => void }) {
       <div className="mx-auto max-w-6xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="um-eyebrow">Overview</p>
             <h2 className="text-xl font-semibold tracking-tight text-civic-ink">
-              Operations dashboard
+              Overview
             </h2>
-            <p className="mt-1 max-w-xl text-sm text-civic-slate">
-              Community-supported is spatial corroboration (≥
-              {stats?.cluster_threshold ?? 3} within{" "}
-              {stats?.cluster_radius_meters ?? 15} m) — not field inspection.
-              Disproved and deleted reports are excluded from public hazard views.
-            </p>
           </div>
           <div className="flex items-center gap-2">
             {fetchedAt ? (

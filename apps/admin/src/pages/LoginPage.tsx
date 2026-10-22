@@ -51,7 +51,7 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
       />
 
       <header className="relative z-[1] flex items-center justify-between gap-3 px-4 py-4 sm:px-6">
-        <p className="um-eyebrow">Authentication portal</p>
+        <p className="text-sm font-semibold text-civic-ink">Admin</p>
         <ThemeToggle />
       </header>
 
@@ -61,13 +61,7 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
           <p className="mt-4 text-[1.75rem] font-semibold tracking-tight text-civic-ink sm:text-[2rem]">
             UrbanMesh
           </p>
-          <p className="mt-1 text-sm font-medium text-civic-muted">
-            Admin &amp; authentication · Kilimani pilot
-          </p>
-          <p className="mt-3 text-sm leading-relaxed text-civic-slate">
-            For municipal planners, local leaders, and spatial data operators
-            reviewing Kilimani hazard evidence.
-          </p>
+          <p className="mt-1 text-sm text-civic-muted">Sign in</p>
         </div>
 
         <form
@@ -80,21 +74,12 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
               <h1 className="text-lg font-semibold tracking-tight text-civic-ink">
                 Sign in
               </h1>
-              <p className="mt-1.5 text-sm leading-relaxed text-civic-slate">
-                Authorized operators only. Field inspection stays separate from
-                community corroboration.
-              </p>
+              <p className="mt-1 text-sm text-civic-muted">Operators only.</p>
             </div>
             <span className="shrink-0 rounded-md border border-civic-line bg-civic-mist/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.04em] text-civic-muted">
               {dark ? "Ops" : "Day"}
             </span>
           </div>
-
-          <ul className="mt-4 space-y-1.5 border-y border-civic-line py-3 text-xs text-civic-muted">
-            <li>Review and moderate resident hazard reports</li>
-            <li>Disprove unsupported claims · archive invalid records</li>
-            <li>Track resolution across the Kilimani pilot zone</li>
-          </ul>
 
           <div className="mt-5">
             <label
@@ -164,7 +149,7 @@ export function LoginPage({ onLogin }: { onLogin: (token: string) => void }) {
       </div>
 
       <footer className="relative z-[1] px-4 pb-6 text-center text-[11px] text-civic-muted">
-        UrbanMesh admin · Restricted access · Kilimani pilot zone · No public indexing
+        Restricted · no public indexing
       </footer>
     </div>
   );

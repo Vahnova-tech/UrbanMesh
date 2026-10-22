@@ -30,11 +30,7 @@ export function DataQualityPage() {
   return (
     <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
       <div className="mx-auto max-w-4xl">
-        <p className="um-eyebrow">Data package</p>
         <h2 className="text-xl font-semibold text-civic-ink">Data quality</h2>
-        <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Database counts only. No completeness percentages are inferred.
-        </p>
 
         {loading ? (
           <p className="mt-6 text-sm text-civic-muted">Loading…</p>

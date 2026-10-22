@@ -102,12 +102,7 @@ export function CataloguePage() {
   return (
     <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
       <div className="mx-auto max-w-4xl">
-        <p className="um-eyebrow">Data package</p>
-        <h2 className="text-xl font-semibold text-civic-ink">Dataset catalogue</h2>
-        <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Upload, publish, and download datasets for the selected neighbourhood.
-          Restricted files are never exposed on public routes.
-        </p>
+        <h2 className="text-xl font-semibold text-civic-ink">Catalogue</h2>
 
         <label className="mt-4 inline-flex items-center gap-2 text-sm">
           <span className="text-civic-muted">Neighbourhood</span>

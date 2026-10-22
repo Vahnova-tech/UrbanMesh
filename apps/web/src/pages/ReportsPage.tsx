@@ -129,17 +129,10 @@ export function ReportsPage() {
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-8 lg:px-6 lg:py-8">
       <header className="mb-5">
-        <p className="um-eyebrow">Kilimani pilot · Nairobi</p>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 max-w-xl">
-            <h1 className="text-2xl font-semibold tracking-tight text-civic-ink lg:text-[1.75rem]">
-              Street hazard reports
-            </h1>
-            <p className="mt-1.5 text-sm leading-snug text-civic-slate">
-              Community-supported evidence means ≥3 same-category reports within 15 m —
-              not a county inspection.
-            </p>
-          </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
+            Reports
+          </h1>
           <div className="flex shrink-0 items-center gap-2">
             <ButtonLink to={REPORT_NEW_PATH} className="min-h-11 rounded-full px-4 text-sm">
               Report a hazard

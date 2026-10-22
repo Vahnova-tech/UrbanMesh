@@ -101,25 +101,19 @@ export function DataPackPage() {
   return (
     <div className={`um-scroll h-full ${NAV_PILL_OFFSET}`}>
       <div className="mx-auto max-w-[1100px] px-4 pb-24 pt-4 lg:px-6 lg:pt-8">
-        <p className="um-eyebrow">Kileleshwa Data Package</p>
-        <h1 className="mt-3 max-w-[18ch] text-3xl font-semibold tracking-tight text-civic-ink sm:text-4xl">
-          {pack?.title ?? "Growing Better: Community-Led Planning for Kileleshwa"}
+        <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
+          Kileleshwa
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-relaxed text-civic-slate">
-          {pack?.introduction ??
-            "A structured evidence resource for community-led planning. Missing statistics stay TBD — never invented."}
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2 text-xs text-civic-muted">
-          <span className="rounded-md border border-civic-line bg-civic-surface px-2 py-1 font-semibold">
-            Version {pack?.version ?? "…"}
-          </span>
-          <span className="rounded-md border border-civic-line bg-civic-surface px-2 py-1 font-semibold uppercase">
-            {pack?.status ?? "draft"}
-          </span>
-          <span className="rounded-md border border-civic-line bg-civic-mist/60 px-2 py-1">
-            Boundary: {neighbourhood.boundary_status.replace(/_/g, " ")}
-          </span>
-        </div>
+        {pack ? (
+          <div className="mt-3 flex flex-wrap gap-2 text-xs text-civic-muted">
+            <span className="rounded-md border border-civic-line bg-civic-surface px-2 py-1 font-semibold">
+              v{pack.version}
+            </span>
+            <span className="rounded-md border border-civic-line bg-civic-surface px-2 py-1 font-semibold uppercase">
+              {pack.status}
+            </span>
+          </div>
+        ) : null}
 
         {error ? (
           <p className="mt-6 rounded-card border border-civic-critical/20 bg-civic-criticalBg px-3 py-2 text-sm text-civic-critical">
@@ -132,13 +126,8 @@ export function DataPackPage() {
 
         {pack ? (
           <>
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Planning workflow
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Understand → Investigate → Identify → Define → Design → Test
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Workflow</h2>
               <ol className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {pack.process_steps.map((step, i) => (
                   <li
@@ -156,17 +145,8 @@ export function DataPackPage() {
               </ol>
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Kileleshwa at a glance
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-civic-slate">
-                Indicators appear only with sourced values. TBD means the figure
-                is not yet established — not zero.
-              </p>
-              <p className="mt-2 text-xs text-civic-muted">
-                {neighbourhood.boundary_note}
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">At a glance</h2>
               <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {pack.glance.map((row) => (
                   <GlanceCard key={row.id} row={row} />
@@ -174,15 +154,8 @@ export function DataPackPage() {
               </div>
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Map framing (provisional)
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Interactive ward layers appear when authoritative geometry is
-                ingested. Until then, UrbanMesh uses a provisional framing box
-                for orientation only.
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Map frame</h2>
               <dl className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Meta
                   label="Center (lat, lng)"
@@ -198,14 +171,8 @@ export function DataPackPage() {
               </ButtonLink>
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Community concern taxonomy
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Distinct from Kilimani’s six infrastructure hazard categories. No
-                submissions are implied by listing these labels.
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Concern types</h2>
               <ul className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {pack.concern_taxonomy.map((c) => (
                   <li
@@ -223,15 +190,8 @@ export function DataPackPage() {
               </ul>
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Development and land-use change
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Observable change is shown separately from impact judgements.
-                Before/after imagery appears only when two licensed image refs
-                exist.
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Change</h2>
               {timelineNote ? (
                 <p className="mt-2 text-xs text-civic-muted">{timelineNote}</p>
               ) : null}
@@ -278,14 +238,8 @@ export function DataPackPage() {
               )}
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Community-reported concerns
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Published evidence only. Listing the taxonomy does not imply field
-                confirmation.
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Concerns</h2>
               {concerns.length === 0 ? (
                 <p className="mt-4 rounded-card border border-civic-line bg-civic-mist/40 px-4 py-3 text-sm text-civic-muted">
                   No published concern records yet.
@@ -314,14 +268,8 @@ export function DataPackPage() {
               )}
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-xl font-semibold text-civic-ink">
-                Data catalogue
-              </h2>
-              <p className="mt-2 text-sm text-civic-slate">
-                Open-tier metadata only. Restricted downloads are never exposed on
-                this page.
-              </p>
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Catalogue</h2>
               {pack.datasets.length === 0 ? (
                 <p className="mt-4 text-sm text-civic-muted">
                   No open datasets published yet.
@@ -375,9 +323,7 @@ export function DataPackPage() {
                 </ul>
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-civic-ink">
-                  Privacy & access tiers
-                </h2>
+                <h2 className="text-lg font-semibold text-civic-ink">Privacy</h2>
                 <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-civic-slate">
                   {pack.privacy_guidance.map((item) => (
                     <li key={item}>{item}</li>
@@ -391,14 +337,10 @@ export function DataPackPage() {
               </div>
             </section>
 
-            <section className="mt-12 border-t border-civic-line pt-10">
-              <h2 className="text-lg font-semibold text-civic-ink">
-                Participant problem definition
-              </h2>
-              <p className="mt-2 max-w-2xl text-sm text-civic-slate">
-                Interpretations submitted by participants are not established
-                findings. Submissions are labelled as participant interpretation —
-                not official.
+            <section className="mt-8 border-t border-civic-line pt-6">
+              <h2 className="text-lg font-semibold text-civic-ink">Proposals</h2>
+              <p className="mt-1 text-sm text-civic-muted">
+                Participant notes, not official findings.
               </p>
 
               <form

@@ -25,13 +25,8 @@ export function BriefsPage() {
 
   return (
     <div className="p-5 lg:p-8">
-      <h1 className="um-display">Policy briefs</h1>
-      <p className="um-body mt-2 max-w-xl">
-        One-click A4 planning brief from{" "}
-        <span className="font-medium text-civic-ink">community-supported</span> Kilimani
-        clusters (≥3 same-category reports within 15 m). This is spatial corroboration
-        for the planning desk, not a statutory LPDP. Latest file: {MONTH_LABEL}.
-      </p>
+      <h1 className="um-display">Briefs</h1>
+      <p className="um-meta mt-2">Latest · {MONTH_LABEL}</p>
 
       <div className="mt-6 flex flex-wrap gap-3">
         <button

@@ -74,14 +74,9 @@ export function ReportSubmittedPage() {
 
   return (
     <div className="um-enter um-scroll mx-auto flex min-h-0 w-full max-w-lg flex-1 flex-col px-5 py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
-      <p className="um-eyebrow">Submission received</p>
-      <h1 className="mt-3 text-2xl font-semibold tracking-tight text-civic-ink lg:text-[1.75rem]">
-        Report received
+      <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
+        Received
       </h1>
-      <p className="um-body mt-3">
-        Your hazard report has been submitted. It appears in the listing once the
-        submission is saved on the server.
-      </p>
 
       <dl className="mt-6 space-y-3 rounded-card border border-civic-line px-4 py-4">
         <div>
@@ -113,8 +108,7 @@ export function ReportSubmittedPage() {
       </div>
 
       <p className="um-meta mt-4">
-        Community support requires three same-category reports within 15 metres. That is
-        spatial corroboration — not a Nairobi City County inspection.
+        Support needs 3 same-category reports within 15 m.
       </p>
 
       <div className="mt-8 flex flex-col gap-2">

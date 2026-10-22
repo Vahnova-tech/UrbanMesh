@@ -7,7 +7,6 @@ import {
 import { Link } from "react-router-dom";
 import { ButtonLink } from "../components/ui/Button";
 import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
-import { PIPELINE } from "../components/ui/Pipeline";
 
 const APPROACH = [
   {
@@ -69,20 +68,14 @@ export function AboutPage() {
         {/* 01 — Hero */}
         <header className="grid gap-10 border-b border-civic-line pb-14 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,0.85fr)] lg:items-end lg:gap-16 lg:pb-20">
           <div>
-            <p className="um-eyebrow um-about-stagger" style={{ animationDelay: "40ms" }}>
-              About · Kilimani pilot
-            </p>
-            <h1 className="um-about-hero-title um-about-stagger mt-4 max-w-[14ch] text-balance">
-              Street evidence that planners can trust.
+            <h1 className="um-about-hero-title um-about-stagger max-w-[12ch] text-balance">
+              Street evidence.
             </h1>
             <p
-              className="um-about-stagger mt-5 max-w-xl text-base leading-relaxed text-civic-slate lg:text-[1.05rem]"
+              className="um-about-stagger mt-4 max-w-md text-sm leading-relaxed text-civic-slate"
               style={{ animationDelay: "120ms" }}
             >
-              UrbanMesh helps Kilimani residents document visible street hazards and turns
-              nearby agreement into community-supported clusters for Nairobi City County
-              planning input — not inspections, and not a statutory Local Physical
-              Development Plan.
+              Residents document street hazards. Nearby agreement becomes planning input.
             </p>
             <div
               className="um-about-stagger mt-8 flex flex-wrap items-center gap-x-5 gap-y-3"
@@ -92,7 +85,7 @@ export function AboutPage() {
                 href="#approach"
                 className="group inline-flex items-center gap-2 text-sm font-semibold text-civic-accent"
               >
-                Explore our approach
+                Approach
                 <span
                   aria-hidden
                   className="transition-transform duration-200 group-hover:translate-y-0.5 motion-reduce:transition-none"
@@ -111,8 +104,7 @@ export function AboutPage() {
             style={{ animationDelay: "220ms" }}
             aria-label="Pilot context"
           >
-            <p className="um-eyebrow">Pilot context</p>
-            <dl className="mt-5 space-y-5">
+            <dl className="space-y-5">
               <div>
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.06em] text-civic-muted">
                   Place
@@ -151,75 +143,40 @@ export function AboutPage() {
         </header>
 
         {/* 02 — Our story */}
-        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
-            <div>
-              <p className="um-eyebrow">Our story</p>
-              <h2 className="um-about-section-title mt-3 max-w-[12ch]">
-                Why UrbanMesh exists
-              </h2>
-            </div>
-            <div className="space-y-5 text-base leading-relaxed text-civic-slate lg:text-[1.05rem]">
-              <p>
-                Kilimani’s walkability problems are visible on the street — broken surfaces,
-                blocked paths, drainage failures — yet a single complaint rarely carries enough
-                weight for planning decisions.
-              </p>
-              <p>
-                UrbanMesh exists to turn resident sightings into spatial evidence: when
-                enough people report the same hazard type in the same place, the platform
-                forms a community-supported cluster that planners can use as{" "}
-                <span className="font-semibold text-civic-ink">Kilimani LPDP planning input</span>.
-              </p>
-              <p>
-                It is deliberately narrow. No public profiles. No sensitive social domains.
-                No claim that community support equals a county field inspection.
-              </p>
-            </div>
+        <Reveal as="section" className="border-b border-civic-line py-10 lg:py-14">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
+            <h2 className="um-about-section-title max-w-[12ch]">Why it exists</h2>
+            <p className="max-w-xl text-sm leading-relaxed text-civic-slate">
+              A single complaint rarely carries enough weight. When enough people report the
+              same hazard in the same place, UrbanMesh forms a community-supported cluster
+              for planning input.
+            </p>
           </div>
         </Reveal>
 
         {/* 03–04 — Mission & Vision */}
-        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
-          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+        <Reveal as="section" className="border-b border-civic-line py-10 lg:py-14">
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
             <div>
-              <p className="font-semibold tracking-tight text-civic-mist select-none text-[clamp(3.5rem,10vw,6rem)] leading-none">
-                01
-              </p>
-              <p className="um-eyebrow mt-4">Mission</p>
-              <h2 className="um-about-section-title mt-2">Our purpose</h2>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-civic-slate">
-                Give Kilimani residents a trustworthy way to document street hazards, and give
-                planners corroborated spatial evidence they can act on — without mistaking
-                community agreement for official inspection.
+              <h2 className="um-about-section-title">Purpose</h2>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-civic-slate">
+                A clear way to document street hazards, and corroborated evidence planners can
+                use. Community agreement is not an official inspection.
               </p>
             </div>
             <div>
-              <p className="font-semibold tracking-tight text-civic-mist select-none text-[clamp(3.5rem,10vw,6rem)] leading-none">
-                02
-              </p>
-              <p className="um-eyebrow mt-4">Vision</p>
-              <h2 className="um-about-section-title mt-2">Our direction</h2>
-              <p className="mt-4 max-w-md text-base leading-relaxed text-civic-slate">
-                Neighbourhood walkability intelligence that stays honest about what is live,
-                what is pending, and what still needs county or partner confirmation — starting
-                on Kilimani’s pilot corridors.
+              <h2 className="um-about-section-title">Direction</h2>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-civic-slate">
+                Stay honest about what is live, what is pending, and what still needs county
+                confirmation.
               </p>
             </div>
           </div>
         </Reveal>
 
         {/* 05 — What we do */}
-        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
-          <div className="max-w-2xl">
-            <p className="um-eyebrow">What we do</p>
-            <h2 className="um-about-section-title mt-3">
-              From resident sighting to planning evidence
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-civic-slate">
-              Three connected capabilities — not a generic service catalog.
-            </p>
-          </div>
+        <Reveal as="section" className="border-b border-civic-line py-10 lg:py-14">
+          <h2 className="um-about-section-title">What it does</h2>
           <ul className="mt-10 divide-y divide-civic-line border-y border-civic-line">
             {CAPABILITIES.map((item, index) => (
               <li key={item.title}>
@@ -256,15 +213,9 @@ export function AboutPage() {
         <Reveal
           as="section"
           id="approach"
-          className="scroll-mt-24 border-b border-civic-line py-14 lg:py-20"
+          className="scroll-mt-24 border-b border-civic-line py-10 lg:py-14"
         >
-          <div className="max-w-2xl">
-            <p className="um-eyebrow">Our approach</p>
-            <h2 className="um-about-section-title mt-3">How a report becomes evidence</h2>
-            <p className="mt-4 text-base leading-relaxed text-civic-slate">
-              {PIPELINE.join(" → ")}.
-            </p>
-          </div>
+          <h2 className="um-about-section-title">How a report becomes evidence</h2>
 
           <ol className="mt-10 grid gap-0 lg:grid-cols-4 lg:gap-0">
             {APPROACH.map((step, index) => (
@@ -317,13 +268,8 @@ export function AboutPage() {
         </Reveal>
 
         {/* 07 — Our difference */}
-        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
-          <div className="max-w-2xl">
-            <p className="um-eyebrow">Our difference</p>
-            <h2 className="um-about-section-title mt-3">
-              Thoughtful by design. Practical on Kilimani streets.
-            </h2>
-          </div>
+        <Reveal as="section" className="border-b border-civic-line py-10 lg:py-14">
+          <h2 className="um-about-section-title">How it differs</h2>
           <ul className="mt-10 grid gap-10 sm:grid-cols-2">
             {DIFFERENCE.map((item) => (
               <li key={item.title} className="max-w-md">
@@ -336,32 +282,19 @@ export function AboutPage() {
           </ul>
         </Reveal>
 
-        <Reveal as="section" className="border-b border-civic-line py-14 lg:py-20">
-          <div className="grid gap-10 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
-            <div>
-              <p className="um-eyebrow">On this phone</p>
-              <h2 className="um-about-section-title mt-3">Install for quick access</h2>
-            </div>
-            <div>
-              <p className="max-w-xl text-sm leading-relaxed text-civic-slate">
-                Install UrbanMesh via the header install control (Chrome / Edge) or Share →
-                Add to Home Screen on iPhone. Cached map and reports stay available offline;
-                new submissions still need a connection.
-              </p>
-            </div>
+        <Reveal as="section" className="border-b border-civic-line py-10 lg:py-14">
+          <div className="grid gap-6 lg:grid-cols-[minmax(0,0.4fr)_minmax(0,0.6fr)] lg:gap-16">
+            <h2 className="um-about-section-title">Install</h2>
+            <p className="max-w-xl text-sm leading-relaxed text-civic-slate">
+              Use the header install control, or Share → Add to Home Screen on iPhone.
+              Cached pages stay available offline. New reports still need a connection.
+            </p>
           </div>
         </Reveal>
 
         {/* Closing CTA */}
-        <Reveal as="section" className="py-14 lg:py-20">
-          <p className="um-eyebrow">Next step</p>
-          <h2 className="um-about-hero-title mt-4 max-w-[16ch] text-balance">
-            See a hazard on your street?
-          </h2>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-civic-slate">
-            Add a report from this phone, or open the live map to explore community-supported
-            evidence already forming in Kilimani.
-          </p>
+        <Reveal as="section" className="py-10 lg:py-14">
+          <h2 className="um-about-section-title max-w-[14ch]">See a hazard?</h2>
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink to="/reports/new" className="min-h-12 rounded-full px-5">
               Report a hazard

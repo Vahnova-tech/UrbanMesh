@@ -61,12 +61,9 @@ export function ConcernDetailPage() {
       <div className="mx-auto max-w-3xl px-4 py-8">
         {justSubmitted ? (
           <div className="rounded-card border border-civic-line bg-civic-surface p-5">
-            <p className="um-eyebrow">Submitted</p>
-            <h1 className="um-title mt-1">Concern received for review</h1>
-            <p className="mt-3 text-sm leading-relaxed text-civic-slate">
-              UrbanMesh does not publish planning concerns until an admin accepts
-              them for the evidence pack. This is not Kilimani hazard reporting,
-              and acceptance is not a county confirmation.
+            <h1 className="um-title">Received</h1>
+            <p className="mt-2 text-sm text-civic-slate">
+              Published only if accepted. Acceptance is not a county confirmation.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <ButtonLink to="/concerns/new">Share another</ButtonLink>
@@ -74,7 +71,7 @@ export function ConcernDetailPage() {
                 to="/kileleshwa"
                 className="inline-flex min-h-11 items-center rounded-card border border-civic-line px-4 text-sm font-semibold text-civic-ink hover:bg-civic-mist"
               >
-                Back to data pack
+                Back
               </Link>
             </div>
           </div>
@@ -85,7 +82,7 @@ export function ConcernDetailPage() {
             />
             <div className="mt-4">
               <ButtonLink to="/kileleshwa" variant="secondary">
-                Kileleshwa data pack
+                Kileleshwa
               </ButtonLink>
             </div>
           </>
@@ -96,9 +93,7 @@ export function ConcernDetailPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 pb-[max(7rem,calc(5rem+env(safe-area-inset-bottom)))]">
-      <p className="um-eyebrow">
-        {concern.neighbourhood_id} · {concern.concern_type_label}
-      </p>
+      <p className="um-eyebrow">{concern.concern_type_label}</p>
       <h1 className="um-title mt-1">{concern.title}</h1>
       <p className="um-meta mt-2">
         Published {formatRelative(concern.created_at)} ·{" "}

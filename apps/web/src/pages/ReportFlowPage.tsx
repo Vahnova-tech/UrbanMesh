@@ -118,10 +118,9 @@ export function ReportFlowPage() {
           {step === 1 ? (
             <section className="flex min-h-0 flex-1 flex-col lg:flex-row lg:overflow-hidden">
               <div className="shrink-0 px-4 pb-2 pt-3 lg:hidden [@media(max-height:560px)]:hidden">
-                <p className="um-eyebrow">1 · Location</p>
-                <h1 className="um-title mt-1 text-lg lg:text-lg">Where is the problem?</h1>
+                <h1 className="um-title text-lg">Location</h1>
                 <p className="um-meta mt-1">
-                  Required. Pan the map so the crosshair sits on the hazard.
+                  Pan the crosshair onto the hazard.
                 </p>
               </div>
               <div className="relative min-h-[160px] flex-1 lg:min-h-0">
@@ -138,10 +137,9 @@ export function ReportFlowPage() {
               </div>
               <div className="shrink-0 space-y-3 border-t border-civic-line bg-civic-surface px-4 py-3 pb-[max(0.85rem,env(safe-area-inset-bottom))] lg:w-[380px] lg:overflow-y-auto lg:border-l lg:border-t-0 lg:px-5 lg:py-6">
                 <div className="hidden lg:block">
-                  <p className="um-eyebrow">1 · Location</p>
-                  <h1 className="um-title mt-1">Where is the problem?</h1>
+                  <h1 className="um-title">Location</h1>
                   <p className="um-meta mt-1">
-                    Required. Pan the map so the crosshair sits on the hazard.
+                    Pan the crosshair onto the hazard.
                   </p>
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-civic-muted">
@@ -183,9 +181,8 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="um-eyebrow">2 · Hazard</p>
-                  <h1 className="um-title mt-1">What did you notice?</h1>
-                  <p className="um-meta mt-1">Required. One primary category keeps corroboration accurate.</p>
+                  <h1 className="um-title">Hazard</h1>
+                  <p className="um-meta mt-1">Pick one category.</p>
                   <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-3">
                     {HAZARD_OPTIONS.map((opt) => (
                       <button
@@ -226,10 +223,9 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-5xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="um-eyebrow">3 · Evidence</p>
-                  <h1 className="um-title mt-1">Add photos</h1>
+                  <h1 className="um-title">Photos</h1>
                   <p className="um-meta mt-1">
-                    Photograph the hazard now. Gallery uploads are not accepted.
+                    Take a photo now. Gallery uploads are not accepted.
                   </p>
                   <div className="mt-4 flex flex-col gap-6 lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
                     <div className="order-2 lg:order-none">
@@ -288,8 +284,7 @@ export function ReportFlowPage() {
             <>
               <div ref={scrollRef} className="min-h-0 flex-1 um-scroll">
                 <section className="mx-auto w-full max-w-4xl px-4 py-4 lg:px-6 lg:py-8">
-                  <p className="um-eyebrow">4 · Review</p>
-                  <h1 className="um-title mt-1">Review and submit</h1>
+                  <h1 className="um-title">Review</h1>
                   <dl className="mt-4 grid gap-4 rounded-card border border-civic-line bg-civic-surface p-4 text-sm lg:grid-cols-2">
                     <div>
                       <dt className="text-xs font-semibold uppercase tracking-wide text-civic-muted">

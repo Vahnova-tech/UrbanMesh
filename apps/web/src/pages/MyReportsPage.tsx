@@ -7,7 +7,7 @@ import { useCollapsedReports } from "../lib/useCollapsedReports";
 import { ErrorBanner, EvidenceEmpty, ReportCard } from "../components/ui/ReportCard";
 import { ButtonLink } from "../components/ui/Button";
 import { SkeletonList } from "../components/ui/Pipeline";
-import { CORROBORATION_THRESHOLD, REPORT_NEW_PATH } from "../lib/reportStatus";
+import { REPORT_NEW_PATH } from "../lib/reportStatus";
 
 type Filter = "all" | "pending" | "supported";
 
@@ -80,16 +80,12 @@ export function MyReportsPage() {
   return (
     <div className="mx-auto w-full max-w-[1100px] px-4 py-6 pb-[max(7.5rem,calc(6rem+env(safe-area-inset-bottom)))] md:pb-8 lg:px-6 lg:py-8">
       <header className="mb-5">
-        <p className="um-eyebrow">Kilimani pilot · This device</p>
-        <div className="mt-2 flex flex-wrap items-start justify-between gap-3">
-          <div className="min-w-0 max-w-xl">
-            <h1 className="text-2xl font-semibold tracking-tight text-civic-ink lg:text-[1.75rem]">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
               My reports
             </h1>
-            <p className="mt-1.5 text-sm leading-snug text-civic-slate">
-              Stored on this phone only — no public profile. Track corroboration toward{" "}
-              {CORROBORATION_THRESHOLD} same-category reports within 15 m.
-            </p>
+            <p className="mt-1 text-sm text-civic-muted">On this phone only.</p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <ButtonLink to={REPORT_NEW_PATH} className="min-h-11 rounded-full px-4 text-sm">

@@ -63,13 +63,9 @@ export function SearchPage() {
   return (
     <div className={`um-scroll h-full ${NAV_PILL_OFFSET}`}>
       <div className="mx-auto max-w-2xl px-4 pb-24 pt-4 lg:px-6 lg:pt-8">
-        <p className="um-eyebrow">Catalogue</p>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight text-civic-ink">
+        <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
           Search
         </h1>
-        <p className="mt-2 text-sm text-civic-slate">
-          Find datasets, concerns, layers, and planning documents across UrbanMesh.
-        </p>
 
         <form onSubmit={onSubmit} className="mt-6 flex flex-wrap gap-2">
           <input

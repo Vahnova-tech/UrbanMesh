@@ -32,11 +32,7 @@ export function AuditLogsPage({ onLogout }: { onLogout: () => void }) {
       <div className="mx-auto max-w-4xl">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="um-eyebrow">Admin</p>
-            <h2 className="text-xl font-semibold text-civic-ink">Audit logs</h2>
-            <p className="mt-1 text-sm text-civic-slate">
-              Who changed a report, what changed, when, and why.
-            </p>
+            <h2 className="text-xl font-semibold text-civic-ink">Audit</h2>
           </div>
           <button
             type="button"

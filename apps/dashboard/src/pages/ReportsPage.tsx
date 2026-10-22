@@ -52,10 +52,9 @@ export function ReportsPage() {
   return (
     <div className="p-5 lg:p-8">
       <h1 className="um-display">Reports</h1>
-      <p className="um-body mt-2 max-w-2xl">
-        Every geotagged citizen report in the Kilimani catchments.
-        {clusterFilter ? " Showing one community-supported cluster’s evidence." : ""}
-      </p>
+      {clusterFilter ? (
+        <p className="um-meta mt-2">One cluster.</p>
+      ) : null}
       {error ? (
         <div className="mt-4">
           <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />

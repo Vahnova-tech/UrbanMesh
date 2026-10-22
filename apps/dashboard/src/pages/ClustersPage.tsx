@@ -51,11 +51,7 @@ export function ClustersPage() {
 
   return (
     <div className="p-5 lg:p-8">
-      <h1 className="um-display">Community-supported clusters</h1>
-      <p className="um-body mt-2 max-w-2xl">
-        Same-category reports within 15 metres, corroborated by at least three residents.
-        This is spatial corroboration, not a field inspection.
-      </p>
+      <h1 className="um-display">Clusters</h1>
       {error ? (
         <div className="mt-4">
           <ErrorNotice message={error} onRetry={() => setReload((n) => n + 1)} />

@@ -9,14 +9,9 @@ export function NeighbourhoodsPage() {
   return (
     <div className={`um-scroll h-full ${NAV_PILL_OFFSET}`}>
       <div className="mx-auto max-w-[900px] px-4 pb-24 pt-4 lg:px-6 lg:pt-8">
-        <p className="um-eyebrow">Neighbourhoods</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-civic-ink">
-          Choose a planning area
+        <h1 className="text-2xl font-semibold tracking-tight text-civic-ink">
+          Areas
         </h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-civic-slate">
-          Kilimani and Kileleshwa are separate UrbanMesh experiences with their own
-          boundaries, filters, and data products. They are not one combined dataset.
-        </p>
 
         <ul className="mt-8 space-y-4">
           {neighbourhoods.map((n) => {
@@ -35,14 +30,11 @@ export function NeighbourhoodsPage() {
                     <h2 className="text-lg font-semibold text-civic-ink">
                       {n.display_name}
                     </h2>
-                    <p className="mt-1 text-sm text-civic-slate">{n.description}</p>
-                    <p className="mt-2 text-xs text-civic-muted">
-                      Mode:{" "}
+                    <p className="mt-1 text-sm text-civic-muted">
                       {n.reporting_mode === "infrastructure_hazards"
-                        ? "Infrastructure hazard reporting"
-                        : "Community-led planning data pack"}
+                        ? "Hazard reports"
+                        : "Planning evidence"}
                     </p>
-                    <p className="mt-1 text-xs text-civic-muted">{n.boundary_note}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button
@@ -57,7 +49,7 @@ export function NeighbourhoodsPage() {
                         to="/kileleshwa"
                         className="min-h-10 rounded-full px-3 text-xs"
                       >
-                        Open data pack
+                        Open
                       </ButtonLink>
                     ) : (
                       <ButtonLink to="/" className="min-h-10 rounded-full px-3 text-xs">
@@ -72,10 +64,9 @@ export function NeighbourhoodsPage() {
         </ul>
 
         <p className="mt-8 text-xs text-civic-muted">
-          Absence of reports or datasets in an area is not proof that problems do not
-          exist.{" "}
+          Empty areas are not proof nothing is wrong.{" "}
           <Link to="/about" className="font-semibold text-civic-accent hover:underline">
-            About UrbanMesh
+            About
           </Link>
         </p>
       </div>

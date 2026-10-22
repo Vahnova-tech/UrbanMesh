@@ -79,12 +79,7 @@ export function NeighbourhoodsPage() {
   return (
     <div className="h-full overflow-y-auto px-4 py-6 lg:px-6">
       <div className="mx-auto max-w-3xl">
-        <p className="um-eyebrow">Data package</p>
         <h2 className="text-xl font-semibold text-civic-ink">Neighbourhoods</h2>
-        <p className="mt-2 text-sm leading-relaxed text-civic-slate">
-          Kilimani and Kileleshwa are separate products. Upload a Polygon or
-          MultiPolygon GeoJSON boundary, then refresh OSM base layers when needed.
-        </p>
 
         {loading ? (
           <p className="mt-6 text-sm text-civic-muted">Loading…</p>
