@@ -12,6 +12,7 @@ import { useOnline } from "../../lib/online";
 import { useNotices } from "../../lib/useNotices";
 import { NoticeBell, NotificationsPane } from "./NotificationsPane";
 import { StorageNotice } from "./StorageNotice";
+import { Walkthrough } from "./Walkthrough";
 import { ButtonLink } from "../ui/Button";
 
 const NAV = [
@@ -62,6 +63,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
       <BottomNav />
       <StorageNotice />
+      <Walkthrough />
       <NotificationsPane
         open={updatesOpen}
         onClose={() => setUpdatesOpen(false)}
@@ -120,6 +122,7 @@ function TopBar({
         </Link>
 
         <div
+          data-tour="area"
           className="um-neighbourhood-slot shrink-0"
           style={{ width: "7.5rem", maxWidth: "7.5rem", minWidth: 0, overflow: "hidden" }}
         >
@@ -135,6 +138,7 @@ function TopBar({
               key={item.to}
               to={item.to}
               end={"end" in item ? item.end : false}
+              data-tour={item.to === "/reports" ? "reports" : undefined}
               className={({ isActive }) => navClass(isActive)}
             >
               {item.label}
@@ -183,6 +187,7 @@ function TopBar({
           <ThemeToggle className={toolBtn} compact />
           <ButtonLink
             to={reportPath}
+            data-tour="report"
             className="ml-1 hidden min-h-9 shrink-0 rounded-full px-3.5 text-xs sm:px-4 sm:text-sm md:inline-flex"
           >
             {reportLabel}
@@ -221,7 +226,7 @@ function BottomNav() {
           )}
         </NavLink>
 
-        <NavLink to="/reports" className={({ isActive }) => tabClass(isActive)}>
+        <NavLink to="/reports" data-tour="reports" className={({ isActive }) => tabClass(isActive)}>
           {({ isActive }) => (
             <>
               <ListIcon filled={isActive} />
@@ -234,6 +239,7 @@ function BottomNav() {
         <div className="relative flex w-[4.5rem] shrink-0 flex-col items-center justify-end">
           <Link
             to={reportPath}
+            data-tour="report"
             aria-label={planning ? "Submit a concern" : "Report an issue"}
             className="um-tab-fab absolute -top-7 inline-flex h-14 w-14 items-center justify-center rounded-full bg-civic-accent text-white shadow-card transition-transform active:scale-95"
           >

@@ -190,7 +190,7 @@ export function MapHomePage() {
 
   return (
     <div className="absolute inset-0 flex">
-      <div className="relative min-h-0 min-w-0 flex-1">
+      <div data-tour="map" className="relative min-h-0 min-w-0 flex-1">
         <div className={view === "list" ? "absolute inset-0 hidden lg:block" : "absolute inset-0"}>
           <LiveMap
             incidents={mapIncidents}
@@ -205,7 +205,7 @@ export function MapHomePage() {
         </div>
 
         {view === "list" ? (
-          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(10rem,calc(8.5rem+env(safe-area-inset-bottom)))] pt-[max(11rem,calc(9.5rem+env(safe-area-inset-top)))] lg:hidden">
+          <div className="um-scroll absolute inset-0 bg-civic-paper px-3 pb-[max(8rem,calc(6.5rem+env(safe-area-inset-bottom)))] pt-[max(5.25rem,calc(4.25rem+env(safe-area-inset-top)))] lg:hidden">
             <div className="mb-3 flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-civic-ink">
                 {loading && incidents.length === 0
@@ -241,50 +241,16 @@ export function MapHomePage() {
           </div>
         ) : null}
 
-        <div className="pointer-events-none absolute inset-x-0 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] px-3 lg:hidden">
-          <div className="pointer-events-auto space-y-2">
-            <div className="um-map-card rounded-card px-3.5 py-3 shadow-card">
-              <h1 className="text-lg font-semibold tracking-tight text-civic-ink">
-                Street hazards
-              </h1>
-              <div className="mt-3.5 flex items-center gap-2">
-                <ButtonLink to="/reports/new" className="min-h-10 shrink-0 rounded-full px-3.5 text-xs">
-                  + Report a hazard
-                </ButtonLink>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setView("map");
-                    setFiltersOpen(false);
-                  }}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
-                >
-                  <MapPinIcon className="h-3.5 w-3.5" />
-                  Map
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFiltersOpen((open) => !open)}
-                  className="inline-flex min-h-10 items-center rounded-full border border-civic-line bg-civic-surface/70 px-3 text-xs font-semibold text-civic-ink"
-                  aria-expanded={filtersOpen}
-                >
-                  {filtersOpen ? "Hide" : "Filters"}
-                </button>
-              </div>
-              <Link to="/about" className="mt-2.5 inline-block text-xs font-semibold text-civic-accent">
-                How it works
-              </Link>
+        {filtersOpen ? (
+          <div className="absolute inset-x-3 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] lg:hidden">
+            <div className="um-map-card max-h-[70vh] overflow-y-auto rounded-card p-3.5 shadow-card">
+              <MapFilters {...filterProps} />
             </div>
-            {filtersOpen ? (
-              <div className="um-map-card rounded-card p-3.5 shadow-card">
-                <MapFilters {...filterProps} />
-              </div>
-            ) : null}
           </div>
-        </div>
+        ) : null}
 
         {error || locationError ? (
-          <div className="absolute inset-x-3 top-[max(16rem,calc(14.5rem+env(safe-area-inset-top)))] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-[max(5rem,calc(4rem+env(safe-area-inset-top)))] lg:w-[360px]">
+          <div className="absolute inset-x-3 top-[max(5.25rem,calc(4.25rem+env(safe-area-inset-top)))] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-[max(5rem,calc(4rem+env(safe-area-inset-top)))] lg:w-[360px]">
             {error ? (
               <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
             ) : null}
@@ -301,6 +267,14 @@ export function MapHomePage() {
         </div>
 
         <div className="absolute bottom-[max(6.75rem,calc(5.5rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-expanded={filtersOpen}
+            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md lg:hidden"
+          >
+            {filtersOpen ? "Hide" : "Filters"}
+          </button>
           <button
             type="button"
             onClick={() => setView((v) => (v === "map" ? "list" : "map"))}

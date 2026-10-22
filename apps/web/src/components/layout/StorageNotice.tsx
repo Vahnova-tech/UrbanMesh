@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { WALKTHROUGH_DONE, WALKTHROUGH_KEY } from "./Walkthrough";
 
 const KEY = "urbanmesh.storageNotice";
 
@@ -7,12 +8,18 @@ export function StorageNotice() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    try {
-      if (localStorage.getItem(KEY) === "seen") return;
-      setOpen(true);
-    } catch {
-      setOpen(true);
+    function openIfNeeded() {
+      try {
+        if (localStorage.getItem(WALKTHROUGH_KEY) !== "seen") return;
+        if (localStorage.getItem(KEY) === "seen") return;
+        setOpen(true);
+      } catch {
+        setOpen(true);
+      }
     }
+    openIfNeeded();
+    window.addEventListener(WALKTHROUGH_DONE, openIfNeeded);
+    return () => window.removeEventListener(WALKTHROUGH_DONE, openIfNeeded);
   }, []);
 
   if (!open) return null;

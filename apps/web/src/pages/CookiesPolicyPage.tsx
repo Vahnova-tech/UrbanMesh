@@ -35,6 +35,12 @@ const STORAGE_ROWS = [
     type: "Local storage",
     duration: "Until you clear site data",
   },
+  {
+    name: "urbanmesh.walkthrough",
+    purpose: "Remembers that you finished or skipped the first-run tour.",
+    type: "Local storage",
+    duration: "Until you clear site data",
+  },
 ] as const;
 
 export function CookiesPolicyPage() {
