@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { UrbanMeshLogo } from "../ui/UrbanMeshLogo";
 import { useLocationState } from "../../lib/location";
+import { NeighbourhoodSwitcher } from "../../lib/neighbourhood";
 import { ThemeToggle } from "../../lib/theme";
 import { InstallButton } from "../../lib/install";
 import { useOnline } from "../../lib/online";
@@ -12,6 +13,8 @@ import { ButtonLink } from "../ui/Button";
 
 const NAV = [
   { to: "/", label: "Map", end: true },
+  { to: "/neighbourhoods", label: "Areas" },
+  { to: "/kileleshwa", label: "Kileleshwa" },
   { to: "/reports", label: "Reports" },
   { to: "/me", label: "My Reports" },
 ] as const;
@@ -109,7 +112,9 @@ function TopBar({
           <UrbanMeshLogo compact />
         </Link>
 
-        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-0.5 md:flex">
+        <NeighbourhoodSwitcher className="shrink-0" />
+
+        <nav aria-label="Primary" className="hidden min-w-0 flex-1 items-center gap-0.5 lg:flex">
           {NAV.map((item) => (
             <NavLink
               key={item.to}
@@ -123,7 +128,7 @@ function TopBar({
         </nav>
 
         <div className="ml-auto flex min-w-0 items-center gap-1 sm:gap-1.5">
-          <div className="hidden items-center gap-1 lg:flex">
+          <div className="hidden items-center gap-1 xl:flex">
             <InstallButton className={toolBtn} />
             <NoticeBell
               unreadCount={unreadCount}

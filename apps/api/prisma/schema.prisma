@@ -72,6 +72,103 @@ model Incident {
   @@map("incidents")
 }
 
+/// Planning neighbourhood — Kilimani and Kileleshwa stay separate products.
+enum NeighbourhoodId {
+  kilimani
+  kileleshwa
+}
+
+enum DatasetAccessTier {
+  open
+  restricted
+  synthetic
+}
+
+enum DatasetDataKind {
+  real
+  derived
+  synthetic
+  reference
+}
+
+model Neighbourhood {
+  id              NeighbourhoodId @id
+  displayName     String          @map("display_name")
+  centerLat       Float           @map("center_lat")
+  centerLng       Float           @map("center_lng")
+  /// Provisional bbox JSON: [minLat, maxLat, minLng, maxLng]
+  bboxJson        String          @map("bbox_json")
+  boundaryStatus  String          @map("boundary_status")
+  boundarySource  String          @map("boundary_source")
+  boundaryNote    String          @map("boundary_note")
+  reportingMode   String          @map("reporting_mode")
+  description     String
+  active          Boolean         @default(true)
+  datasets        Dataset[]
+  dataPacks       DataPack[]
+  concernTypes    ConcernType[]
+
+  @@map("neighbourhoods")
+}
+
+model Dataset {
+  id                    String            @id @default(uuid()) @db.Uuid
+  neighbourhoodId       NeighbourhoodId   @map("neighbourhood_id")
+  slug                  String
+  title                 String
+  description           String
+  category              String
+  geographicCoverage    String            @map("geographic_coverage")
+  sourceOrganization    String            @map("source_organization")
+  sourceUrl             String?           @map("source_url")
+  publishedAt           DateTime?         @map("published_at")
+  acquiredAt            DateTime?         @map("acquired_at")
+  observationPeriod     String?           @map("observation_period")
+  lastUpdated           DateTime?         @map("last_updated")
+  fileFormat            String?           @map("file_format")
+  license               String
+  accessTier            DatasetAccessTier @map("access_tier")
+  privacyClassification String            @map("privacy_classification")
+  qualityNotes          String            @map("quality_notes")
+  methodology           String?
+  downloadAvailable     Boolean           @default(false) @map("download_available")
+  dataKind              DatasetDataKind   @map("data_kind")
+  published             Boolean           @default(false)
+  neighbourhood         Neighbourhood     @relation(fields: [neighbourhoodId], references: [id])
+
+  @@unique([neighbourhoodId, slug])
+  @@index([neighbourhoodId, accessTier])
+  @@map("datasets")
+}
+
+model DataPack {
+  id              String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId NeighbourhoodId @map("neighbourhood_id")
+  version         String
+  title           String
+  status          String          @default("draft")
+  publishedAt     DateTime?       @map("published_at")
+  summary         String?
+  methodology     String?
+  neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@unique([neighbourhoodId, version])
+  @@map("data_packs")
+}
+
+model ConcernType {
+  id              String          @id @default(uuid()) @db.Uuid
+  neighbourhoodId NeighbourhoodId @map("neighbourhood_id")
+  code            String
+  label           String
+  description     String
+  sortOrder       Int             @default(0) @map("sort_order")
+  neighbourhood   Neighbourhood   @relation(fields: [neighbourhoodId], references: [id])
+
+  @@unique([neighbourhoodId, code])
+  @@map("concern_types")
+}
+
 /// Append-only admin action log — never silently rewrite verification history.
 model AdminAuditLog {
   id         String   @id @default(uuid()) @db.Uuid

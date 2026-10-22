@@ -303,6 +303,55 @@ export async function fetchPlannerMetrics(): Promise<PlannerMetrics> {
   return requestJson<PlannerMetrics>("/api/v1/dashboard/metrics");
 }
 
+export interface NeighbourhoodInfo {
+  id: "kilimani" | "kileleshwa";
+  display_name: string;
+  short_label: string;
+  center: [number, number];
+  bbox: [number, number, number, number];
+  boundary_status: string;
+  boundary_source: string;
+  boundary_note: string;
+  reporting_mode: string;
+  description: string;
+}
+
+export interface CatalogueDataset {
+  id: string;
+  neighbourhood_id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  geographic_coverage: string;
+  source_organization: string;
+  source_url: string | null;
+  license: string;
+  access_tier: "open" | "restricted" | "synthetic";
+  privacy_classification: string;
+  quality_notes: string;
+  methodology: string | null;
+  download_available: boolean;
+  data_kind: string;
+  related_layers: string[];
+}
+
+export async function fetchNeighbourhoods() {
+  return requestJson<{ count: number; neighbourhoods: NeighbourhoodInfo[] }>(
+    "/api/v1/catalogue/neighbourhoods",
+  );
+}
+
+export async function fetchCatalogue(
+  neighbourhood: "kilimani" | "kileleshwa",
+) {
+  return requestJson<{
+    neighbourhood_id: string;
+    count: number;
+    datasets: CatalogueDataset[];
+  }>(`/api/v1/catalogue/catalogue?neighbourhood=${neighbourhood}&tier=all`);
+}
+
 export async function runAdminAction(
   id: string,
   action: AdminAction,

@@ -14,7 +14,9 @@ import {
   MARKER,
   styleUrlFor,
 } from "../../lib/mapStyle";
+import { useNeighbourhood } from "../../lib/neighbourhood";
 
+/** @deprecated Prefer useNeighbourhood().neighbourhood.center */
 export const KILIMANI_CENTER: [number, number] = [-1.2921, 36.785];
 
 export type MapFocus = {
@@ -262,12 +264,14 @@ export function LiveMap({
   onSelect?: (incident: IncidentPublic) => void;
 }) {
   const { dark } = useTheme();
+  const { neighbourhood } = useNeighbourhood();
   const wrapRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const onSelectRef = useRef(onSelect);
   const byIdRef = useRef(new Map<string, IncidentPublic>());
   const fittedRef = useRef(false);
   const lastFlyRef = useRef<string | null>(null);
+  const lastNeighbourhoodRef = useRef(neighbourhood.id);
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
   const popupRef = useRef<maplibregl.Popup | null>(null);
 
@@ -277,6 +281,7 @@ export function LiveMap({
     [incidents],
   );
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
+  const [centerLat, centerLng] = neighbourhood.center;
 
   onSelectRef.current = onSelect;
   byIdRef.current = byId;
@@ -288,7 +293,7 @@ export function LiveMap({
     const map = new maplibregl.Map({
       container: el,
       style: styleUrlFor(dark),
-      center: [KILIMANI_CENTER[1], KILIMANI_CENTER[0]],
+      center: [centerLng, centerLat],
       zoom: 15.2,
       pitch: MAP_CAMERA.pitch,
       bearing: MAP_CAMERA.bearing,
@@ -359,6 +364,20 @@ export function LiveMap({
     map.setStyle(styleUrlFor(dark), { diff: false });
     map.once("style.load", onStyle);
   }, [dark]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    if (lastNeighbourhoodRef.current === neighbourhood.id) return;
+    lastNeighbourhoodRef.current = neighbourhood.id;
+    fittedRef.current = false;
+    const reduced = prefersReducedMotion();
+    map.easeTo({
+      center: [centerLng, centerLat],
+      zoom: 15.2,
+      duration: reduced ? 0 : 700,
+    });
+  }, [neighbourhood.id, centerLat, centerLng]);
 
   useEffect(() => {
     const map = mapRef.current;

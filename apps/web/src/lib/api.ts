@@ -218,3 +218,64 @@ export function photoSrc(url: string | null): string | null {
   if (!PHOTO_PATH.test(pathName.split("?")[0])) return null;
   return `${API_BASE}${pathName.split("?")[0]}`;
 }
+
+export interface GlanceIndicator {
+  id: string;
+  label: string;
+  value: string | null;
+  unit: string | null;
+  status: "available" | "tbd" | "unavailable";
+  source_organization: string | null;
+  reference_year: string | null;
+  geographic_scope: string;
+  last_updated: string | null;
+  confidence: "high" | "medium" | "low" | "unknown";
+  source_url: string | null;
+  methodology: string | null;
+}
+
+export interface DataPackDataset {
+  id: string;
+  neighbourhood_id: string;
+  slug: string;
+  title: string;
+  description: string;
+  category: string;
+  geographic_coverage: string;
+  source_organization: string;
+  source_url: string | null;
+  license: string;
+  access_tier: "open" | "restricted" | "synthetic";
+  privacy_classification: string;
+  quality_notes: string;
+  methodology: string | null;
+  download_available: boolean;
+  data_kind: string;
+  related_layers: string[];
+}
+
+export interface DataPackResponse {
+  neighbourhood_id: string;
+  title: string;
+  subtitle: string;
+  version: string;
+  status: string;
+  published_at: string | null;
+  introduction: string;
+  process_steps: string[];
+  limitations: string[];
+  privacy_guidance: string[];
+  recommended_use: string[];
+  glance: GlanceIndicator[];
+  concern_taxonomy: { code: string; label: string; description: string }[];
+  datasets: DataPackDataset[];
+}
+
+export async function fetchDataPack(
+  neighbourhood: "kilimani" | "kileleshwa",
+): Promise<DataPackResponse> {
+  return requestJson<DataPackResponse>(
+    `${API_BASE}/api/v1/catalogue/data-packs/${neighbourhood}`,
+    "load",
+  );
+}

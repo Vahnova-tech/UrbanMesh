@@ -8,21 +8,25 @@ import {
 } from "../lib/categories";
 import { CategoryIcon } from "../components/ui/StatusBadge";
 import { CameraCapture } from "../components/report/CameraCapture";
-import { KILIMANI_CENTER } from "../components/map/LiveMap";
 import { LocationPickerMap } from "../components/map/LocationPickerMap";
 import { formatCoords } from "../lib/format";
 import { rememberMyReport } from "../lib/myReports";
 import { useLocationState } from "../lib/location";
+import { useNeighbourhood } from "../lib/neighbourhood";
 import { UrbanMeshLogo } from "../components/ui/UrbanMeshLogo";
 import { ErrorBanner } from "../components/ui/ReportCard";
 import { ThemeToggle } from "../lib/theme";
 
 export function ReportFlowPage() {
   const navigate = useNavigate();
+  const { neighbourhood } = useNeighbourhood();
   const { coords, requestLocation, locating, error: locationError } = useLocationState();
   const [step, setStep] = useState(1);
-  const [center, setCenter] = useState(
-    coords ?? { lat: KILIMANI_CENTER[0], lng: KILIMANI_CENTER[1] },
+  const [center, setCenter] = useState(() =>
+    coords ?? {
+      lat: neighbourhood.center[0],
+      lng: neighbourhood.center[1],
+    },
   );
   const [category, setCategory] = useState<HazardCategoryValue | "">("");
   const [description, setDescription] = useState("");

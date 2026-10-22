@@ -14,6 +14,8 @@ import { ReportDetailPage } from "./pages/ReportDetailPage";
 import { ReportsListPage } from "./pages/ReportsListPage";
 import { SettingsPage } from "./pages/SettingsPage";
 import { UsersPage } from "./pages/UsersPage";
+import { NeighbourhoodsPage } from "./pages/NeighbourhoodsPage";
+import { CataloguePage } from "./pages/CataloguePage";
 
 const basename =
   import.meta.env.BASE_URL === "/"
@@ -156,6 +158,8 @@ export default function App() {
             element={<AnalyticsPage onLogout={onLogout} />}
           />
           <Route path="/pdf" element={<PdfReportsPage />} />
+          <Route path="/neighbourhoods" element={<NeighbourhoodsPage />} />
+          <Route path="/catalogue" element={<CataloguePage />} />
           <Route
             path="/audit"
             element={<AuditLogsPage onLogout={onLogout} />}

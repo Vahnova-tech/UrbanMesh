@@ -1,13 +1,21 @@
+import { useNeighbourhood } from "../../lib/neighbourhood";
+
 interface UrbanMeshLogoProps {
   className?: string;
   compact?: boolean;
+  /** Override subtitle; defaults to active neighbourhood */
+  areaLabel?: string;
 }
 
 export function UrbanMeshLogo({
   className = "",
   compact = false,
+  areaLabel,
 }: UrbanMeshLogoProps) {
+  const { neighbourhood } = useNeighbourhood();
   const size = compact ? 32 : 40;
+  const subtitle = areaLabel ?? neighbourhood.short_label;
+
   return (
     <div className={`inline-flex items-center gap-2.5 ${className}`}>
       <svg
@@ -48,7 +56,7 @@ export function UrbanMeshLogo({
         <p className="text-[15px] font-semibold tracking-tight text-civic-ink">
           UrbanMesh
         </p>
-        <p className="text-[11px] font-medium text-civic-muted">Kilimani</p>
+        <p className="text-[11px] font-medium text-civic-muted">{subtitle}</p>
       </div>
     </div>
   );

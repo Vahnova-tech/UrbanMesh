@@ -12,6 +12,8 @@ const NAV: { to: string; label: string; end?: boolean; section?: string }[] = [
   { to: "/reports/resolved", label: "Resolved issues", end: true },
   { to: "/analytics", label: "Analytics", section: "Insights" },
   { to: "/pdf", label: "PDF reports" },
+  { to: "/neighbourhoods", label: "Neighbourhoods", section: "Data package" },
+  { to: "/catalogue", label: "Dataset catalogue" },
   { to: "/audit", label: "Audit logs", section: "Admin" },
   { to: "/users", label: "Users & roles" },
   { to: "/settings", label: "Settings" },

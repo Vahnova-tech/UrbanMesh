@@ -12,6 +12,7 @@ import { lpdpRouter } from "./modules/reports/lpdp.routes.js";
 import { clustersRouter } from "./modules/clusters/clusters.routes.js";
 import { uploadsRouter } from "./modules/uploads/uploads.routes.js";
 import { metaRouter } from "./modules/meta/meta.routes.js";
+import { catalogueRouter } from "./modules/catalogue/catalogue.routes.js";
 import { adminRouter } from "./modules/admin/admin.routes.js";
 import { mountFrontends } from "./lib/serveFrontends.js";
 
@@ -58,6 +59,7 @@ export function createApp() {
   });
 
   app.use("/api/v1/meta", metaRouter);
+  app.use("/api/v1/catalogue", catalogueRouter);
   app.use("/api/v1/reports", reportsRouter);
   app.use("/api/v1/clusters", clustersRouter);
   app.use("/api/v1/dashboard", dashboardRouter);
