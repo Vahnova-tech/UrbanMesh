@@ -117,7 +117,7 @@ function TopBar({
     <header className="pointer-events-none absolute inset-x-0 top-0 z-[2000] px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-4 lg:px-6">
       <div className="um-nav-pill pointer-events-auto mx-auto flex w-full max-w-6xl items-center gap-1 px-1.5 py-1.5 sm:gap-2 sm:px-2.5">
         <Link to="/" aria-label="UrbanMesh home" className="shrink-0 rounded-full px-1 py-1">
-          <UrbanMeshLogo compact />
+          <UrbanMeshLogo compact className="[&>div]:max-sm:hidden" />
         </Link>
 
         <div

@@ -1,6 +1,7 @@
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { BrowserRouter, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { LocationProvider } from "./lib/location";
-import { NeighbourhoodProvider } from "./lib/neighbourhood";
+import { NeighbourhoodProvider, useNeighbourhood } from "./lib/neighbourhood";
 import { ThemeProvider } from "./lib/theme";
 import { AppShell } from "./components/layout/AppShell";
 import { MapHomePage } from "./pages/MapHomePage";
@@ -22,12 +23,41 @@ function HazardRedirect() {
   return <Navigate to={`/reports/${id}`} replace />;
 }
 
+function pageLabel(pathname: string): string | null {
+  if (pathname === "/") return null;
+  if (pathname === "/reports/new" || pathname === "/report") return "Report a hazard";
+  if (pathname.startsWith("/reports/") && pathname.endsWith("/submitted")) return "Report sent";
+  if (pathname.startsWith("/reports/") || pathname.startsWith("/hazards/")) return "Report";
+  if (pathname === "/reports") return "Reports";
+  if (pathname === "/concerns/new") return "Submit a concern";
+  if (pathname.startsWith("/concerns/")) return "Concern";
+  if (pathname === "/neighbourhoods") return "Neighbourhoods";
+  if (pathname === "/search") return "Search";
+  if (pathname === "/me") return "My Reports";
+  if (pathname === "/about") return "About";
+  if (pathname === "/cookies") return "Cookies";
+  if (pathname === "/kileleshwa" || pathname === "/data-pack") return "Kileleshwa";
+  return null;
+}
+
+function DocumentTitle() {
+  const { pathname } = useLocation();
+  const { neighbourhood } = useNeighbourhood();
+  useEffect(() => {
+    const page = pageLabel(pathname);
+    const area = neighbourhood.short_label;
+    document.title = page ? `${page} · ${area}` : `UrbanMesh · ${area}`;
+  }, [pathname, neighbourhood.short_label]);
+  return null;
+}
+
 export default function App() {
   return (
     <ThemeProvider>
       <NeighbourhoodProvider>
         <LocationProvider>
           <BrowserRouter>
+            <DocumentTitle />
             <Routes>
               <Route path="/report" element={<Navigate to="/reports/new" replace />} />
               <Route path="/reports/new" element={<ReportFlowPage />} />
