@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { UrbanMeshLogo } from "../ui/UrbanMeshLogo";
 import { useLocationState } from "../../lib/location";
@@ -34,6 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const online = useOnline();
   const notices = useNotices();
   const [updatesOpen, setUpdatesOpen] = useState(false);
+  const updatesAnchor = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setUpdatesOpen(false);
@@ -52,6 +53,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TopBar
         unreadCount={notices.unreadCount}
         updatesOpen={updatesOpen}
+        updatesAnchor={updatesAnchor}
         onToggleUpdates={() => setUpdatesOpen((open) => !open)}
       />
       <main
@@ -66,6 +68,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <Walkthrough />
       <NotificationsPane
         open={updatesOpen}
+        anchorRef={updatesAnchor}
         onClose={() => setUpdatesOpen(false)}
         notices={notices.notices}
         readIds={notices.readIds}
@@ -100,10 +103,12 @@ const toolBtn =
 function TopBar({
   unreadCount,
   updatesOpen,
+  updatesAnchor,
   onToggleUpdates,
 }: {
   unreadCount: number;
   updatesOpen: boolean;
+  updatesAnchor: RefObject<HTMLButtonElement | null>;
   onToggleUpdates: () => void;
 }) {
   const { requestLocation, locating, coords, error } = useLocationState();
@@ -169,6 +174,7 @@ function TopBar({
           </NavLink>
           <InstallButton className={toolBtn} compact />
           <NoticeBell
+            ref={updatesAnchor}
             unreadCount={unreadCount}
             open={updatesOpen}
             onToggle={onToggleUpdates}

@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type ButtonHTMLAttributes, type KeyboardEvent, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { fetchReports, type IncidentPublic } from "../lib/api";
 import { HAZARD_OPTIONS } from "../lib/categories";
@@ -241,20 +241,17 @@ export function MapHomePage() {
           </div>
         ) : null}
 
-        {filtersOpen ? (
-          <div className="absolute inset-x-3 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] lg:hidden">
-            <div className="um-map-card max-h-[70vh] overflow-y-auto rounded-card p-3.5 shadow-card">
-              <MapFilters {...filterProps} />
-            </div>
-          </div>
-        ) : null}
-
-        {error || locationError ? (
-          <div className="absolute inset-x-3 top-[max(5.25rem,calc(4.25rem+env(safe-area-inset-top)))] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-[max(5rem,calc(4rem+env(safe-area-inset-top)))] lg:w-[360px]">
+        {error || locationError || filtersOpen ? (
+          <div className="absolute inset-x-3 top-[max(4.75rem,calc(3.85rem+env(safe-area-inset-top)))] z-[1100] space-y-2 lg:left-3 lg:right-auto lg:top-[max(5rem,calc(4rem+env(safe-area-inset-top)))] lg:w-[360px]">
             {error ? (
               <ErrorBanner message={error} onRetry={() => setReload((n) => n + 1)} />
             ) : null}
             {locationError ? <ErrorBanner message={locationError} /> : null}
+            {filtersOpen ? (
+              <div className="um-map-card max-h-[70vh] overflow-y-auto rounded-card p-3.5 shadow-card lg:hidden">
+                <MapFilters {...filterProps} />
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -266,30 +263,37 @@ export function MapHomePage() {
           />
         </div>
 
-        <div className="absolute bottom-[max(6.75rem,calc(5.5rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col items-end gap-2 lg:bottom-6 lg:right-6">
-          <button
-            type="button"
+        <div className="um-map-tools absolute bottom-[max(6.75rem,calc(5.5rem+env(safe-area-inset-bottom)))] right-3 z-[1100] flex flex-col overflow-hidden rounded-2xl border border-civic-line bg-civic-surface/92 shadow-card backdrop-blur-md lg:bottom-6 lg:right-6">
+          <MapTool
+            className="lg:hidden"
+            pressed={filtersOpen}
+            label="Filters"
             onClick={() => setFiltersOpen((open) => !open)}
+            data-tour="filters"
             aria-expanded={filtersOpen}
-            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md lg:hidden"
           >
-            {filtersOpen ? "Hide" : "Filters"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setView((v) => (v === "map" ? "list" : "map"))}
+            <FilterIcon />
+          </MapTool>
+          <MapTool
+            className="border-t border-civic-line lg:hidden"
+            pressed={view === "list"}
+            label={view === "map" ? "List" : "Map"}
+            onClick={() => {
+              setFiltersOpen(false);
+              setView((v) => (v === "map" ? "list" : "map"));
+            }}
             aria-pressed={view === "list"}
-            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md lg:hidden"
           >
-            {view === "map" ? "List" : "Map"}
-          </button>
-          <button
-            type="button"
+            {view === "map" ? <ListIcon /> : <MapPinIcon className="h-3.5 w-3.5" />}
+          </MapTool>
+          <MapTool
+            className="max-lg:border-t max-lg:border-civic-line"
+            label={locating ? "…" : "Locate"}
             onClick={onLocate}
-            className="min-h-11 rounded-full border border-civic-line bg-civic-surface/90 px-3.5 py-2 text-xs font-semibold text-civic-ink shadow-card backdrop-blur-md"
+            aria-label={locating ? "Locating" : "Recenter on me"}
           >
-            {locating ? "Locating…" : "Recenter on me"}
-          </button>
+            <LocateIcon />
+          </MapTool>
         </div>
 
         <BottomSheet
@@ -671,6 +675,56 @@ function MapFilters({
         </label>
       </div>
     </div>
+  );
+}
+
+function MapTool({
+  children,
+  label,
+  pressed = false,
+  className = "",
+  ...props
+}: ButtonHTMLAttributes<HTMLButtonElement> & {
+  label: string;
+  pressed?: boolean;
+}) {
+  return (
+    <button
+      {...props}
+      type="button"
+      className={`inline-flex min-h-10 items-center gap-1.5 px-3 text-xs font-semibold ${
+        pressed ? "bg-civic-mist text-civic-ink" : "text-civic-slate"
+      } ${className}`}
+    >
+      {children}
+      {label}
+    </button>
+  );
+}
+
+function FilterIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ListIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M8 7h12M8 12h12M8 17h12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M4.5 7h.01M4.5 12h.01M4.5 17h.01" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LocateIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M12 3.5v2.5M12 18v2.5M3.5 12H6M18 12h2.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
   );
 }
 

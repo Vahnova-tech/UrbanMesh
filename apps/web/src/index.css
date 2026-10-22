@@ -524,9 +524,26 @@ html.dark .um-map-zoom button:active {
   }
 }
 
+.um-pop {
+  transform-origin: top right;
+  animation: um-pop 160ms ease-out;
+}
+
+@keyframes um-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .um-enter,
   .um-sheet,
+  .um-pop,
   .um-skeleton,
   .um-selected-pin__mark,
   .um-crystal-pin__gem,
